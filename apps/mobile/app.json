@@ -12,10 +12,15 @@
       "bundleIdentifier": "com.meyerslink.melo",
       "buildNumber": "1",
       "supportsTablet": false,
-      "config": { "usesNonExemptEncryption": false },
+      "config": {
+        "usesNonExemptEncryption": false
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "LSApplicationQueriesSchemes": ["spotify", "music"]
+        "LSApplicationQueriesSchemes": [
+          "spotify",
+          "music"
+        ]
       },
       "associatedDomains": []
     },
@@ -47,7 +52,16 @@
       "reactCompiler": true
     },
     "extra": {
-      "eas": {}
+      "eas": {
+        "projectId": "f4253c2b-99e0-4996-bb04-ba7e36ea1cbf"
+      }
+    },
+    "owner": "ayalmeyers",
+    "updates": {
+      "url": "https://u.expo.dev/f4253c2b-99e0-4996-bb04-ba7e36ea1cbf"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }

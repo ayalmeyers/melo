@@ -1,13 +1,18 @@
 {
   "name": "melo",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "test": "npm run test -w @melo/core && ./scripts/test-db.sh",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "seed": "node scripts/gen-seed.mjs",
+    "seed": "node scripts/gen-seed.mjs && node scripts/gen-setup.mjs",
     "web": "npm run dev -w @melo/web",
     "ios": "npm run ios -w @melo/mobile"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }
