@@ -13,6 +13,6 @@
     "ios": "npm run ios -w @melo/mobile"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.13"
   }
 }

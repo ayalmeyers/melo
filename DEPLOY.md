@@ -121,7 +121,7 @@ Sign-in is email and password while testing. In Supabase, Authentication → Sig
 ## Running it locally
 
 ```bash
-npm install
+npm install            # needs Node 22.13+ (nodejs.org LTS)
 cp apps/web/.env.example apps/web/.env.local       # fill in Supabase values
 cp apps/mobile/.env.example apps/mobile/.env.local
 npm run web        # http://localhost:3000
