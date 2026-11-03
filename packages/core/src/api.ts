@@ -32,6 +32,19 @@ export function createApi(sb: SupabaseClient) {
     /* ---------- auth ---------- */
     async sendCode(email: string) { ok(await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } }) as never); },
     async verifyCode(email: string, token: string) { const r = await sb.auth.verifyOtp({ email, token, type: 'email' }); if (r.error) throw new MeloError('That code did not work. Check it, or send a new one.'); return r.data.user; },
+    /** Email and password. Sign-up returns a session right away when "Confirm email" is off in Supabase. */
+    async signIn(email: string, password: string) {
+      const r = await sb.auth.signInWithPassword({ email, password });
+      if (r.error) throw new MeloError(/invalid/i.test(r.error.message) ? 'Wrong email or password.' : r.error.message);
+      return r.data.user;
+    },
+    async signUp(email: string, password: string) {
+      if (password.length < 8) throw new MeloError('Use at least 8 characters for your password.');
+      const r = await sb.auth.signUp({ email, password });
+      if (r.error) throw new MeloError(/registered|exists/i.test(r.error.message) ? 'That email already has an account. Sign in instead.' : r.error.message);
+      if (!r.data.session) throw new MeloError('Account created. Check your email to confirm it, then sign in.');
+      return r.data.user;
+    },
     async signOut() { await sb.auth.signOut(); },
     async deleteAccount() { ok(await sb.rpc('delete_account')); await sb.auth.signOut(); },
 

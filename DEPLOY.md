@@ -100,6 +100,10 @@ In App Store Connect, fill in:
 
   Apple can't receive your email codes. The usual fix is a demo account whose inbox you share, or a fixed code. Supabase supports test phone numbers for SMS only, so for email use a dedicated inbox.
 
+### Sign-in during testing
+
+Sign-in is email and password while testing. In Supabase, Authentication → Sign In / Providers → Email: turn **Confirm email** off. Before launch, connect custom SMTP and switch back to email codes or turn confirmation on.
+
 ### What's already in the code for review
 
 - Account deletion inside the app (Settings → Delete account), guideline 5.1.1(v)
