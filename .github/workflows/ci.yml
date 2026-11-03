@@ -1,0 +1,38 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_PASSWORD: postgres }
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGPASSWORD: postgres
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+      NEXT_PUBLIC_SITE_URL: https://melo.vercel.app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Core tests
+        run: npm run test -w @melo/core
+      - name: Database schema, security and scoring tests
+        run: ./scripts/test-db.sh
+      - name: Typecheck everything
+        run: npm run typecheck
+      - name: Build the website
+        run: npm run build -w @melo/web
+      - name: Bundle the iPhone app
+        working-directory: apps/mobile
+        run: npx expo export --platform ios --output-dir /tmp/ios-export
