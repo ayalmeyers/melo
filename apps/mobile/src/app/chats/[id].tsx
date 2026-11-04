@@ -2,10 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, FlatList, KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-native';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ago, artistName, genreName, LIMITS, type Message, type Profile } from '@melo/core';
+import { ago, genreName, LIMITS, type Message, type Profile } from '@melo/core';
 import { api } from '../../lib/supabase';
 import { useSession } from '../../lib/session';
-import { cachedItem, fail, go, loadItems, useLoad } from '../../lib/hooks';
+import { cachedItem, fail, go, loadArtists, loadItems, targetLabel, useLoad } from '../../lib/hooks';
 import { moderate } from '../../components/post';
 import { ArtistCover, Avatar, GenreCover, Icon, Input, ItemCover } from '../../components/ui';
 import { C, F } from '../../components/theme';
@@ -15,7 +15,7 @@ function Share({ m, mine }: { m: Message; mine: boolean }) {
   const id = m.share_id;
   const [href, label, art] =
     m.share_type === 'item' ? [`/item/${id}`, cachedItem(id)?.title ?? 'An album', <ItemCover key="a" item={{ id, title: cachedItem(id)?.title ?? id, type: 'album' }} size={44} radius={8} />]
-    : m.share_type === 'artist' ? [`/artist/${id}`, artistName(id), <ArtistCover key="a" id={id} size={44} />]
+    : m.share_type === 'artist' ? [`/artist/${id}`, targetLabel({ type: 'artist', id }), <ArtistCover key="a" id={id} size={44} />]
     : m.share_type === 'genre' ? [`/genre/${id}`, genreName(id), <GenreCover key="a" id={id} size={44} radius={8} />]
     : m.share_type === 'forecast' ? [`/forecast/${id}`, 'A forecast', <Icon key="a" name="chart.line.uptrend.xyaxis" size={28} color={C.blue} />]
     : [`/post/${id}`, 'A post', <Icon key="a" name="text.bubble" size={28} color={C.blue} />];
@@ -38,7 +38,7 @@ export default function ChatScreen() {
 
   useEffect(() => {
     let alive = true;
-    api.messages(id).then(async m => { await loadItems(m.filter(x => x.share_type === 'item').map(x => x.share_id!)); if (alive) setMsgs(m); }).catch(fail);
+    api.messages(id).then(async m => { await Promise.all([loadItems(m.filter(x => x.share_type === 'item').map(x => x.share_id!)), loadArtists(m.filter(x => x.share_type === 'artist').map(x => x.share_id!))]); if (alive) setMsgs(m); }).catch(fail);
     api.markRead(id).catch(() => {});
     const off = api.onMessages(id, m => { setMsgs(prev => (prev.some(x => x.id === m.id) ? prev : [...prev, m])); api.markRead(id).catch(() => {}); });
     return () => { alive = false; off(); };

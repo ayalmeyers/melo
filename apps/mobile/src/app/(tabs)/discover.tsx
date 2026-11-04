@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { ARTISTS, GENRES, SHOWS, artistName, flag, type CatalogItem, type Profile } from '@melo/core';
+import { ARTISTS, GENRES, SHOWS, artistName, flag, type Artist, type CatalogItem, type Profile } from '@melo/core';
 import { api, configured } from '../../lib/supabase';
-import { go, rememberItem, useLoad } from '../../lib/hooks';
+import { go, rememberArtist, rememberItem, useLoad } from '../../lib/hooks';
+import { AppleSection, useAppleSearch } from '../../components/apple';
 import { Screen } from '../../components/screen';
 import { SectionTitle } from '../../components/post';
 import { ItemRow } from '../../components/rows';
@@ -11,13 +12,19 @@ import { C, F } from '../../components/theme';
 
 export default function Discover() {
   const [q, setQ] = useState('');
-  const [res, setRes] = useState<{ items: CatalogItem[]; people: Profile[] } | null>(null);
+  const [res, setRes] = useState<{ items: CatalogItem[]; people: Profile[]; artists: Artist[] } | null>(null);
   useEffect(() => {
     const s = q.trim();
     if (s.length < 2) { setRes(null); return; }
-    const t = setTimeout(() => { Promise.all([api.searchItems(s), api.searchPeople(s)]).then(([items, people]) => setRes({ items, people })).catch(() => setRes({ items: [], people: [] })); }, 250);
+    const t = setTimeout(() => {
+      Promise.all([api.searchItems(s), api.searchPeople(s), api.searchArtists(s)])
+        .then(([items, people, artists]) => { items.forEach(rememberItem); artists.forEach(rememberArtist); setRes({ items, people, artists }); })
+        .catch(() => setRes({ items: [], people: [], artists: [] }));
+    }, 250);
     return () => clearTimeout(t);
   }, [q]);
+  const fromApple = useAppleSearch(q, ['album', 'show'], 10);
+  const have = new Set(res?.items.map(i => i.id) ?? []);
 
   const top = useLoad(async () => {
     if (!configured) return null;
@@ -39,13 +46,16 @@ export default function Discover() {
     </Band>
     <Sheet>
       {res ? <View style={{ gap: 14 }}>
-        {Object.entries(ARTISTS).filter(([, a]) => a.name.toLowerCase().includes(q.trim().toLowerCase())).slice(0, 5).map(([id, a]) =>
-          <Pressable key={id} onPress={() => go(`/artist/${id}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}><ArtistCover id={id} size={48} /><View><T.Bold>{a.name}</T.Bold><T.Dim>Artist {flag(a.cc)}</T.Dim></View></Pressable>)}
+        {res.artists.map(a =>
+          <Pressable key={a.id} onPress={() => go(`/artist/${a.id}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}><ArtistCover id={a.id} art={a.artwork_url} size={48} /><View><T.Bold>{a.name}</T.Bold><T.Dim>Artist {flag(a.cc)}</T.Dim></View></Pressable>)}
+        {!!res.items.length && <SectionTitle title="On Melo" />}
         {res.items.map(it => <ItemRow key={it.id} it={it} />)}
         {res.people.map(p => <Pressable key={p.id} onPress={() => go(`/user/${p.handle}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}><Avatar name={p.name} color={p.color} size={48} /><View><T.Bold>{p.name}</T.Bold><T.Dim>@{p.handle} {flag(p.cc)}</T.Dim></View></Pressable>)}
-        {!res.items.length && !res.people.length && <Empty text="Nothing found." />}
+        <AppleSection title="Albums" results={fromApple?.filter(r => r.kind === 'album') ?? null} have={have} />
+        <AppleSection title="Podcasts" results={fromApple?.filter(r => r.kind === 'show') ?? null} have={have} />
+        {!res.items.length && !res.people.length && !res.artists.length && fromApple && !fromApple.length && <Empty text="Nothing found." />}
         <Pressable onPress={() => go(`/add-item?title=${encodeURIComponent(q.trim())}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 }}>
-          <Icon name="plus.circle.fill" size={22} color={C.blue} /><Text style={{ fontFamily: F.semibold, color: C.blue, fontSize: 15.5 }}>Not here? Add it to Melo</Text>
+          <Icon name="plus.circle.fill" size={22} color={C.blue} /><Text style={{ fontFamily: F.semibold, color: C.blue, fontSize: 15.5 }}>Still missing? Add it by hand</Text>
         </Pressable>
       </View> : <>
         <SectionTitle title="Genres" />

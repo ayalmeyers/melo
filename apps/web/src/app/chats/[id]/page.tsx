@@ -2,13 +2,15 @@
 import Link from 'next/link';
 import { use, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ARTISTS, GENRES, LIMITS, type Message, type Profile } from '@melo/core';
+import { GENRES, LIMITS, type Message, type Profile } from '@melo/core';
 import { useMelo } from '@/components/session';
 import { Avatar, Icon } from '@/components/ui';
+import { useArtist } from '@/components/interactive';
 
 function Shared({ m }: { m: Message }) {
+  const artist = useArtist(m.share_type === 'artist' ? m.share_id : null);
   const href = m.share_type === 'post' ? `/p/${m.share_id}` : m.share_type === 'forecast' ? `/forecasts/${m.share_id}` : m.share_type === 'artist' ? `/artist/${m.share_id}` : m.share_type === 'genre' ? `/genre/${m.share_id}` : m.share_type === 'item' ? `/album/${m.share_id}` : '#';
-  const label = m.share_type === 'artist' ? ARTISTS[m.share_id!]?.name : m.share_type === 'genre' ? '#' + GENRES[m.share_id!]?.name : 'Open';
+  const label = m.share_type === 'artist' ? artist?.name ?? 'Artist' : m.share_type === 'genre' ? '#' + GENRES[m.share_id!]?.name : 'Open';
   return <Link href={href} className="shared"><span className="k">Shared {m.share_type}</span><b>{label}</b></Link>;
 }
 

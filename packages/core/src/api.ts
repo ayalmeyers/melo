@@ -1,6 +1,7 @@
+import type { AppleResult } from './apple';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
-  CatalogItem, Chat, ChatMember, Comment, FeedPost, FollowKind, Forecast, ForecastConsensus, ItemRating,
+  Artist, CatalogItem, Chat, ChatMember, Comment, FeedPost, FollowKind, Forecast, ForecastConsensus, ItemRating,
   LogEntry, Message, Moment, PostKind, Profile, ProfileStats, RadarRow, ShareType, Target, WikiPage,
 } from './types';
 
@@ -76,6 +77,12 @@ export function createApi(sb: SupabaseClient) {
       if (filter.type) q = q.eq('type', filter.type);
       return ok(await q);
     },
+    async artist(id: string): Promise<Artist | null> { return ok(await sb.from('artists').select('*').eq('id', id).maybeSingle()); },
+    async artists(ids: string[]): Promise<Artist[]> { if (!ids.length) return []; return ok(await sb.from('artists').select('*').in('id', [...new Set(ids)])); },
+    async searchArtists(q: string, limit = 8): Promise<Artist[]> { const s = q.replace(/[%,()]/g, ' ').trim(); if (s.length < 2) return []; return ok(await sb.from('artists').select('*').ilike('name', `%${s}%`).limit(limit)); },
+    async artistsByGenre(genre: string, limit = 60): Promise<Artist[]> { return ok(await sb.from('artists').select('*').contains('genres', [genre]).order('name').limit(limit)); },
+    /** Adds an album, podcast or episode from Apple's catalog (or finds the existing page) and returns its Melo id. */
+    async importApple(r: AppleResult): Promise<string> { await need(); return ok(await sb.rpc('import_apple', { p: r })) as string; },
     async searchItems(q: string, limit = 20): Promise<CatalogItem[]> { const s = q.replace(/[%,()]/g, ' ').trim(); if (!s) return []; return ok(await sb.from('catalog_items').select('*').or(`title.ilike.%${s}%,artist_name.ilike.%${s}%`).limit(limit)); },
     async addItem(it: { type: 'album' | 'episode'; title: string; artist_name: string; artist_id?: string | null; show_id?: string | null; year?: number | null; cc: string; genre: string; dur_min?: number | null }): Promise<string> {
       const by = await need();

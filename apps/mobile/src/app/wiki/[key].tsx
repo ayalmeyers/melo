@@ -4,7 +4,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { ago, ARTISTS, GENRES } from '@melo/core';
 import { api } from '../../lib/supabase';
 import { useSession } from '../../lib/session';
-import { cachedItem, fail, go, useLoad } from '../../lib/hooks';
+import { cachedArtist, cachedItem, fail, go, useLoad } from '../../lib/hooks';
 import { Button, Input, T } from '../../components/ui';
 
 export default function WikiEdit() {
@@ -17,7 +17,7 @@ export default function WikiEdit() {
   const [busy, setBusy] = useState(false);
   const [kind, id] = k.split(':');
   const fallback = kind === 'r' ? ARTISTS[id]?.wiki : kind === 'g' ? GENRES[id]?.wiki : '';
-  const label = kind === 'r' ? ARTISTS[id]?.name : kind === 'g' ? GENRES[id]?.name : cachedItem(id)?.title ?? id;
+  const label = kind === 'r' ? cachedArtist(id)?.name ?? ARTISTS[id]?.name : kind === 'g' ? GENRES[id]?.name : cachedItem(id)?.title ?? id;
   useEffect(() => { if (!page.loading) setBody(page.data?.body ?? fallback ?? ''); }, [page.loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const save = async () => {

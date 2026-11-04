@@ -13,9 +13,11 @@ import { Band, Button, Empty, Icon, Sheet, T } from './ui';
 import { C, F } from './theme';
 
 /** Shared page for artists and genres: a community board, a wiki, and the catalog. Like a subreddit with a record shelf. */
-export function Board({ kind, id, name, sub, art, wikiKey, wikiFallback, sharePath, items }: {
+export function Board({ kind, id, name, sub, art, wikiKey, wikiFallback, sharePath, items, recordsExtra }: {
   kind: Extract<FollowKind, 'artist' | 'genre'>; id: string; name: string; sub: string; art: React.ReactNode;
   wikiKey: string; wikiFallback: string; sharePath: string; items: () => Promise<CatalogItem[]>;
+  /** Shown under the records tab, e.g. the rest of an artist's discography from Apple. */
+  recordsExtra?: (have: Set<string>) => React.ReactNode;
 }) {
   const { user } = useSession();
   const [tab, setTab] = useState<'board' | 'records' | 'wiki'>('board');
@@ -50,6 +52,7 @@ export function Board({ kind, id, name, sub, art, wikiKey, wikiFallback, sharePa
       </>}
       {tab === 'records' && (records.data && !records.data.length ? <Empty text="Nothing in the catalog yet." /> : (records.data ?? []).map(it => <ItemRow key={it.id} it={it} />))}
       {tab === 'wiki' && <WikiBox wkey={wikiKey} fallback={wikiFallback} />}
+      {tab === 'records' && recordsExtra?.(new Set((records.data ?? []).map(r => r.id)))}
       {tab === 'records' && <Button kind="ghost" icon="plus" title="Add a record" onPress={() => go(`/add-item${kind === 'artist' ? `?artist=${id}` : `?genre=${id}`}`)} />}
     </Sheet>
   </Screen>;

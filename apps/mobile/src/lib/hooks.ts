@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Share } from 'react-native';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { artistName, genreName, MeloError, type CatalogItem, type Target } from '@melo/core';
+import { artistName, genreName, MeloError, type Artist, type CatalogItem, type Target } from '@melo/core';
 import { api, WEB_URL } from './supabase';
 
 /** Load data, with reload for pull-to-refresh and setData for optimistic updates. */
@@ -32,8 +32,18 @@ export async function loadItems(ids: string[]) {
 }
 export const cachedItem = (id: string) => itemCache.get(id);
 export const rememberItem = (it: CatalogItem) => itemCache.set(it.id, it);
+
+/* Artists, seeded and imported from Apple, cached the same way. */
+const artistCache = new Map<string, Artist>();
+export async function loadArtists(ids: string[]) {
+  const missing = [...new Set(ids)].filter(id => !artistCache.has(id));
+  if (missing.length) (await api.artists(missing).catch(() => [])).forEach(a => artistCache.set(a.id, a));
+  return artistCache;
+}
+export const cachedArtist = (id: string) => artistCache.get(id);
+export const rememberArtist = (a: Artist) => artistCache.set(a.id, a);
 export function targetLabel(t: Target) {
-  if (t.type === 'artist') return artistName(t.id);
+  if (t.type === 'artist') return artistCache.get(t.id)?.name ?? artistName(t.id);
   if (t.type === 'genre') return genreName(t.id) || t.id;
   return itemCache.get(t.id)?.title ?? 'Album';
 }

@@ -1,4 +1,4 @@
-import { coverSvg, hash, initials, itemCover, artistCover, genreCover, type CatalogItem, type Cover as CoverT } from '@melo/core';
+import { appleArt, coverSvg, hash, initials, itemCover, artistCover, genreCover, type CatalogItem, type Cover as CoverT } from '@melo/core';
 
 const PATHS: Record<string, string> = {
   home: '<path d="M3.5 10.2 12 3.5l8.5 6.7V19.5a1.5 1.5 0 0 1-1.5 1.5h-4.2v-6h-5.6v6H5a1.5 1.5 0 0 1-1.5-1.5z"/>',
@@ -32,8 +32,15 @@ export function Art({ cover, label, size, round, className = '' }: { cover: Cove
   const uid = 'c' + hash(label + JSON.stringify(cover.shapes.length) + cover.from).toString(36);
   return <div className={`art ${round ? 'round' : ''} ${className}`} style={size ? { width: size } : undefined} dangerouslySetInnerHTML={{ __html: coverSvg(cover, uid, label) }} />;
 }
-export const ItemArt = ({ item, size, className }: { item: Pick<CatalogItem, 'id' | 'title' | 'type'>; size?: number; className?: string }) => <Art cover={itemCover(item)} label={item.title} size={size} className={className} />;
-export const ArtistArt = ({ id, name, size }: { id: string; name?: string; size?: number }) => <Art cover={artistCover(id, name)} label={name ?? id} size={size} round />;
+/** Apple artwork when Melo has it (shown with a link back to Apple on the item's page), else the generated cover. */
+function Photo({ src, label, size, round, className = '' }: { src: string; label: string; size?: number; round?: boolean; className?: string }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  return <div className={`art ${round ? 'round' : ''} ${className}`} style={size ? { width: size } : undefined}><img src={appleArt(src, size && size <= 64 ? 200 : 600)} alt={label} loading="lazy" decoding="async" /></div>;
+}
+export const ItemArt = ({ item, size, className }: { item: Pick<CatalogItem, 'id' | 'title' | 'type'> & { artwork_url?: string | null }; size?: number; className?: string }) =>
+  item.artwork_url ? <Photo src={item.artwork_url} label={item.title} size={size} className={className} /> : <Art cover={itemCover(item)} label={item.title} size={size} className={className} />;
+export const ArtistArt = ({ id, name, size, art }: { id: string; name?: string; size?: number; art?: string | null }) =>
+  art ? <Photo src={art} label={name ?? id} size={size} round /> : <Art cover={artistCover(id, name)} label={name ?? id} size={size} round />;
 export const GenreArt = ({ id, size }: { id: string; size?: number }) => <Art cover={genreCover(id)} label={id} size={size} />;
 
 export function Avatar({ name, color, size = '' }: { name: string; color?: string; size?: '' | 'xs' | 'lg' | 'xl' }) {

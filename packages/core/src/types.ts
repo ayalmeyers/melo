@@ -15,9 +15,24 @@ export interface CatalogItem {
   cc: string;
   genre: string | null;
   dur_min: number | null;
-  source: 'seed' | 'user';
+  source: 'seed' | 'user' | 'apple';
   added_by: string | null;
   created_at: string;
+  apple_id?: number | null;
+  artwork_url?: string | null;
+  apple_url?: string | null;
+  release_date?: string | null;
+  track_count?: number | null;
+}
+
+export interface Artist {
+  id: string;
+  name: string;
+  cc: string;
+  genres: string[];
+  apple_id?: number | null;
+  artwork_url?: string | null;
+  source?: 'seed' | 'apple';
 }
 
 export interface Profile {

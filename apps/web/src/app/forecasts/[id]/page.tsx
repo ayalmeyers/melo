@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ARTISTS, GENRES } from '@melo/core';
+import { GENRES } from '@melo/core';
+import { TargetChip } from '@/components/interactive';
 import { serverApi, safe } from '@/lib/server';
 import { Comments, ForecastPanel } from '@/components/interactive';
 import { Avatar, Gauge } from '@/components/ui';
@@ -17,7 +18,7 @@ export default async function ForecastPage({ params }: P) {
   const myP = f.preds.find(p => p.user_id === me)?.p ?? null;
   const closed = new Date(f.closes_on + 'T23:59:59') < new Date();
   const dist = f.c?.distribution ?? Array(10).fill(0); const mx = Math.max(1, ...dist);
-  const tgt = f.target_type === 'artist' && f.target_id ? <Link className="tchip" href={`/artist/${f.target_id}`}>{ARTISTS[f.target_id]?.name}</Link> : f.target_type === 'genre' && f.target_id ? <Link className="tchip" href={`/genre/${f.target_id}`}>#{GENRES[f.target_id]?.name}</Link> : f.target_type === 'item' && f.target_id ? <Link className="tchip" href={`/album/${f.target_id}`}>Open the album</Link> : null;
+  const tgt = f.target_type === 'artist' && f.target_id ? <TargetChip t={{ type: 'artist', id: f.target_id }} /> : f.target_type === 'genre' && f.target_id ? <Link className="tchip" href={`/genre/${f.target_id}`}>#{GENRES[f.target_id]?.name}</Link> : f.target_type === 'item' && f.target_id ? <Link className="tchip" href={`/album/${f.target_id}`}>Open the album</Link> : null;
   return <section className="wrap sec"><div className="two">
     <div className="stack" style={{ gap: 22, minWidth: 0 }}>
       <Link href="/forecasts" style={{ color: 'var(--blue)', fontWeight: 600 }}>← All forecasts</Link>

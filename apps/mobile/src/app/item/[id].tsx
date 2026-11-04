@@ -9,6 +9,8 @@ import { Screen, Seg } from '../../components/screen';
 import { moderate, PostList } from '../../components/post';
 import { WikiBox } from '../../components/social';
 import { ItemRow } from '../../components/rows';
+import { AppleSection } from '../../components/apple';
+import { apple } from '../../lib/apple';
 import { Band, Button, Empty, Icon, Input, ItemCover, Sheet, T } from '../../components/ui';
 import { C, F } from '../../components/theme';
 
@@ -20,6 +22,14 @@ export default function ItemScreen() {
   const rating = useLoad(async () => (await api.ratings([id]))[id] ?? null, [id]);
   const posts = useLoad(() => api.feed('hot', { target: { type: 'item', id }, limit: 60 }), [id]);
   const episodes = useLoad(() => (item.data?.type === 'show' ? api.itemsBy({ show: id }, 100) : Promise.resolve([])), [id, item.data?.type]);
+  // A podcast's newest episodes straight from Apple; tapping one adds it to Melo.
+  const latest = useLoad(async () => {
+    const show = item.data;
+    if (!show || show.type !== 'show') return null;
+    let appleId = show.apple_id ?? null;
+    if (!appleId) appleId = (await apple.search(show.title, 'show', 5)).find(r => r.title.toLowerCase() === show.title.toLowerCase())?.apple_id ?? null;
+    return appleId ? apple.episodes(appleId, 25) : [];
+  }, [id, item.data?.type]);
   const moments = useLoad(() => api.moments(id), [id]);
   const [mBody, setMBody] = useState(''); const [mT, setMT] = useState('');
 
@@ -65,7 +75,7 @@ export default function ItemScreen() {
       </View>
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <Button small kind="dark" style={{ flex: 1 }} title="Spotify" icon="play.circle" onPress={() => Linking.openURL(`https://open.spotify.com/search/${q}`)} />
-        <Button small kind="dark" style={{ flex: 1 }} title="Apple Music" icon="music.note" onPress={() => Linking.openURL(it.type === 'album' ? `https://music.apple.com/search?term=${q}` : `https://podcasts.apple.com/search?term=${q}`)} />
+        <Button small kind="dark" style={{ flex: 1 }} title={it.type === 'album' ? 'Apple Music' : 'Apple Podcasts'} icon="music.note" onPress={() => Linking.openURL(it.apple_url ?? (it.type === 'album' ? `https://music.apple.com/search?term=${q}` : `https://podcasts.apple.com/search?term=${q}`))} />
       </View>
       <Seg value={tab} onChange={setTab} options={[['reviews', `Reviews ${reviews.length || ''}`], ['threads', `Board ${threads.length || ''}`], ['moments', 'Moments'], ['about', it.type === 'show' ? 'Episodes' : 'Wiki']]} />
     </Band>
@@ -87,7 +97,10 @@ export default function ItemScreen() {
         </Pressable>)}
       </>}
       {tab === 'about' && (it.type === 'show'
-        ? <>{episodes.data && !episodes.data.length ? <Empty text="No episodes added yet." /> : (episodes.data ?? []).map(e => <ItemRow key={e.id} it={e} />)}
+        ? <>{!!episodes.data?.length && <T.H2>On Melo</T.H2>}
+          {(episodes.data ?? []).map(e => <ItemRow key={e.id} it={e} />)}
+          <AppleSection title="Latest episodes" results={latest.data ?? null} have={new Set((episodes.data ?? []).map(e => e.id))} />
+          {episodes.data && !episodes.data.length && latest.data && !latest.data.length && <Empty text="No episodes yet." />}
           <Button kind="ghost" title="Add an episode" icon="plus" onPress={() => go(`/add-item?type=episode&show=${id}`)} /></>
         : <WikiBox wkey={`a:${id}`} />)}
     </Sheet>

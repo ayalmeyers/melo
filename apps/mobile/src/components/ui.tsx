@@ -2,8 +2,10 @@ import { useMemo, useRef } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View, type PressableProps, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Path, Polygon, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import { SymbolView } from 'expo-symbols';
+import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
-import { artistCover, genreCover, hash, initials, itemCover, type CatalogItem, type Cover as CoverT } from '@melo/core';
+import { appleArt, artistCover, genreCover, hash, initials, itemCover, type CatalogItem, type Cover as CoverT } from '@melo/core';
+import { cachedArtist, cachedItem } from '../lib/hooks';
 import { C, F, R } from './theme';
 
 /* ---------- text ---------- */
@@ -43,8 +45,18 @@ export function Cover({ cover, size, radius = 12, round }: { cover: CoverT; size
     </Svg>
   </View>;
 }
-export const ItemCover = ({ item, size, radius }: { item: Pick<CatalogItem, 'id' | 'title' | 'type'>; size: number; radius?: number }) => <Cover cover={itemCover(item)} size={size} radius={radius} />;
-export const ArtistCover = ({ id, size }: { id: string; size: number }) => <Cover cover={artistCover(id)} size={size} round />;
+/** Real artwork from Apple when Melo has it, otherwise the generated cover. */
+function Art({ uri, size, radius, round }: { uri: string; size: number; radius: number; round?: boolean }) {
+  return <Image source={{ uri: appleArt(uri, size <= 64 ? 200 : 600) }} style={{ width: size, height: size, borderRadius: round ? size / 2 : radius, backgroundColor: C.mist }} contentFit="cover" transition={150} recyclingKey={uri} accessibilityIgnoresInvertColors />;
+}
+export const ItemCover = ({ item, size, radius = 12 }: { item: Pick<CatalogItem, 'id' | 'title' | 'type'> & { artwork_url?: string | null }; size: number; radius?: number }) => {
+  const art = item.artwork_url ?? cachedItem(item.id)?.artwork_url;
+  return art ? <Art uri={art} size={size} radius={radius} /> : <Cover cover={itemCover(item)} size={size} radius={radius} />;
+};
+export const ArtistCover = ({ id, size, art }: { id: string; size: number; art?: string | null }) => {
+  const a = cachedArtist(id); const uri = art ?? a?.artwork_url;
+  return uri ? <Art uri={uri} size={size} radius={0} round /> : <Cover cover={artistCover(id, a?.name)} size={size} round />;
+};
 export const GenreCover = ({ id, size, radius }: { id: string; size: number; radius?: number }) => <Cover cover={genreCover(id)} size={size} radius={radius} />;
 
 /* ---------- avatars, stars ---------- */

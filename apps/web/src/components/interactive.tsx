@@ -3,10 +3,12 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
+  type Artist,
   ARTISTS, CNAME, EMAIL_RE, FLAG, GENRES, LIMITS, SHOWS, ago, flag, genreName, mmss, parseTimestamp, starsText,
   type CatalogItem, type Comment, type FeedPost, type FollowKind, type Moment, type Target,
 } from '@melo/core';
 import { useMelo } from './session';
+import { AppleSection, useAppleSearch } from './apple';
 import { ArtistArt, Avatar, GenreArt, Icon, ItemArt, Stars } from './ui';
 
 /* ---------------- nav ---------------- */
@@ -54,8 +56,24 @@ export function WaitlistForm({ source = 'home' }: { source?: string }) {
 }
 
 /* ---------------- targets ---------------- */
+const artistCache = new Map<string, Promise<Artist | null>>();
+/** Artist name and art for imported artists (seeded ones are known up front). */
+export function useArtist(id: string | null | undefined) {
+  const { api } = useMelo();
+  const [a, setA] = useState<Artist | null>(id && ARTISTS[id] ? { id, name: ARTISTS[id].name, cc: ARTISTS[id].cc, genres: ARTISTS[id].genres } : null);
+  useEffect(() => {
+    if (!id) return;
+    if (!artistCache.has(id)) artistCache.set(id, api.artist(id).catch(() => null));
+    let alive = true; artistCache.get(id)!.then(r => { if (alive && r) setA(r); }); return () => { alive = false; };
+  }, [api, id]);
+  return a;
+}
+function ArtistChip({ id }: { id: string }) {
+  const a = useArtist(id);
+  return <Link className="tchip" href={`/artist/${id}`}><ArtistArt id={id} name={a?.name} art={a?.artwork_url} size={24} /><span>{a?.name ?? 'Artist'}</span></Link>;
+}
 export function TargetChip({ t, items }: { t: Target; items?: Record<string, CatalogItem> }) {
-  if (t.type === 'artist') { const a = ARTISTS[t.id]; return a ? <Link className="tchip" href={`/artist/${t.id}`}><ArtistArt id={t.id} size={24} /><span>{a.name}</span></Link> : null; }
+  if (t.type === 'artist') return <ArtistChip id={t.id} />;
   if (t.type === 'genre') { const g = GENRES[t.id]; return g ? <Link className="tchip" href={`/genre/${t.id}`}><span className="gdot">#</span><span>{g.name}</span></Link> : null; }
   const it = items?.[t.id];
   return <Link className="tchip" href={`/album/${t.id}`}>{it && <ItemArt item={it} size={24} />}<span>{it ? `${it.title} · ${it.artist_name}` : 'Open'}</span></Link>;
@@ -241,16 +259,17 @@ export function ComposeModal() {
   const { compose, closeCompose, api, toast } = useMelo(); const router = useRouter();
   const [kind, setKind] = useState<'review' | 'take' | 'thread' | 'forecast'>('review');
   const [target, setTarget] = useState<Target | null>(null); const [targetItem, setTargetItem] = useState<CatalogItem | null>(null);
-  const [q, setQ] = useState(''); const [results, setResults] = useState<CatalogItem[]>([]);
+  const [q, setQ] = useState(''); const [results, setResults] = useState<CatalogItem[]>([]); const [artistHits, setArtistHits] = useState<Artist[]>([]);
   const [rating, setRating] = useState(0); const [liked, setLiked] = useState(false);
   const [title, setTitle] = useState(''); const [body, setBody] = useState(''); const [detail, setDetail] = useState(''); const [closes, setCloses] = useState(''); const [spoiler, setSpoiler] = useState(false);
   const [busy, setBusy] = useState(false); const [adding, setAdding] = useState(false);
   useEffect(() => { if (compose) { setKind(compose.kind ?? 'review'); setTarget(compose.target ?? null); setRating(0); setTitle(''); setBody(''); setDetail(''); setCloses(''); setQ(''); setLiked(false); setSpoiler(false); setAdding(false); } }, [compose]);
   useEffect(() => { if (target?.type === 'item') api.item(target.id).then(setTargetItem).catch(() => setTargetItem(null)); else setTargetItem(null); }, [api, target]);
-  useEffect(() => { const t = setTimeout(() => { if (q.trim()) api.searchItems(q, 8).then(setResults).catch(() => {}); else setResults([]); }, 200); return () => clearTimeout(t); }, [api, q]);
+  useEffect(() => { const t = setTimeout(() => { if (q.trim()) { api.searchItems(q, 8).then(setResults).catch(() => {}); api.searchArtists(q, 4).then(setArtistHits).catch(() => {}); } else { setResults([]); setArtistHits([]); } }, 200); return () => clearTimeout(t); }, [api, q]);
+  const fromApple = useAppleSearch(compose && !target ? q : '', ['album', 'episode'], 6);
+  const targetArtist = useArtist(target?.type === 'artist' ? target.id : null);
   if (!compose) return null;
   const lim = kind === 'take' ? LIMITS.take : kind === 'thread' ? LIMITS.thread : kind === 'forecast' ? LIMITS.question : LIMITS.review;
-  const artistHits = q.trim() ? Object.entries(ARTISTS).filter(([, a]) => a.name.toLowerCase().includes(q.toLowerCase())).slice(0, 4) : [];
   const genreHits = q.trim() ? Object.entries(GENRES).filter(([, g]) => g.name.toLowerCase().includes(q.toLowerCase())).slice(0, 3) : [];
   async function submit() {
     setBusy(true);
@@ -274,19 +293,20 @@ export function ComposeModal() {
       }
     } catch (e) { toast((e as Error).message); } finally { setBusy(false); }
   }
-  const targetLabel = target ? target.type === 'artist' ? ARTISTS[target.id]?.name : target.type === 'genre' ? '#' + GENRES[target.id]?.name : targetItem ? `${targetItem.title} · ${targetItem.artist_name}` : '…' : null;
+  const targetLabel = target ? target.type === 'artist' ? targetArtist?.name ?? 'Artist' : target.type === 'genre' ? '#' + GENRES[target.id]?.name : targetItem ? `${targetItem.title} · ${targetItem.artist_name}` : '…' : null;
   return (
     <div className="modal-bg" onClick={e => { if (e.target === e.currentTarget) closeCompose(); }}>
       <div className="modal" role="dialog" aria-modal="true" aria-labelledby="compose-h">
         <div className="modal-h"><h2 id="compose-h">{{ review: 'Log and review', take: 'Make a take', thread: 'Start a thread', forecast: 'Ask the crowd' }[kind]}</h2><button className="x" onClick={closeCompose} aria-label="Close"><Icon name="x" size={18} /></button></div>
         <div className="seg">{(['review', 'take', 'thread', 'forecast'] as const).map(k => <button key={k} className={kind === k ? 'on' : ''} onClick={() => { setKind(k); if (k === 'review' && target && target.type !== 'item') setTarget(null); }}>{{ review: 'Review', take: 'Take', thread: 'Thread', forecast: 'Forecast' }[k]}</button>)}</div>
         {adding ? <AddItemForm initialTitle={q} onDone={id => { setAdding(false); if (id) { setTarget({ type: 'item', id }); setQ(''); } }} />
-          : target ? <div className="card row" style={{ padding: 10 }}>{target.type === 'item' && targetItem ? <ItemArt item={targetItem} size={48} /> : target.type === 'artist' ? <ArtistArt id={target.id} size={48} /> : <GenreArt id={target.id} size={48} />}<b style={{ flex: 1, minWidth: 0 }}>{targetLabel}</b><button className="x" onClick={() => setTarget(null)} aria-label="Change"><Icon name="x" size={16} /></button></div>
+          : target ? <div className="card row" style={{ padding: 10 }}>{target.type === 'item' && targetItem ? <ItemArt item={targetItem} size={48} /> : target.type === 'artist' ? <ArtistArt id={target.id} name={targetArtist?.name} art={targetArtist?.artwork_url} size={48} /> : <GenreArt id={target.id} size={48} />}<b style={{ flex: 1, minWidth: 0 }}>{targetLabel}</b><button className="x" onClick={() => setTarget(null)} aria-label="Change"><Icon name="x" size={16} /></button></div>
           : <div className="field"><label htmlFor="pick-q">{kind === 'review' ? 'What did you listen to?' : 'About an album, artist or genre (optional)'}</label><input id="pick-q" className="inp" value={q} onChange={e => setQ(e.target.value)} placeholder="Search" autoComplete="off" />
             <div className="pick">
               {results.filter(r => kind !== 'review' || r.type !== 'show').map(r => <button key={r.id} onClick={() => setTarget({ type: 'item', id: r.id })}><ItemArt item={r} size={44} /><span><b>{r.title}</b><br /><small className="muted">{r.artist_name} · {r.type}</small></span></button>)}
-              {kind !== 'review' && artistHits.map(([id, a]) => <button key={id} onClick={() => setTarget({ type: 'artist', id })}><ArtistArt id={id} size={44} /><span><b>{a.name}</b><br /><small className="muted">Artist</small></span></button>)}
+              {kind !== 'review' && artistHits.map(a => <button key={a.id} onClick={() => setTarget({ type: 'artist', id: a.id })}><ArtistArt id={a.id} name={a.name} art={a.artwork_url} size={44} /><span><b>{a.name}</b><br /><small className="muted">Artist</small></span></button>)}
               {kind !== 'review' && genreHits.map(([id, g]) => <button key={id} onClick={() => setTarget({ type: 'genre', id })}><GenreArt id={id} size={44} /><span><b>#{g.name}</b><br /><small className="muted">Genre</small></span></button>)}
+              <AppleSection title="More from Apple" results={fromApple} have={new Set(results.map(r => r.id))} onPick={id => { setTarget({ type: 'item', id }); setQ(''); }} />
               {q.trim() && <button onClick={() => setAdding(true)}><span className="art" style={{ width: 44, display: 'grid', placeItems: 'center' }}><Icon name="plus" /></span><span><b>Add “{q}” to Melo</b><br /><small className="muted">An album or podcast episode that is missing</small></span></button>}
             </div></div>}
         {kind === 'review' && <div className="field"><label>Your rating</label><div className="row"><StarInput value={rating} onChange={setRating} /><b style={{ fontSize: 20 }}>{rating ? starsText(rating) : '–'}</b><button className={`act heart ${liked ? 'on' : ''}`} onClick={() => setLiked(!liked)} aria-pressed={liked} aria-label="Like"><Icon name="heart" size={24} /></button></div></div>}

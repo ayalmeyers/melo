@@ -8,4 +8,5 @@ $DB -f supabase/tests/shim.sql
 for f in supabase/migrations/*.sql; do $DB -f "$f"; done
 $DB -f supabase/seed.sql
 $DB -f supabase/tests/security.sql
+for f in supabase/tests/*.sql; do case "$f" in */shim.sql|*/security.sql) ;; *) $DB -f "$f" ;; esac; done
 echo "database tests passed"

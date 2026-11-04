@@ -4,7 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { ago, flag, type FeedPost, type Target } from '@melo/core';
 import { api } from '../lib/supabase';
 import { useSession } from '../lib/session';
-import { fail, go, loadItems, shareLink, targetHref, targetLabel } from '../lib/hooks';
+import { fail, go, loadArtists, loadItems, shareLink, targetHref, targetLabel } from '../lib/hooks';
 import { Avatar, Empty, Icon, ItemCover, ArtistCover, GenreCover, Stars, T } from './ui';
 import { C, F } from './theme';
 
@@ -102,7 +102,10 @@ export function usePostState(posts: FeedPost[] | null) {
     const ps = posts ?? [];
     setList(ps);
     const ids = ps.map(p => p.id);
-    loadItems(ps.filter(p => p.target_type === 'item' && p.target_id).map(p => p.target_id!)).then(() => setList(l => [...l]));
+    Promise.all([
+      loadItems(ps.filter(p => p.target_type === 'item' && p.target_id).map(p => p.target_id!)),
+      loadArtists(ps.filter(p => p.target_type === 'artist' && p.target_id).map(p => p.target_id!)),
+    ]).then(() => setList(l => [...l]));
     if (user && ids.length) Promise.all([api.myReactions(ids), api.myVotes(ids)]).then(([reacts, votes]) => setMine({ reacts, votes })).catch(() => {});
   }, [posts, user]);
   const render = (p: FeedPost, extra: { full?: boolean; hideTarget?: boolean } = {}) => <PostCard key={p.id} post={p} {...extra}

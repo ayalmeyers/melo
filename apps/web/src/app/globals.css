@@ -85,6 +85,8 @@ textarea.inp { min-height: 110px; line-height: 1.45; resize: vertical; }
 /* art, avatars, stars */
 .art { aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: var(--mist); flex: none; max-width: 100%; }
 .art svg { width: 100%; height: 100%; }
+.art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.apple-note { font-size: 12.5px; color: var(--dim); }
 .art.round { border-radius: 50%; }
 .av { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 13px; flex: none; }
 .av.xs { width: 26px; height: 26px; font-size: 10.5px; }

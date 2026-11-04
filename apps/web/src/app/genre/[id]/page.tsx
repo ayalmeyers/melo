@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ARTISTS, GENRES, flag } from '@melo/core';
+import { ARTISTS, GENRES, flag, type Artist } from '@melo/core';
 import { serverApi, safe } from '@/lib/server';
 import { ComposeButton, FollowButton, PostList, WikiBox } from '@/components/interactive';
 import { ArtistArt, GenreArt, ItemArt } from '@/components/ui';
@@ -13,7 +13,7 @@ export default async function GenrePage({ params, searchParams }: P) {
   const { id } = await params; const { tab: tp } = await searchParams;
   const g = GENRES[id]; if (!g) notFound();
   const api = await serverApi();
-  const artists = Object.entries(ARTISTS).filter(([, a]) => a.genres.includes(id));
+  const artists: Artist[] = await safe(() => api.artistsByGenre(id, 200), Object.entries(ARTISTS).filter(([, a]) => a.genres.includes(id)).map(([aid, a]) => ({ id: aid, name: a.name, cc: a.cc, genres: a.genres })));
   const [albums, wiki, board, followers] = await Promise.all([safe(() => api.itemsBy({ genre: id }), []), safe(() => api.wiki('g:' + id), null), safe(() => api.feed('hot', { target: { type: 'genre', id }, limit: 60 }), []), safe(() => api.followCount('genre', id), 0)]);
   const editor = wiki?.updated_by ? await safe(() => api.profile(wiki.updated_by!), null) : null;
   const tab = ['board', 'wiki', 'artists', 'albums'].includes(tp ?? '') ? tp! : 'board';
@@ -25,7 +25,7 @@ export default async function GenrePage({ params, searchParams }: P) {
     </div></section>
     <div className="sheet"><div className="wrap sec" style={{ maxWidth: 820 }}>
       {tab === 'wiki' && <WikiBox wikiKey={'g:' + id} initial={wiki?.body ?? g.wiki} label={g.name} editedBy={editor?.name} editedAt={wiki?.updated_at} rev={wiki?.rev} />}
-      {tab === 'artists' && <div className="stack">{artists.map(([aid, a]) => <Link key={aid} href={`/artist/${aid}`} className="list-row"><ArtistArt id={aid} name={a.name} size={52} /><span className="m"><b>{a.name}</b><small>{flag(a.cc)}</small></span></Link>)}</div>}
+      {tab === 'artists' && <div className="stack">{artists.map(a => <Link key={a.id} href={`/artist/${a.id}`} className="list-row"><ArtistArt id={a.id} name={a.name} art={a.artwork_url} size={52} /><span className="m"><b>{a.name}</b><small>{flag(a.cc)}</small></span></Link>)}</div>}
       {tab === 'albums' && <div className="g3">{albums.map(al => <Link key={al.id} href={`/album/${al.id}`} className="cover-tile"><ItemArt item={al} /><b>{al.title}</b><small>{al.artist_name}</small></Link>)}</div>}
       {tab === 'board' && <div className="stack"><div><ComposeButton kind="thread" target={{ type: 'genre', id }} label="Start a discussion" /></div><PostList posts={board} empty={`The ${g.name} board is empty. Start it.`} /></div>}
     </div></div>
