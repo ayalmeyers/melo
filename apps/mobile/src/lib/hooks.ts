@@ -80,3 +80,11 @@ export function shareMenu(opts: { path: string; message: string; storyPath?: str
   if (Platform.OS === 'ios') ActionSheetIOS.showActionSheetWithOptions({ options: choices, cancelButtonIndex: 2 }, pick);
   else Alert.alert('Share', undefined, [{ text: choices[0], onPress: () => pick(0) }, { text: choices[1], onPress: () => pick(1) }, { text: 'Cancel', style: 'cancel' }]);
 }
+
+/** Genre mosaics: up to four album covers per genre, loaded once per session. */
+export const genreArtCache = new Map<string, string[]>();
+let genreArtLoaded: Promise<void> | null = null;
+export function loadGenreArt() {
+  genreArtLoaded ??= api.genreArt().then(m => { Object.entries(m).forEach(([g, c]) => genreArtCache.set(g, c)); }).catch(() => { genreArtLoaded = null; });
+  return genreArtLoaded;
+}

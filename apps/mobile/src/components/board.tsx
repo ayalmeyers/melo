@@ -13,8 +13,8 @@ import { Band, Button, Empty, Icon, Sheet, T } from './ui';
 import { C, F } from './theme';
 
 /** Shared page for artists and genres: a community board, a wiki, and the catalog. Like a subreddit with a record shelf. */
-export function Board({ kind, id, name, sub, art, wikiKey, wikiFallback, sharePath, items, recordsExtra }: {
-  kind: Extract<FollowKind, 'artist' | 'genre'>; id: string; name: string; sub: string; art: React.ReactNode;
+export function Board({ kind, id, name, sub, art, credit, wikiKey, wikiFallback, sharePath, items, recordsExtra }: {
+  kind: Extract<FollowKind, 'artist' | 'genre'>; id: string; name: string; sub: string; art: React.ReactNode; credit?: React.ReactNode;
   wikiKey: string; wikiFallback: string; sharePath: string; items: () => Promise<CatalogItem[]>;
   /** Shown under the records tab, e.g. the rest of an artist's discography from Apple. */
   recordsExtra?: (have: Set<string>) => React.ReactNode;
@@ -38,6 +38,7 @@ export function Board({ kind, id, name, sub, art, wikiKey, wikiFallback, sharePa
           <Text style={{ fontFamily: F.medium, fontSize: 14, color: C.onInkDim }}>{sub}{followers.data != null ? ` · ${compact(followers.data)} following` : ''}</Text>
         </View>
       </View>
+      {credit}
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <View style={{ flex: 1 }}><FollowButton kind={kind} target={id} small={false} onDark /></View>
         <Button style={{ flex: 1 }} kind="dark" title="Post" icon="square.and.pencil" onPress={() => go(user ? `/compose?kind=thread&target=${kind}:${id}` : '/login')} />

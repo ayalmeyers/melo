@@ -83,6 +83,17 @@ export function createApi(sb: SupabaseClient) {
     async artistsByGenre(genre: string, limit = 60): Promise<Artist[]> { return ok(await sb.from('artists').select('*').contains('genres', [genre]).order('name').limit(limit)); },
     /** Adds an album, podcast or episode from Apple's catalog (or finds the existing page) and returns its Melo id. */
     async importApple(r: AppleResult): Promise<string> { await need(); return ok(await sb.rpc('import_apple', { p: r })) as string; },
+    async setArtistImage(id: string, photo: { url: string; credit: string; source: string } | null) {
+      await need(); ok(await sb.rpc('set_artist_image', { p_id: id, p_url: photo?.url ?? null, p_credit: photo?.credit ?? null, p_source: photo?.source ?? null }));
+    },
+    /** For the admin image backfill. */
+    async artistsMissingImages(limit = 200): Promise<Artist[]> { return ok(await sb.from('artists').select('*').is('image_url', null).limit(limit)); },
+    async itemsMissingArt(limit = 200): Promise<CatalogItem[]> { return ok(await sb.from('catalog_items').select('*').is('artwork_url', null).in('type', ['album', 'show']).limit(limit)); },
+    /** Up to four album covers per genre, for genre mosaics. */
+    async genreArt(): Promise<Record<string, string[]>> {
+      const rows = ok(await sb.from('genre_art').select('*')) as { genre: string; covers: string[] }[];
+      return Object.fromEntries(rows.map(r => [r.genre, r.covers]));
+    },
     async searchItems(q: string, limit = 20): Promise<CatalogItem[]> { const s = q.replace(/[%,()]/g, ' ').trim(); if (!s) return []; return ok(await sb.from('catalog_items').select('*').or(`title.ilike.%${s}%,artist_name.ilike.%${s}%`).limit(limit)); },
     async addItem(it: { type: 'album' | 'episode'; title: string; artist_name: string; artist_id?: string | null; show_id?: string | null; year?: number | null; cc: string; genre: string; dur_min?: number | null }): Promise<string> {
       const by = await need();

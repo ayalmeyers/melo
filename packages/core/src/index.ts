@@ -6,4 +6,6 @@ export * from './scoring';
 export * from './catalog';
 export * from './api';
 export * from './apple';
+export * from './images';
+export * from './artwork';
 export { FLAG, CNAME, ALBUMS, SHOWS } from './catalog-data.js';

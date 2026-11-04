@@ -33,6 +33,10 @@ export interface Artist {
   apple_id?: number | null;
   artwork_url?: string | null;
   source?: 'seed' | 'apple';
+  image_url?: string | null;
+  image_credit?: string | null;
+  image_source?: string | null;
+  image_checked_at?: string | null;
 }
 
 export interface Profile {

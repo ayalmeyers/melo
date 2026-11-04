@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { countryName, flag, genreName } from '@melo/core';
 import { AppleEpisodes } from '@/components/apple';
+import { FixArtwork } from '@/components/artwork';
 import { serverApi, safe } from '@/lib/server';
 import { ComposeButton, ItemRow, LogButton, Moments, PostList, WikiBox, StoryButton } from '@/components/interactive';
 import { Icon, ItemArt } from '@/components/ui';
@@ -36,7 +37,7 @@ export default async function ItemPage({ params, searchParams }: P) {
   const counts: Record<string, number> = { reviews: posts.filter(p => p.kind === 'review').length, takes: posts.filter(p => p.kind === 'take').length, threads: posts.filter(p => p.kind === 'thread').length, moments: moments.length, episodes: episodes.length };
   const q = encodeURIComponent(`${it.artist_name} ${it.title}`);
   const hm = Math.max(1, ...(r?.histogram ?? [0]));
-  return <section className="wrap sec"><div className="two left">
+  return <section className="wrap sec"><FixArtwork item={it} /><div className="two left">
     <aside className="side hero-art">
       <ItemArt item={it} />
       <div className="play-on"><a href={`https://open.spotify.com/search/${q}`} target="_blank" rel="noopener noreferrer"><Icon name="play" size={16} /> Spotify</a><a href={it.apple_url ?? `https://${isEp || isShow ? 'podcasts' : 'music'}.apple.com/us/search?term=${q}`} target="_blank" rel="noopener noreferrer"><Icon name="play" size={16} /> {isEp || isShow ? 'Apple Podcasts' : 'Apple Music'}</a></div>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { ARTISTS, GENRES, SHOWS, artistName, flag, type Artist, type CatalogItem, type Profile } from '@melo/core';
 import { api, configured } from '../../lib/supabase';
-import { go, rememberArtist, rememberItem, useLoad } from '../../lib/hooks';
+import { go, loadArtists, loadGenreArt, rememberArtist, rememberItem, useLoad } from '../../lib/hooks';
 import { AppleSection, useAppleSearch } from '../../components/apple';
 import { Screen } from '../../components/screen';
 import { SectionTitle } from '../../components/post';
@@ -34,6 +34,7 @@ export default function Discover() {
     const byId = Object.fromEntries(items.map(i => [i.id, i]));
     return { rated: rated.map(r => ({ r, it: byId[r.item_id] })).filter(x => x.it), radar, byId };
   }, []);
+  const genreArt = useLoad(() => Promise.all([loadGenreArt(), loadArtists(Object.keys(ARTISTS))]), []);
   const fresh = useLoad(() => configured ? api.itemsBy({ type: 'album' }, 20) : Promise.resolve([]), []);
 
   return <Screen onRefresh={() => Promise.all([top.reload(), fresh.reload()])} keyboard>
@@ -47,7 +48,7 @@ export default function Discover() {
     <Sheet>
       {res ? <View style={{ gap: 14 }}>
         {res.artists.map(a =>
-          <Pressable key={a.id} onPress={() => go(`/artist/${a.id}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}><ArtistCover id={a.id} art={a.artwork_url} size={48} /><View><T.Bold>{a.name}</T.Bold><T.Dim>Artist {flag(a.cc)}</T.Dim></View></Pressable>)}
+          <Pressable key={a.id} onPress={() => go(`/artist/${a.id}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}><ArtistCover id={a.id} art={a.image_url ?? a.artwork_url} size={48} /><View><T.Bold>{a.name}</T.Bold><T.Dim>Artist {flag(a.cc)}</T.Dim></View></Pressable>)}
         {!!res.items.length && <SectionTitle title="On Melo" />}
         {res.items.map(it => <ItemRow key={it.id} it={it} />)}
         {res.people.map(p => <Pressable key={p.id} onPress={() => go(`/user/${p.handle}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}><Avatar name={p.name} color={p.color} size={48} /><View><T.Bold>{p.name}</T.Bold><T.Dim>@{p.handle} {flag(p.cc)}</T.Dim></View></Pressable>)}
@@ -61,7 +62,7 @@ export default function Discover() {
         <SectionTitle title="Genres" />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }} style={{ marginHorizontal: -20 }}>
           <View style={{ width: 8 }} />
-          {Object.entries(GENRES).map(([id, g]) => <Pressable key={id} onPress={() => go(`/genre/${id}`)} style={{ width: 120, gap: 6 }}><GenreCover id={id} size={120} radius={18} /><T.Bold>{g.name}</T.Bold></Pressable>)}
+          {Object.entries(GENRES).map(([id, g]) => <Pressable key={id} onPress={() => go(`/genre/${id}`)} style={{ width: 120, gap: 6 }}><GenreCover key={genreArt.loading ? 'g' : 'G'} id={id} size={120} radius={18} /><T.Bold>{g.name}</T.Bold></Pressable>)}
           <View style={{ width: 8 }} />
         </ScrollView>
 
@@ -81,7 +82,7 @@ export default function Discover() {
         <SectionTitle title="Artists" />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 14 }} style={{ marginHorizontal: -20 }}>
           <View style={{ width: 6 }} />
-          {Object.entries(ARTISTS).map(([id, a]) => <Pressable key={id} onPress={() => go(`/artist/${id}`)} style={{ width: 84, alignItems: 'center', gap: 6 }}><ArtistCover id={id} size={76} /><Text style={{ fontFamily: F.semibold, fontSize: 13, color: C.text, textAlign: 'center' }} numberOfLines={2}>{a.name}</Text></Pressable>)}
+          {Object.entries(ARTISTS).map(([id, a]) => <Pressable key={id} onPress={() => go(`/artist/${id}`)} style={{ width: 84, alignItems: 'center', gap: 6 }}><ArtistCover key={genreArt.loading ? 'a' : 'A'} id={id} size={76} /><Text style={{ fontFamily: F.semibold, fontSize: 13, color: C.text, textAlign: 'center' }} numberOfLines={2}>{a.name}</Text></Pressable>)}
           <View style={{ width: 6 }} />
         </ScrollView>
 

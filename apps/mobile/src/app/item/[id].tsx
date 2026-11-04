@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Linking, Pressable, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { ago, flag, genreName, LIMITS, mmss, parseTimestamp, starsText, type Target } from '@melo/core';
@@ -11,6 +11,7 @@ import { WikiBox } from '../../components/social';
 import { ItemRow } from '../../components/rows';
 import { AppleSection } from '../../components/apple';
 import { apple } from '../../lib/apple';
+import { artwork } from '../../lib/artwork';
 import { Band, Button, Empty, Icon, Input, ItemCover, Sheet, T } from '../../components/ui';
 import { C, F } from '../../components/theme';
 
@@ -19,6 +20,8 @@ export default function ItemScreen() {
   const { user, toast } = useSession();
   const [tab, setTab] = useState<'reviews' | 'threads' | 'moments' | 'about'>('reviews');
   const item = useLoad(async () => { const it = await api.item(id); if (it) rememberItem(it); return it; }, [id]);
+  // Starter albums and hand-added items pick up Apple's artwork the first time someone signed in opens them.
+  useEffect(() => { if (item.data) artwork.item(item.data).then(next => { if (next) { rememberItem(next); item.setData(next); } }); }, [item.data?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const rating = useLoad(async () => (await api.ratings([id]))[id] ?? null, [id]);
   const posts = useLoad(() => api.feed('hot', { target: { type: 'item', id }, limit: 60 }), [id]);
   const episodes = useLoad(() => (item.data?.type === 'show' ? api.itemsBy({ show: id }, 100) : Promise.resolve([])), [id, item.data?.type]);

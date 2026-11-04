@@ -1,8 +1,11 @@
+import { useEffect } from 'react';
+import { Linking, Text } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { ARTISTS, countryName, flag, genreName, type AppleResult, type Artist } from '@melo/core';
 import { api } from '../../lib/supabase';
 import { apple } from '../../lib/apple';
 import { rememberArtist, useLoad } from '../../lib/hooks';
+import { artwork } from '../../lib/artwork';
 import { Board } from '../../components/board';
 import { AppleSection } from '../../components/apple';
 import { Screen } from '../../components/screen';
@@ -25,6 +28,11 @@ export default function ArtistScreen() {
     if (out) rememberArtist(out);
     return out;
   }, [id]);
+  // First visit by a signed-in person looks up a photo for everyone.
+  useEffect(() => {
+    if (!a.data) return;
+    artwork.artist(a.data).then(next => { if (next) { rememberArtist(next); a.setData(next); } });
+  }, [a.data?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const more = useLoad(async () => (a.data ? discography(a.data) : []), [a.data?.id]);
 
   if (!a.data) return <Screen top={false}><Band><T.Display>{a.loading ? '' : 'Not found.'}</T.Display></Band></Screen>;
@@ -32,7 +40,8 @@ export default function ArtistScreen() {
   const where = art.cc ? `${flag(art.cc)} ${countryName(art.cc)}` : '';
   const genres = art.genres.map(genreName).filter(Boolean).join(', ');
   return <Board kind="artist" id={id} name={art.name} sub={[where, genres].filter(Boolean).join(' · ') || 'Artist'}
-    art={<ArtistCover id={id} art={art.artwork_url} size={96} />} wikiKey={`r:${id}`} wikiFallback={ARTISTS[id]?.wiki ?? ''} sharePath={`/artist/${id}`}
+    art={<ArtistCover id={id} art={art.image_url ?? art.artwork_url} size={96} />}
+    credit={art.image_credit ? <Text onPress={() => art.image_source && Linking.openURL(art.image_source)} style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)' }} numberOfLines={1}>{art.image_credit}</Text> : undefined} wikiKey={`r:${id}`} wikiFallback={ARTISTS[id]?.wiki ?? ''} sharePath={`/artist/${id}`}
     items={() => api.itemsBy({ artist: id }, 100)}
     recordsExtra={have => <AppleSection title="More on Apple Music" results={more.data?.filter(r => !have.has('am' + r.apple_id)) ?? null} />} />;
 }

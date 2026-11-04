@@ -84,7 +84,7 @@ export function useArtist(id: string | null | undefined) {
 }
 function ArtistChip({ id }: { id: string }) {
   const a = useArtist(id);
-  return <Link className="tchip" href={`/artist/${id}`}><ArtistArt id={id} name={a?.name} art={a?.artwork_url} size={24} /><span>{a?.name ?? 'Artist'}</span></Link>;
+  return <Link className="tchip" href={`/artist/${id}`}><ArtistArt id={id} name={a?.name} art={a?.image_url ?? a?.artwork_url} size={24} /><span>{a?.name ?? 'Artist'}</span></Link>;
 }
 export function TargetChip({ t, items }: { t: Target; items?: Record<string, CatalogItem> }) {
   if (t.type === 'artist') return <ArtistChip id={t.id} />;
@@ -314,11 +314,11 @@ export function ComposeModal() {
         <div className="modal-h"><h2 id="compose-h">{{ review: 'Log and review', take: 'Make a take', thread: 'Start a thread', forecast: 'Ask the crowd' }[kind]}</h2><button className="x" onClick={closeCompose} aria-label="Close"><Icon name="x" size={18} /></button></div>
         <div className="seg">{(['review', 'take', 'thread', 'forecast'] as const).map(k => <button key={k} className={kind === k ? 'on' : ''} onClick={() => { setKind(k); if (k === 'review' && target && target.type !== 'item') setTarget(null); }}>{{ review: 'Review', take: 'Take', thread: 'Thread', forecast: 'Forecast' }[k]}</button>)}</div>
         {adding ? <AddItemForm initialTitle={q} onDone={id => { setAdding(false); if (id) { setTarget({ type: 'item', id }); setQ(''); } }} />
-          : target ? <div className="card row" style={{ padding: 10 }}>{target.type === 'item' && targetItem ? <ItemArt item={targetItem} size={48} /> : target.type === 'artist' ? <ArtistArt id={target.id} name={targetArtist?.name} art={targetArtist?.artwork_url} size={48} /> : <GenreArt id={target.id} size={48} />}<b style={{ flex: 1, minWidth: 0 }}>{targetLabel}</b><button className="x" onClick={() => setTarget(null)} aria-label="Change"><Icon name="x" size={16} /></button></div>
+          : target ? <div className="card row" style={{ padding: 10 }}>{target.type === 'item' && targetItem ? <ItemArt item={targetItem} size={48} /> : target.type === 'artist' ? <ArtistArt id={target.id} name={targetArtist?.name} art={targetArtist?.image_url ?? targetArtist?.artwork_url} size={48} /> : <GenreArt id={target.id} size={48} />}<b style={{ flex: 1, minWidth: 0 }}>{targetLabel}</b><button className="x" onClick={() => setTarget(null)} aria-label="Change"><Icon name="x" size={16} /></button></div>
           : <div className="field"><label htmlFor="pick-q">{kind === 'review' ? 'What did you listen to?' : 'About an album, artist or genre (optional)'}</label><input id="pick-q" className="inp" value={q} onChange={e => setQ(e.target.value)} placeholder="Search" autoComplete="off" />
             <div className="pick">
               {results.filter(r => kind !== 'review' || r.type !== 'show').map(r => <button key={r.id} onClick={() => setTarget({ type: 'item', id: r.id })}><ItemArt item={r} size={44} /><span><b>{r.title}</b><br /><small className="muted">{r.artist_name} · {r.type}</small></span></button>)}
-              {kind !== 'review' && artistHits.map(a => <button key={a.id} onClick={() => setTarget({ type: 'artist', id: a.id })}><ArtistArt id={a.id} name={a.name} art={a.artwork_url} size={44} /><span><b>{a.name}</b><br /><small className="muted">Artist</small></span></button>)}
+              {kind !== 'review' && artistHits.map(a => <button key={a.id} onClick={() => setTarget({ type: 'artist', id: a.id })}><ArtistArt id={a.id} name={a.name} art={a.image_url ?? a.artwork_url} size={44} /><span><b>{a.name}</b><br /><small className="muted">Artist</small></span></button>)}
               {kind !== 'review' && genreHits.map(([id, g]) => <button key={id} onClick={() => setTarget({ type: 'genre', id })}><GenreArt id={id} size={44} /><span><b>#{g.name}</b><br /><small className="muted">Genre</small></span></button>)}
               <AppleSection title="More from Apple" results={fromApple} have={new Set(results.map(r => r.id))} onPick={id => { setTarget({ type: 'item', id }); setQ(''); }} />
               {q.trim() && <button onClick={() => setAdding(true)}><span className="art" style={{ width: 44, display: 'grid', placeItems: 'center' }}><Icon name="plus" /></span><span><b>Add “{q}” to Melo</b><br /><small className="muted">An album or podcast episode that is missing</small></span></button>}

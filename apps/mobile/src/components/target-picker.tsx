@@ -34,7 +34,7 @@ export function TargetPicker({ value, onChange, itemsOnly }: { value: Target | n
   const row = (key: string, art: React.ReactNode, title: string, sub: string, t: Target) => <Pressable key={key} onPress={() => { onChange(t); setQ(''); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 }}>{art}<View style={{ flex: 1 }}><T.Bold>{title}</T.Bold><T.Dim>{sub}</T.Dim></View></Pressable>;
   return <View style={{ gap: 8 }}>
     <Input value={q} onChangeText={setQ} placeholder={itemsOnly ? 'Search any album or episode' : 'About an album, artist or genre? (optional)'} autoCorrect={false} />
-    {artists.map(a => row('a' + a.id, <ArtistCover id={a.id} art={a.artwork_url} size={40} />, a.name, 'Artist board', { type: 'artist', id: a.id }))}
+    {artists.map(a => row('a' + a.id, <ArtistCover id={a.id} art={a.image_url ?? a.artwork_url} size={40} />, a.name, 'Artist board', { type: 'artist', id: a.id }))}
     {genres.map(([id, g]) => row('g' + id, <GenreCover id={id} size={40} radius={8} />, g.name, 'Genre board', { type: 'genre', id }))}
     {items.map(it => row('i' + it.id, <ItemCover item={it} size={40} radius={8} />, it.title, `${it.artist_name}${it.year ? ' · ' + it.year : ''}`, { type: 'item', id: it.id }))}
     <AppleSection title="More from Apple" results={fromApple} have={have} onPick={id => { onChange({ type: 'item', id }); setQ(''); }} />

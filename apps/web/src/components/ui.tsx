@@ -41,7 +41,11 @@ export const ItemArt = ({ item, size, className }: { item: Pick<CatalogItem, 'id
   item.artwork_url ? <Photo src={item.artwork_url} label={item.title} size={size} className={className} /> : <Art cover={itemCover(item)} label={item.title} size={size} className={className} />;
 export const ArtistArt = ({ id, name, size, art }: { id: string; name?: string; size?: number; art?: string | null }) =>
   art ? <Photo src={art} label={name ?? id} size={size} round /> : <Art cover={artistCover(id, name)} label={name ?? id} size={size} round />;
-export const GenreArt = ({ id, size }: { id: string; size?: number }) => <Art cover={genreCover(id)} label={id} size={size} />;
+/** A genre is a 2×2 mosaic of its album covers once it has four, else a generated cover. */
+export const GenreArt = ({ id, size, covers }: { id: string; size?: number; covers?: string[] }) => covers && covers.length >= 4
+  // eslint-disable-next-line @next/next/no-img-element
+  ? <div className="art mosaic" style={size ? { width: size } : undefined}>{covers.slice(0, 4).map(u => <img key={u} src={appleArt(u, 200)} alt="" loading="lazy" />)}</div>
+  : <Art cover={genreCover(id)} label={id} size={size} />;
 
 export function Avatar({ name, color, size = '' }: { name: string; color?: string; size?: '' | 'xs' | 'lg' | 'xl' }) {
   return <span className={`av ${size}`} style={{ background: color ?? '#047eef' }} aria-hidden="true">{initials(name)}</span>;

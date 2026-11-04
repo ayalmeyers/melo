@@ -5,7 +5,7 @@ import { SymbolView } from 'expo-symbols';
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import { appleArt, artistCover, genreCover, hash, initials, itemCover, type CatalogItem, type Cover as CoverT } from '@melo/core';
-import { cachedArtist, cachedItem } from '../lib/hooks';
+import { cachedArtist, cachedItem, genreArtCache } from '../lib/hooks';
 import { C, F, R } from './theme';
 
 /* ---------- text ---------- */
@@ -53,11 +53,21 @@ export const ItemCover = ({ item, size, radius = 12 }: { item: Pick<CatalogItem,
   const art = item.artwork_url ?? cachedItem(item.id)?.artwork_url;
   return art ? <Art uri={art} size={size} radius={radius} /> : <Cover cover={itemCover(item)} size={size} radius={radius} />;
 };
+/** Artist photo when Melo has one, else their latest album art, else a generated cover. */
 export const ArtistCover = ({ id, size, art }: { id: string; size: number; art?: string | null }) => {
-  const a = cachedArtist(id); const uri = art ?? a?.artwork_url;
+  const a = cachedArtist(id); const uri = art ?? a?.image_url ?? a?.artwork_url;
   return uri ? <Art uri={uri} size={size} radius={0} round /> : <Cover cover={artistCover(id, a?.name)} size={size} round />;
 };
-export const GenreCover = ({ id, size, radius }: { id: string; size: number; radius?: number }) => <Cover cover={genreCover(id)} size={size} radius={radius} />;
+/** A genre is shown as a 2×2 mosaic of its album covers once it has four, else a generated cover. */
+export const GenreCover = ({ id, size, radius = 12, covers }: { id: string; size: number; radius?: number; covers?: string[] }) => {
+  const list = covers ?? genreArtCache.get(id);
+  if (!list || list.length < 4) return <Cover cover={genreCover(id)} size={size} radius={radius} />;
+  const h = size / 2;
+  return <View style={{ width: size, height: size, borderRadius: radius, overflow: 'hidden', flexDirection: 'row', flexWrap: 'wrap', backgroundColor: C.mist }}>
+    {list.slice(0, 4).map(u => <Image key={u} source={{ uri: appleArt(u, 200) }} style={{ width: h, height: h }} contentFit="cover" />)}
+  </View>;
+};
+
 
 /* ---------- avatars, stars ---------- */
 export function Avatar({ name, color, size = 36 }: { name: string; color?: string; size?: number }) {

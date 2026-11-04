@@ -26,7 +26,7 @@ export function SearchBox() {
   return <div className="stack">
     <label className="row" style={{ background: 'var(--ink-2)', borderRadius: 16, padding: '0 16px', height: 54, color: 'var(--on-ink-dim)', flexWrap: 'nowrap' }}><Icon name="search" /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Albums, artists, genres, people" aria-label="Search Melo" style={{ flex: 1, background: 'none', border: 0, outline: 0, color: '#fff', fontSize: 17 }} /></label>
     {ql && <div className="card stack" style={{ color: 'var(--text)' }}>
-      {artists.map(a => <Link key={a.id} className="list-row" href={`/artist/${a.id}`}><ArtistArt id={a.id} name={a.name} art={a.artwork_url} size={48} /><span className="m"><b>{a.name}</b><small>Artist {flag(a.cc)}</small></span></Link>)}
+      {artists.map(a => <Link key={a.id} className="list-row" href={`/artist/${a.id}`}><ArtistArt id={a.id} name={a.name} art={a.image_url ?? a.artwork_url} size={48} /><span className="m"><b>{a.name}</b><small>Artist {flag(a.cc)}</small></span></Link>)}
       {items.map(it => <Link key={it.id} className="list-row" href={`/album/${it.id}`}><ItemArt item={it} size={48} /><span className="m"><b>{it.title}</b><small>{it.artist_name} · {it.type}</small></span></Link>)}
       {genres.map(([id, g]) => <Link key={id} className="list-row" href={`/genre/${id}`}><GenreArt id={id} size={48} /><span className="m"><b>#{g.name}</b><small>Genre</small></span></Link>)}
       {people.map(p => <Link key={p.id} className="list-row" href={`/u/${p.handle}`}><Avatar name={p.name} color={p.color} size="lg" /><span className="m"><b>{p.name}</b><small>@{p.handle}</small></span></Link>)}

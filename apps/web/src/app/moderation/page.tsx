@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { ago, type QueuedReport, type ReportAction } from '@melo/core';
 import { useMelo } from '@/components/session';
+import { ImageBackfill } from '@/components/backfill';
 
 /** Admin report queue. Apple expects reports on user content to be handled within 24 hours. */
 export default function ModerationPage() {
@@ -18,6 +19,7 @@ export default function ModerationPage() {
   }
   return <section className="wrap sec stack" style={{ maxWidth: 820 }}>
     <h1 style={{ fontSize: 34 }}>Moderation</h1>
+    <ImageBackfill />
     <div className="seg">{(['open', 'actioned', 'dismissed'] as const).map(s => <button key={s} className={status === s ? 'on' : ''} onClick={() => setStatus(s)}>{s[0].toUpperCase() + s.slice(1)}</button>)}</div>
     {list && !list.length && <p className="muted">{status === 'open' ? 'Nothing to review.' : 'Nothing here.'}</p>}
     {(list ?? []).map(r => <div key={r.id} className="mod-card">

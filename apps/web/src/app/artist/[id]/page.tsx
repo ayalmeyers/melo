@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ARTISTS, GENRES, countryName, flag, type Artist } from '@melo/core';
 import { AppleDiscography } from '@/components/apple';
+import { FixArtwork } from '@/components/artwork';
 import { serverApi, safe } from '@/lib/server';
 import { ComposeButton, FollowButton, PostList, WikiBox } from '@/components/interactive';
 import { ArtistArt, ItemArt } from '@/components/ui';
@@ -27,8 +28,9 @@ export default async function ArtistPage({ params, searchParams }: P) {
   const posts = [...board, ...albumPosts].sort((x, y) => y.hot - x.hot);
   const items = Object.fromEntries(albums.map(x => [x.id, x]));
   return <>
+    <FixArtwork artist={a} />
     <section className="band ent-band"><div className="wrap stack" style={{ gap: 18 }}>
-      <div className="in"><ArtistArt id={id} name={a.name} art={a.artwork_url} size={120} /><div style={{ flex: 1, minWidth: 220 }}><span className="eyebrow">Artist</span><h1>{a.name}</h1><p className="muted" style={{ fontWeight: 600 }}>{a.cc ? `${flag(a.cc)} ${countryName(a.cc)} · ` : ''}{followers} following</p></div></div>
+      <div className="in"><ArtistArt id={id} name={a.name} art={a.image_url ?? a.artwork_url} size={120} /><div style={{ flex: 1, minWidth: 220 }}><span className="eyebrow">Artist</span><h1>{a.name}</h1><p className="muted" style={{ fontWeight: 600 }}>{a.cc ? `${flag(a.cc)} ${countryName(a.cc)} · ` : ''}{followers} following</p>{a.image_credit && <p className="photo-credit">{a.image_source ? <a href={a.image_source} target="_blank" rel="noopener noreferrer">{a.image_credit}</a> : a.image_credit}</p>}</div></div>
       <div className="row"><FollowButton kind="artist" target={id} dark />{a.genres.filter(g => GENRES[g]).map(g => <Link key={g} className="chip" href={`/genre/${g}`}>#{GENRES[g].name}</Link>)}</div>
       <div className="row">{[['board', 'Board'], ['wiki', 'Wiki'], ['albums', `Albums · ${albums.length}`]].map(([v, l]) => <Link key={v} href={`?tab=${v}`} scroll={false} className={`chip ${tab === v ? 'on' : ''}`}>{l}</Link>)}</div>
     </div></section>
