@@ -55,6 +55,7 @@ export default function Root() {
         <Stack.Screen name="settings" options={{ title: 'Settings' }} />
         <Stack.Screen name="activity" options={{ title: 'Activity' }} />
         <Stack.Screen name="moderation" options={{ title: 'Moderation' }} />
+        <Stack.Screen name="charts" options={{ title: 'Charts' }} />
       </Stack>
     </SessionProvider>
   </GestureHandlerRootView>;

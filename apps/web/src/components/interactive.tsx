@@ -28,7 +28,7 @@ function Bell() {
 export function Nav() {
   const { user, profile, openCompose } = useMelo();
   const path = usePathname();
-  const links: [string, string][] = [['/feed', 'Feed'], ['/explore', 'Explore'], ['/forecasts', 'Forecasts'], ['/chats', 'Chats']];
+  const links: [string, string][] = [['/feed', 'Feed'], ['/explore', 'Explore'], ['/charts', 'Charts'], ['/forecasts', 'Forecasts'], ['/chats', 'Chats']];
   const cur = (h: string) => path === h || path.startsWith(h + '/');
   return (
     <nav className="nav" aria-label="Main">

@@ -7,6 +7,7 @@ import { AppleSection, useAppleSearch } from '../../components/apple';
 import { Screen } from '../../components/screen';
 import { SectionTitle } from '../../components/post';
 import { ItemRow } from '../../components/rows';
+import { ChartRowView, loadChart } from '../../components/chart';
 import { ArtistCover, Avatar, Band, Empty, GenreCover, Icon, Input, ItemCover, Sheet, Stars, T } from '../../components/ui';
 import { C, F } from '../../components/theme';
 
@@ -35,9 +36,10 @@ export default function Discover() {
     return { rated: rated.map(r => ({ r, it: byId[r.item_id] })).filter(x => x.it), radar, byId };
   }, []);
   const genreArt = useLoad(() => Promise.all([loadGenreArt(), loadArtists(Object.keys(ARTISTS))]), []);
+  const chart = useLoad(() => (configured ? loadChart('public', 'albums', 5) : Promise.resolve([])), []);
   const fresh = useLoad(() => configured ? api.itemsBy({ type: 'album' }, 20) : Promise.resolve([]), []);
 
-  return <Screen onRefresh={() => Promise.all([top.reload(), fresh.reload()])} keyboard>
+  return <Screen onRefresh={() => Promise.all([top.reload(), fresh.reload(), chart.reload()])} keyboard>
     <Band>
       <T.Display>Discover</T.Display>
       <View>
@@ -59,6 +61,9 @@ export default function Discover() {
           <Icon name="plus.circle.fill" size={22} color={C.blue} /><Text style={{ fontFamily: F.semibold, color: C.blue, fontSize: 15.5 }}>Still missing? Add it by hand</Text>
         </Pressable>
       </View> : <>
+        <SectionTitle title="This week on Melo" action="Charts" onAction={() => go('/charts')} />
+        {chart.data?.length ? <View style={{ gap: 14 }}>{chart.data.map(r => <ChartRowView key={r.subject_id} r={r} />)}</View> : <T.Dim>The weekly chart fills up as people log what they listen to.</T.Dim>}
+
         <SectionTitle title="Genres" />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }} style={{ marginHorizontal: -20 }}>
           <View style={{ width: 8 }} />

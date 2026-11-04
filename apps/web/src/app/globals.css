@@ -280,3 +280,15 @@ footer a:hover { color: #fff; }
 .art.mosaic img { width: 100%; height: 100%; aspect-ratio: 1; }
 .photo-credit { font-size: 12px; color: var(--on-ink-dim); }
 .photo-credit a { color: inherit; text-decoration: underline; }
+/* charts */
+.chart { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.chart-row { display: flex; align-items: center; gap: 14px; padding: 8px 6px; border-radius: 14px; color: var(--text); }
+.chart-row:hover { background: var(--mist); }
+.chart-row .rk { width: 40px; display: grid; justify-items: center; }
+.chart-row .rk b { font-size: 22px; font-weight: 800; }
+.chart-row .rk b.top { color: var(--blue); }
+.chart-row .art { width: 56px; border-radius: 10px; }
+.chart-row .m { display: grid; min-width: 0; }
+.chart-row .m b, .chart-row .m small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mv { font-size: 12px; font-weight: 700; color: var(--dim); }
+.mv.up { color: #1f9d61; } .mv.down { color: #e5484d; } .mv.new { color: var(--blue); font-size: 10.5px; letter-spacing: .05em; }
