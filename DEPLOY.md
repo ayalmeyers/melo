@@ -128,3 +128,33 @@ npm run web        # http://localhost:3000
 npm run ios        # Expo dev server
 npm test           # core unit tests + database tests (needs Postgres on PGHOST/PGPORT)
 ```
+
+## Applying database updates
+
+New features sometimes add a file to `supabase/migrations/`. Apply each new file once, in date order: open it on GitHub, copy all of it, paste into Supabase → SQL Editor → New query, and Run. (With the Supabase CLI linked, `supabase db push` does the same.)
+
+| File | Adds |
+|---|---|
+| `20261104000001_apple_catalog.sql` | Adding albums and podcasts from Apple, real artwork, artist pages for any artist |
+| `20261104000002_moderation_notifications.sql` | Notifications, push tokens, moderation queue, bans |
+
+`supabase/setup.sql` always contains everything, for a brand-new project.
+
+## Push notifications (optional until launch)
+
+The app registers each phone for push and the database writes a notification row for replies, likes, follows, messages and resolved forecasts. One small function turns those rows into phone notifications:
+
+```bash
+npm i -g supabase            # or brew install supabase/tap/supabase
+supabase login
+supabase link --project-ref bjgahyslmlmnjsqopans
+supabase secrets set PUSH_WEBHOOK_SECRET=$(openssl rand -hex 24)   # note the value it prints with: supabase secrets list
+supabase functions deploy push --no-verify-jwt
+```
+
+Then in Supabase → Database → Webhooks → Create a new hook:
+- Table `notifications`, event **Insert**
+- Type **Supabase Edge Functions**, function `push`, method POST
+- HTTP header `x-melo-secret` = the same secret
+
+Push works in Expo Go on iPhone for testing. Store builds need an Apple push key, which `eas build` sets up when asked.

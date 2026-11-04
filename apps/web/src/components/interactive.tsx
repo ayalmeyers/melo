@@ -12,6 +12,19 @@ import { AppleSection, useAppleSearch } from './apple';
 import { ArtistArt, Avatar, GenreArt, Icon, ItemArt, Stars } from './ui';
 
 /* ---------------- nav ---------------- */
+/** Bell with a live unread count. */
+function Bell() {
+  const { api, user } = useMelo();
+  const [n, setN] = useState(0);
+  const path = usePathname();
+  useEffect(() => {
+    if (!user) return;
+    api.unreadCount().then(setN).catch(() => {});
+    return api.onNotifications(user.id, x => { if (x.kind !== 'message') setN(c => c + 1); });
+  }, [api, user, path]);
+  return <Link href="/activity" className="bell" aria-label={n ? `Notifications, ${n} new` : 'Notifications'}><Icon name="bell" size={21} />{n > 0 && <span className="badge">{n > 99 ? '99+' : n}</span>}</Link>;
+}
+
 export function Nav() {
   const { user, profile, openCompose } = useMelo();
   const path = usePathname();
@@ -25,6 +38,7 @@ export function Nav() {
           <div className="nav-links">{links.map(([h, l]) => <Link key={h} href={h} aria-current={cur(h) ? 'page' : undefined}>{l}</Link>)}</div>
           <div className="nav-right">
             {user && profile ? <>
+              <Bell />
               <button className="btn sm" onClick={() => openCompose()}><Icon name="plus" size={18} /> Post</button>
               <Link href={`/u/${profile.handle}`} aria-label="Your profile"><Avatar name={profile.name} color={profile.color} /></Link>
             </> : <Link className="btn sm" href="/login">Sign in</Link>}

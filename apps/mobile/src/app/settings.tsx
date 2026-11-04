@@ -6,6 +6,7 @@ import { AVATAR_COLORS, HANDLE_RE, LIMITS } from '@melo/core';
 import { api } from '../lib/supabase';
 import { useSession } from '../lib/session';
 import { errText, fail, go, openWeb } from '../lib/hooks';
+import { forgetPush, pushStatus, registerPush } from '../lib/push';
 import { Avatar, Button, Input, T } from '../components/ui';
 import { C, F } from '../components/theme';
 
@@ -19,6 +20,8 @@ export default function Settings() {
   const [busy, setBusy] = useState(false);
   const [confirm, setConfirm] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [push, setPush] = useState<'on' | 'off' | 'unavailable' | null>(null);
+  useEffect(() => { pushStatus().then(setPush); }, []);
   useEffect(() => { if (profile) { setName(profile.name); setHandle(profile.handle); setBio(profile.bio); setCity(profile.city); setColor(profile.color); } }, [profile]);
 
   const save = async () => {
@@ -48,6 +51,9 @@ export default function Settings() {
         <Button kind="ghost" title="Change Top 4 and genres" onPress={() => go('/onboarding')} />
       </>}
 
+      {profile?.is_admin && <Button kind="dark" title="Moderation queue" icon="shield" onPress={() => go('/moderation')} />}
+      {user && <Button kind="ghost" title={push === 'on' ? 'Notifications are on' : 'Turn on notifications'} disabled={push === 'on' || push === 'unavailable'} onPress={async () => setPush(await registerPush(true))} />}
+
       <T.Label>Melo</T.Label>
       <Button kind="ghost" title="Support and contact" onPress={() => openWeb('/support')} />
       <Button kind="ghost" title="Community guidelines and Terms" onPress={() => openWeb('/terms')} />
@@ -56,7 +62,7 @@ export default function Settings() {
       {user && <>
         <T.Label>Account</T.Label>
         <T.Dim>Signed in as {user.email}</T.Dim>
-        <Button kind="ghost" title="Sign out" onPress={async () => { await api.signOut(); await reload(); router.replace('/'); }} />
+        <Button kind="ghost" title="Sign out" onPress={async () => { await forgetPush(); await api.signOut(); await reload(); router.replace('/'); }} />
         <View style={{ backgroundColor: '#fdecec', borderRadius: 18, padding: 16, gap: 10, marginTop: 10 }}>
           <Text style={{ fontFamily: F.bold, fontSize: 16, color: C.bad }}>Delete account</Text>
           <T.Dim>Type DELETE to confirm. This removes everything you've posted.</T.Dim>

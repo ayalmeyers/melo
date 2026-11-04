@@ -144,3 +144,35 @@ export interface Message {
 export interface RadarRow { subject_id: string; subject_type: 'artist' | 'item'; recent: number; baseline: number; listeners: number; score: number }
 
 export interface Target { type: TargetType; id: string }
+
+export type NotificationKind = 'comment' | 'reply' | 'follow' | 'like' | 'laugh' | 'resolved' | 'message';
+export interface MeloNotification {
+  id: string;
+  user_id: string;
+  actor: string | null;
+  kind: NotificationKind;
+  post_id: string | null;
+  comment_id: string | null;
+  forecast_id: string | null;
+  chat_id: string | null;
+  body: string | null;
+  read_at: string | null;
+  created_at: string;
+}
+
+export type ReportAction = 'remove' | 'ban' | 'dismiss' | 'unban';
+export interface QueuedReport {
+  id: string;
+  target_type: 'post' | 'comment' | 'message' | 'profile' | 'moment';
+  target_id: string;
+  reason: string;
+  status: 'open' | 'actioned' | 'dismissed';
+  created_at: string;
+  reporter_handle: string | null;
+  author_id: string | null;
+  author_handle: string | null;
+  author_banned: boolean;
+  content: string | null;
+  link: string | null;
+  reports_on_target: number;
+}

@@ -10,7 +10,7 @@ import { Avatar, Band, Button, Icon, Sheet, T } from '../../components/ui';
 import { C, F } from '../../components/theme';
 
 export default function Home() {
-  const { user, profile, follows, ready } = useSession();
+  const { user, profile, follows, ready, unread } = useSession();
   const [mode, setMode] = useState<FeedMode>('hot');
   const feed = useLoad(async () => {
     if (!configured || !ready) return null;
@@ -24,7 +24,10 @@ export default function Home() {
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <Text style={{ fontFamily: F.heavy, fontSize: 30, color: '#fff', letterSpacing: -1 }}>melo<Text style={{ color: C.blue }}>.</Text></Text>
         <View style={{ flexDirection: 'row', gap: 18, alignItems: 'center' }}>
-          {user && <Pressable hitSlop={10} onPress={() => go('/activity')} accessibilityLabel="Activity"><Icon name="bell" size={22} color="#fff" /></Pressable>}
+          {user && <Pressable hitSlop={10} onPress={() => go('/activity')} accessibilityLabel={unread ? `Activity, ${unread} new` : 'Activity'}>
+            <Icon name={unread ? 'bell.badge' : 'bell'} size={22} color="#fff" />
+            {unread > 0 && <View style={{ position: 'absolute', top: -6, right: -8, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: C.blue, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}><Text style={{ color: '#fff', fontFamily: F.bold, fontSize: 11 }}>{unread > 99 ? '99+' : unread}</Text></View>}
+          </Pressable>}
           {user && <Pressable hitSlop={10} onPress={() => go('/chats')} accessibilityLabel="Chats"><Icon name="bubble.left.and.bubble.right" size={22} color="#fff" /></Pressable>}
           {user && profile ? <Pressable onPress={() => go('/me')}><Avatar name={profile.name} color={profile.color} size={32} /></Pressable> : <Button small title="Sign in" onPress={() => go('/login')} />}
         </View>

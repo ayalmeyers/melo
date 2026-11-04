@@ -2,7 +2,7 @@ import type { AppleResult } from './apple';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   Artist, CatalogItem, Chat, ChatMember, Comment, FeedPost, FollowKind, Forecast, ForecastConsensus, ItemRating,
-  LogEntry, Message, Moment, PostKind, Profile, ProfileStats, RadarRow, ShareType, Target, WikiPage,
+  LogEntry, MeloNotification, Message, QueuedReport, ReportAction, Moment, PostKind, Profile, ProfileStats, RadarRow, ShareType, Target, WikiPage,
 } from './types';
 
 /** A thrown error with a message that is safe to show people. */
@@ -235,6 +235,29 @@ export function createApi(sb: SupabaseClient) {
       const ch = sb.channel('chat:' + chatId).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `chat_id=eq.${chatId}` }, payload => cb(payload.new as Message)).subscribe();
       return () => { sb.removeChannel(ch); };
     },
+
+    /* ---------- notifications ---------- */
+    /** In-app notifications, newest first. Chat messages are left out here; unread chats show in Chats. */
+    async notifications(limit = 60): Promise<MeloNotification[]> {
+      await need();
+      return ok(await sb.from('notifications').select('*').neq('kind', 'message').order('created_at', { ascending: false }).limit(limit));
+    },
+    async unreadCount(): Promise<number> {
+      const u = await uid(); if (!u) return 0;
+      const r = await sb.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null).neq('kind', 'message');
+      return r.count ?? 0;
+    },
+    async markNotificationsRead() { await need(); ok(await sb.rpc('mark_notifications_read')); },
+    onNotifications(userId: string, cb: (n: MeloNotification) => void) {
+      const ch = sb.channel('notes:' + userId).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, payload => cb(payload.new as MeloNotification)).subscribe();
+      return () => { sb.removeChannel(ch); };
+    },
+    async savePushToken(token: string, platform: 'ios' | 'android') { await need(); ok(await sb.from('push_tokens').upsert({ token, platform, updated_at: new Date().toISOString() })); },
+    async removePushToken(token: string) { ok(await sb.from('push_tokens').delete().eq('token', token)); },
+
+    /* ---------- moderation (admins) ---------- */
+    async reportQueue(status: 'open' | 'actioned' | 'dismissed' = 'open'): Promise<QueuedReport[]> { await need(); return ok(await sb.rpc('report_queue', { p_status: status, p_limit: 200 })); },
+    async moderate(reportId: string, action: ReportAction) { await need(); ok(await sb.rpc('moderate', { p_report: reportId, p_action: action })); },
 
     /* ---------- activity ---------- */
     async activity(limit = 50) {

@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useFonts, Urbanist_400Regular, Urbanist_500Medium, Urbanist_600SemiBold, Urbanist_700Bold, Urbanist_800ExtraBold } from '@expo-google-fonts/urbanist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SessionProvider, useSession } from '../lib/session';
+import { usePushTaps } from '../lib/push';
 import { C, F } from '../components/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -12,6 +13,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 function Gate() {
   const { user, profile, ready } = useSession();
   const seg = useSegments();
+  usePushTaps();
   useEffect(() => {
     if (!ready) return;
     SplashScreen.hideAsync().catch(() => {});
@@ -52,6 +54,7 @@ export default function Root() {
         <Stack.Screen name="chats/new" options={{ presentation: 'modal', title: 'New chat' }} />
         <Stack.Screen name="settings" options={{ title: 'Settings' }} />
         <Stack.Screen name="activity" options={{ title: 'Activity' }} />
+        <Stack.Screen name="moderation" options={{ title: 'Moderation' }} />
       </Stack>
     </SessionProvider>
   </GestureHandlerRootView>;
