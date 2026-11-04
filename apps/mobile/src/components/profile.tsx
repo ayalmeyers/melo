@@ -62,7 +62,7 @@ function DiaryRow({ l, mine, onGone }: { l: LogEntry; mine: boolean; onGone: () 
     {it && <ItemCover item={it} size={50} radius={9} />}
     <View style={{ flex: 1, gap: 3 }}>
       <T.Bold>{it?.title ?? l.item_id}</T.Bold>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>{l.rating != null && <Stars r10={l.rating} size={12} color={C.blue} />}{l.liked && <Icon name="heart.fill" size={12} color="#e0245e" />}<T.Dim>{ago(l.listened_at)}</T.Dim></View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>{l.rating != null && <Stars r10={l.rating} size={12} color={C.blue} />}{l.liked && <Icon name="heart.fill" size={12} color="#e0245e" />}<T.Dim>{l.source && l.source !== 'melo' ? `${l.plays ?? ''} plays on ${l.source === 'spotify' ? 'Spotify' : 'Apple Music'} · last ` : ''}{ago(l.listened_at)}</T.Dim></View>
     </View>
   </Pressable>;
 }

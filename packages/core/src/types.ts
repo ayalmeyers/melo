@@ -117,7 +117,7 @@ export interface ForecastConsensus {
 
 export interface ItemRating { item_id: string; avg_stars: number; n: number; histogram: number[] }
 
-export interface LogEntry { id: string; user_id: string; item_id: string; rating: number | null; liked: boolean; listened_at: string }
+export interface LogEntry { id: string; user_id: string; item_id: string; rating: number | null; liked: boolean; listened_at: string; source?: 'melo' | 'spotify' | 'apple'; plays?: number | null }
 
 export interface Moment { id: string; item_id: string; author: string; t_seconds: number; body: string; created_at: string }
 
@@ -180,3 +180,7 @@ export interface QueuedReport {
   link: string | null;
   reports_on_target: number;
 }
+
+export type ChartScope = 'public' | 'friends';
+export type ChartKind = 'albums' | 'artists' | 'podcasts';
+export interface ChartRow { subject_id: string; subject_type: 'item' | 'artist'; rank: number; prev_rank: number | null; listeners: number; logs: number; avg_rating: number | null }

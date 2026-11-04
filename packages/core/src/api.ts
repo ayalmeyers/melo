@@ -1,7 +1,7 @@
 import type { AppleResult } from './apple';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
-  Artist, CatalogItem, Chat, ChatMember, Comment, FeedPost, FollowKind, Forecast, ForecastConsensus, ItemRating,
+  Artist, CatalogItem, Chat, ChartKind, ChartRow, ChartScope, ChatMember, Comment, FeedPost, FollowKind, Forecast, ForecastConsensus, ItemRating,
   LogEntry, MeloNotification, Message, QueuedReport, ReportAction, Moment, PostKind, Profile, ProfileStats, RadarRow, ShareType, Target, WikiPage,
 } from './types';
 
@@ -245,6 +245,17 @@ export function createApi(sb: SupabaseClient) {
     onMessages(chatId: string, cb: (m: Message) => void) {
       const ch = sb.channel('chat:' + chatId).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `chat_id=eq.${chatId}` }, payload => cb(payload.new as Message)).subscribe();
       return () => { sb.removeChannel(ch); };
+    },
+
+    /* ---------- history import ---------- */
+    /** Adds imported listening history to your diary; returns how many albums were added or updated. */
+    async importLogs(source: 'spotify' | 'apple', rows: { item_id: string; plays: number; listened_at: string | null }[]): Promise<number> {
+      await need(); return ok(await sb.rpc('import_logs', { p_source: source, p_rows: rows })) as number;
+    },
+
+    /* ---------- charts ---------- */
+    async chart(scope: ChartScope, kind: ChartKind, days = 7, limit = 50): Promise<ChartRow[]> {
+      return ok(await sb.rpc('chart', { p_scope: scope, p_kind: kind, p_days: days, p_limit: limit }));
     },
 
     /* ---------- notifications ---------- */

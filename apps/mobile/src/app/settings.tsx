@@ -52,6 +52,7 @@ export default function Settings() {
       </>}
 
       {profile?.is_admin && <Button kind="dark" title="Moderation queue" icon="shield" onPress={() => go('/moderation')} />}
+      {user && <Button kind="ghost" title="Import Spotify or Apple Music history" icon="arrow.down.circle" onPress={() => openWeb('/import')} />}
       {user && <Button kind="ghost" title={push === 'on' ? 'Notifications are on' : 'Turn on notifications'} disabled={push === 'on' || push === 'unavailable'} onPress={async () => setPush(await registerPush(true))} />}
 
       <T.Label>Melo</T.Label>
