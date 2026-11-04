@@ -56,6 +56,10 @@ export default function Root() {
         <Stack.Screen name="activity" options={{ title: 'Activity' }} />
         <Stack.Screen name="moderation" options={{ title: 'Moderation' }} />
         <Stack.Screen name="charts" options={{ title: 'Charts' }} />
+        <Stack.Screen name="list/[id]" options={{ title: '' }} />
+        <Stack.Screen name="list/new" options={{ presentation: 'modal', title: 'New list' }} />
+        <Stack.Screen name="list/add" options={{ presentation: 'modal', title: 'Add albums' }} />
+        <Stack.Screen name="add-to-list/[itemId]" options={{ presentation: 'formSheet', title: 'Add to list', sheetAllowedDetents: [0.6, 1] }} />
       </Stack>
     </SessionProvider>
   </GestureHandlerRootView>;

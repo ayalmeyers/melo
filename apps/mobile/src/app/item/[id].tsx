@@ -10,6 +10,7 @@ import { moderate, PostList } from '../../components/post';
 import { WikiBox } from '../../components/social';
 import { ItemRow } from '../../components/rows';
 import { AppleSection } from '../../components/apple';
+import { ListCardView } from '../../components/lists';
 import { apple } from '../../lib/apple';
 import { artwork } from '../../lib/artwork';
 import { Band, Button, Empty, Icon, Input, ItemCover, Sheet, T } from '../../components/ui';
@@ -33,6 +34,7 @@ export default function ItemScreen() {
     if (!appleId) appleId = (await apple.search(show.title, 'show', 5)).find(r => r.title.toLowerCase() === show.title.toLowerCase())?.apple_id ?? null;
     return appleId ? apple.episodes(appleId, 25) : [];
   }, [id, item.data?.type]);
+  const inLists = useLoad(() => api.lists({ containing: id, limit: 10 }), [id]);
   const moments = useLoad(() => api.moments(id), [id]);
   const [mBody, setMBody] = useState(''); const [mT, setMT] = useState('');
 
@@ -74,6 +76,7 @@ export default function ItemScreen() {
       <View style={{ flexDirection: 'row', gap: 10 }}>
         {it.type !== 'show' && <Button style={{ flex: 1 }} title="Log" icon="plus" onPress={() => go(user ? `/log/${id}` : '/login')} />}
         <Button style={{ flex: 1 }} kind="dark" title={it.type === 'show' ? 'Start a thread' : 'Review'} icon="square.and.pencil" onPress={() => go(user ? `/compose?kind=${it.type === 'show' ? 'thread' : 'review'}&target=item:${id}` : '/login')} />
+        <Button kind="dark" title="" icon="text.badge.plus" accessibilityLabel="Add to a list" onPress={() => go(user ? `/add-to-list/${id}` : '/login')} />
         <Button kind="dark" title="" icon="paperplane" accessibilityLabel="Send in a chat" onPress={() => go(`/chats/new?share=item:${id}`)} />
       </View>
       <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -106,6 +109,7 @@ export default function ItemScreen() {
           {episodes.data && !episodes.data.length && latest.data && !latest.data.length && <Empty text="No episodes yet." />}
           <Button kind="ghost" title="Add an episode" icon="plus" onPress={() => go(`/add-item?type=episode&show=${id}`)} /></>
         : <WikiBox wkey={`a:${id}`} />)}
+      {!!inLists.data?.length && <View style={{ gap: 12 }}><T.H2>On lists</T.H2>{inLists.data.map(l => <ListCardView key={l.id} l={l} />)}</View>}
     </Sheet>
   </Screen>;
 }

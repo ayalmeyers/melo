@@ -1,7 +1,7 @@
 import type { AppleResult } from './apple';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
-  Artist, CatalogItem, Chat, ChartKind, ChartRow, ChartScope, ChatMember, Comment, FeedPost, FollowKind, Forecast, ForecastConsensus, ItemRating,
+  Artist, CatalogItem, Chat, ChartKind, ChartRow, ChartScope, ListCard, ListEntry, SimilarListener, TasteMatch, ChatMember, Comment, FeedPost, FollowKind, Forecast, ForecastConsensus, ItemRating,
   LogEntry, MeloNotification, Message, QueuedReport, ReportAction, Moment, PostKind, Profile, ProfileStats, RadarRow, ShareType, Target, WikiPage,
 } from './types';
 
@@ -257,6 +257,37 @@ export function createApi(sb: SupabaseClient) {
     async chart(scope: ChartScope, kind: ChartKind, days = 7, limit = 50): Promise<ChartRow[]> {
       return ok(await sb.rpc('chart', { p_scope: scope, p_kind: kind, p_days: days, p_limit: limit }));
     },
+
+    /* ---------- taste ---------- */
+    async tasteMatch(a: string, b: string): Promise<TasteMatch | null> { const rows = ok(await sb.rpc('taste_match', { p_a: a, p_b: b })) as TasteMatch[]; return rows[0] ?? null; },
+    async similarListeners(limit = 20): Promise<SimilarListener[]> { if (!(await uid())) return []; return ok(await sb.rpc('similar_listeners', { p_limit: limit })); },
+
+    /* ---------- lists ---------- */
+    async lists(opts: { owner?: string; containing?: string; limit?: number } = {}): Promise<ListCard[]> {
+      let q = sb.from('list_cards').select('*').order('updated_at', { ascending: false }).limit(opts.limit ?? 50);
+      if (opts.owner) q = q.eq('owner', opts.owner);
+      if (opts.containing) {
+        const ids = (ok(await sb.from('list_items').select('list_id').eq('item_id', opts.containing).limit(200)) as { list_id: string }[]).map(r => r.list_id);
+        if (!ids.length) return [];
+        q = q.in('id', ids);
+      }
+      return ok(await q);
+    },
+    async list(id: string): Promise<{ list: ListCard; entries: ListEntry[] } | null> {
+      const list = ok(await sb.from('list_cards').select('*').eq('id', id).maybeSingle()) as ListCard | null;
+      if (!list) return null;
+      const entries = ok(await sb.from('list_items').select('*').eq('list_id', id).order('position')) as ListEntry[];
+      return { list, entries };
+    },
+    async createList(v: { title: string; description?: string; ranked?: boolean }): Promise<string> {
+      await need(); const r = ok(await sb.from('lists').insert({ title: v.title, description: v.description ?? '', ranked: v.ranked ?? true }).select('id').single()) as { id: string }; return r.id;
+    },
+    async updateList(id: string, v: { title?: string; description?: string; ranked?: boolean }) { await need(); ok(await sb.from('lists').update({ ...v, updated_at: new Date().toISOString() }).eq('id', id)); },
+    async deleteList(id: string) { await need(); ok(await sb.from('lists').delete().eq('id', id)); },
+    async addToList(listId: string, itemId: string, note = '') { await need(); ok(await sb.from('list_items').insert({ list_id: listId, item_id: itemId, note })); },
+    async removeFromList(listId: string, itemId: string) { await need(); ok(await sb.from('list_items').delete().eq('list_id', listId).eq('item_id', itemId)); },
+    async setListNote(listId: string, itemId: string, note: string) { await need(); ok(await sb.from('list_items').update({ note }).eq('list_id', listId).eq('item_id', itemId)); },
+    async reorderList(listId: string, itemIds: string[]) { await need(); ok(await sb.rpc('reorder_list', { p_list: listId, p_items: itemIds })); },
 
     /* ---------- notifications ---------- */
     /** In-app notifications, newest first. Chat messages are left out here; unread chats show in Chats. */

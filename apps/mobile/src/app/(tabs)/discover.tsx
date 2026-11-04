@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { ARTISTS, GENRES, SHOWS, artistName, flag, type Artist, type CatalogItem, type Profile } from '@melo/core';
 import { api, configured } from '../../lib/supabase';
+import { useSession } from '../../lib/session';
 import { go, loadArtists, loadGenreArt, rememberArtist, rememberItem, useLoad } from '../../lib/hooks';
 import { AppleSection, useAppleSearch } from '../../components/apple';
 import { Screen } from '../../components/screen';
@@ -37,6 +38,13 @@ export default function Discover() {
   }, []);
   const genreArt = useLoad(() => Promise.all([loadGenreArt(), loadArtists(Object.keys(ARTISTS))]), []);
   const chart = useLoad(() => (configured ? loadChart('public', 'albums', 5) : Promise.resolve([])), []);
+  const { user } = useSession();
+  const similar = useLoad(async () => {
+    if (!user) return [];
+    const s = await api.similarListeners(10);
+    const ps = Object.fromEntries((await api.profilesByIds(s.map(x => x.user_id))).map(p => [p.id, p]));
+    return s.map(x => ({ ...x, p: ps[x.user_id] })).filter(x => x.p);
+  }, [user?.id]);
   const fresh = useLoad(() => configured ? api.itemsBy({ type: 'album' }, 20) : Promise.resolve([]), []);
 
   return <Screen onRefresh={() => Promise.all([top.reload(), fresh.reload(), chart.reload()])} keyboard>
@@ -63,6 +71,19 @@ export default function Discover() {
       </View> : <>
         <SectionTitle title="This week on Melo" action="Charts" onAction={() => go('/charts')} />
         {chart.data?.length ? <View style={{ gap: 14 }}>{chart.data.map(r => <ChartRowView key={r.subject_id} r={r} />)}</View> : <T.Dim>The weekly chart fills up as people log what they listen to.</T.Dim>}
+
+        {!!similar.data?.length && <View style={{ gap: 12 }}>
+          <SectionTitle title="People who hear like you" />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }} style={{ marginHorizontal: -20 }}>
+            <View style={{ width: 8 }} />
+            {similar.data.map(x => <Pressable key={x.user_id} onPress={() => go(`/user/${x.p.handle}`)} style={{ width: 112, alignItems: 'center', gap: 6, backgroundColor: C.mist, borderRadius: 18, padding: 12 }}>
+              <Avatar name={x.p.name} color={x.p.color} size={56} />
+              <Text style={{ fontFamily: F.bold, fontSize: 14, color: C.text }} numberOfLines={1}>{x.p.name}</Text>
+              <Text style={{ fontFamily: F.heavy, fontSize: 16, color: C.blue }}>{x.score}%</Text>
+            </Pressable>)}
+            <View style={{ width: 8 }} />
+          </ScrollView>
+        </View>}
 
         <SectionTitle title="Genres" />
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }} style={{ marginHorizontal: -20 }}>

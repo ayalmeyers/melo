@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ARTISTS, GENRES, artistName, flag, countryName } from '@melo/core';
 import { serverApi, safe } from '@/lib/server';
 import { SearchBox } from '@/components/search';
-import { ArtistArt, GenreArt, ItemArt } from '@/components/ui';
+import { ArtistArt, Avatar, GenreArt, ItemArt } from '@/components/ui';
 
 export const metadata: Metadata = { title: 'Explore' };
 
@@ -14,6 +14,8 @@ export default async function Explore() {
   const topItems = await safe(() => api.items(top.map(t => t.item_id)), []);
   const byId = Object.fromEntries([...radarItems, ...topItems].map(i => [i.id, i]));
   const [genreArt, artistRows] = await Promise.all([safe(() => api.genreArt(), {} as Record<string, string[]>), safe(() => api.artists(Object.keys(ARTISTS)), [])]);
+  const similar = await safe(() => api.similarListeners(8), []);
+  const similarPeople = Object.fromEntries((await safe(() => api.profilesByIds(similar.map(x => x.user_id)), [])).map(p => [p.id, p]));
   const photo = Object.fromEntries(artistRows.map(a => [a.id, a.image_url ?? a.artwork_url ?? null]));
   return <>
     <section className="band"><div className="wrap" style={{ paddingTop: 40, paddingBottom: 72 }}><span className="eyebrow">Explore</span><h1 style={{ fontSize: 'clamp(32px,5vw,48px)', margin: '8px 0 20px' }}>Find your next argument</h1><SearchBox /></div></section>
@@ -21,6 +23,7 @@ export default async function Explore() {
       <div className="stack" style={{ gap: 36 }}>
         <section><div className="sec-h"><h2>Most rated on Melo</h2></div>
           {topItems.length ? <div className="g6">{top.map(t => byId[t.item_id] && <Link key={t.item_id} className="cover-tile" href={`/album/${t.item_id}`}><ItemArt item={byId[t.item_id]} /><b>{byId[t.item_id].title}</b><small>{t.avg_stars}★ · {t.n} rating{t.n === 1 ? '' : 's'}</small></Link>)}</div> : <p className="muted">Ratings show up here as people log what they hear.</p>}</section>
+        {!!similar.length && <section><div className="sec-h"><h2>People who hear like you</h2></div><div className="g6">{similar.map(x => similarPeople[x.user_id] && <Link key={x.user_id} href={`/u/${similarPeople[x.user_id].handle}`} className="cover-tile" style={{ textAlign: 'center' }}><Avatar name={similarPeople[x.user_id].name} color={similarPeople[x.user_id].color} size="xl" /><b>{similarPeople[x.user_id].name}</b><small style={{ color: 'var(--blue)', fontWeight: 700 }}>{x.score}% match</small></Link>)}</div></section>}
         <section><div className="sec-h"><h2>Genres</h2></div><div className="g6">{Object.entries(GENRES).map(([id, g]) => <Link key={id} href={`/genre/${id}`} className="cover-tile"><GenreArt id={id} covers={genreArt[id]} /><b>{g.name}</b></Link>)}</div></section>
         <section><div className="sec-h"><h2>Artists</h2></div><div className="g6">{Object.entries(ARTISTS).map(([id, a]) => <Link key={id} href={`/artist/${id}`} className="cover-tile"><ArtistArt id={id} name={a.name} art={photo[id]} /><b>{a.name}</b><small>{flag(a.cc)} {countryName(a.cc)}</small></Link>)}</div></section>
       </div>

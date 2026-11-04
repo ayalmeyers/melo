@@ -292,3 +292,14 @@ footer a:hover { color: #fff; }
 .chart-row .m b, .chart-row .m small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mv { font-size: 12px; font-weight: 700; color: var(--dim); }
 .mv.up { color: #1f9d61; } .mv.down { color: #e5484d; } .mv.new { color: var(--blue); font-size: 10.5px; letter-spacing: .05em; }
+/* lists */
+.list-card { display: grid; gap: 6px; background: var(--mist); border-radius: 20px; padding: 14px; color: var(--text); }
+.list-card:hover { background: #ebecef; }
+.list-card .fan { display: flex; height: 72px; }
+.list-card .fan .art { width: 72px; border-radius: 10px; border: 2px solid var(--mist); }
+.list-card .fan .art + .art { margin-left: -20px; }
+.list-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+.match { background: var(--ink-2); border-radius: 18px; padding: 14px 16px; display: grid; gap: 10px; max-width: 560px; }
+.match .pct { font-size: 30px; font-weight: 800; color: var(--blue); }
+.match .covers { display: flex; gap: 8px; }
+.match .covers .art { width: 52px; border-radius: 8px; }

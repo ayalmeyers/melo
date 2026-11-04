@@ -184,3 +184,13 @@ export interface QueuedReport {
 export type ChartScope = 'public' | 'friends';
 export type ChartKind = 'albums' | 'artists' | 'podcasts';
 export interface ChartRow { subject_id: string; subject_type: 'item' | 'artist'; rank: number; prev_rank: number | null; listeners: number; logs: number; avg_rating: number | null }
+
+export interface TasteMatch { score: number; shared_items: number; shared_artists: number; co_rated: number; agreement: number | null; top_shared: string[] | null; both_loved: string[] | null }
+export interface SimilarListener { user_id: string; score: number; shared_items: number; shared_artists: number }
+
+export interface ListCard {
+  id: string; owner: string; title: string; description: string; ranked: boolean; created_at: string; updated_at: string;
+  owner_handle: string; owner_name: string; owner_color: string; item_count: number;
+  preview: { id: string; title: string; type: ItemType; artwork_url: string | null }[];
+}
+export interface ListEntry { list_id: string; item_id: string; position: number; note: string; added_at: string }

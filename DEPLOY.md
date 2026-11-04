@@ -137,6 +137,11 @@ New features sometimes add a file to `supabase/migrations/`. Apply each new file
 |---|---|
 | `20261104000001_apple_catalog.sql` | Adding albums and podcasts from Apple, real artwork, artist pages for any artist |
 | `20261104000002_moderation_notifications.sql` | Notifications, push tokens, moderation queue, bans |
+| `20261105000001_images.sql` | Artist photos (Wikimedia Commons) and genre mosaics |
+| `20261105000002_history_charts.sql` | Spotify / Apple Music history import, weekly charts |
+| `20261105000003_taste_lists.sql` | Taste match, people who hear like you, lists |
+
+Each batch is also bundled into one paste-in file in `supabase/updates/` (`2026-11-04.sql`, `2026-11-05.sql`).
 
 `supabase/setup.sql` always contains everything, for a brand-new project.
 

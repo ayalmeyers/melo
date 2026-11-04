@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { countryName, flag, genreName } from '@melo/core';
 import { AppleEpisodes } from '@/components/apple';
 import { FixArtwork } from '@/components/artwork';
+import { AddToListButton, ListCardView } from '@/components/lists';
 import { serverApi, safe } from '@/lib/server';
 import { ComposeButton, ItemRow, LogButton, Moments, PostList, WikiBox, StoryButton } from '@/components/interactive';
 import { Icon, ItemArt } from '@/components/ui';
@@ -22,6 +23,7 @@ export default async function ItemPage({ params, searchParams }: P) {
   const it = await safe(() => api.item(id), null);
   if (!it) notFound();
   const isEp = it.type === 'episode', isShow = it.type === 'show';
+  const onLists = await safe(() => api.lists({ containing: id, limit: 6 }), []);
   const [ratings, wiki, posts, episodes, moments, show] = await Promise.all([
     safe(() => api.ratings([id]), {}), safe(() => api.wiki('a:' + id), null), safe(() => api.feed('hot', { target: { type: 'item', id }, limit: 60 }), []),
     isShow ? safe(() => api.itemsBy({ show: id }), []) : Promise.resolve([]), isEp ? safe(() => api.moments(id), []) : Promise.resolve([]),
@@ -43,7 +45,8 @@ export default async function ItemPage({ params, searchParams }: P) {
       <div className="play-on"><a href={`https://open.spotify.com/search/${q}`} target="_blank" rel="noopener noreferrer"><Icon name="play" size={16} /> Spotify</a><a href={it.apple_url ?? `https://${isEp || isShow ? 'podcasts' : 'music'}.apple.com/us/search?term=${q}`} target="_blank" rel="noopener noreferrer"><Icon name="play" size={16} /> {isEp || isShow ? 'Apple Podcasts' : 'Apple Music'}</a></div>
       {!isShow && <div className="card"><div className="row" style={{ justifyContent: 'space-between' }}><span className="rating-big">★ {r ? r.avg_stars.toFixed(1) : '–'}</span><span className="muted" style={{ fontSize: 14 }}>{r?.n ?? 0} rating{r?.n === 1 ? '' : 's'} on Melo</span></div><div className="hist" style={{ marginTop: 12 }} aria-hidden="true">{(r?.histogram ?? Array(10).fill(0)).map((v, i) => <i key={i} style={{ height: `${(v / hm) * 100}%` }} />)}</div><div className="hist-l"><span>½★</span><span>★★★★★</span></div></div>}
       {!isShow && <LogButton item={it} />}
-      <StoryButton path={`/album/${id}/story`} label="Share to story" />
+      <div className="row"><AddToListButton itemId={id} /><StoryButton path={`/album/${id}/story`} label="Share to story" /></div>
+      {!!onLists.length && <div className="stack" style={{ gap: 10 }}><b>On lists</b>{onLists.map(l => <ListCardView key={l.id} l={l} />)}</div>}
     </aside>
     <div className="stack" style={{ gap: 20, minWidth: 0 }}>
       <div className="ent-title"><span className="eyebrow">{isEp ? 'Podcast episode' : isShow ? 'Podcast' : 'Album'}</span><h1 style={{ marginTop: 6 }}>{it.title}</h1>
