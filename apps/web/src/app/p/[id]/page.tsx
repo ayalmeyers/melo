@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { serverApi, safe } from '@/lib/server';
-import { Comments, ItemRow, PostList } from '@/components/interactive';
+import { Comments, ItemRow, PostList, StoryButton } from '@/components/interactive';
 
 type P = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: P): Promise<Metadata> {
@@ -17,6 +17,6 @@ export default async function PostPage({ params }: P) {
   const [comments, it] = await Promise.all([safe(() => api.comments({ post: id }), []), p.target_type === 'item' && p.target_id ? safe(() => api.item(p.target_id!), null) : Promise.resolve(null)]);
   return <section className="wrap sec"><div className="two">
     <div className="stack" style={{ gap: 24, minWidth: 0 }}><PostList posts={[p]} items={it ? { [it.id]: it } : {}} full /><Comments on={{ post: id }} initial={comments} /></div>
-    <aside className="side">{it && <div className="card"><ItemRow it={it} size={72} /></div>}</aside>
+    <aside className="side stack">{it && <div className="card"><ItemRow it={it} size={72} /></div>}<div><StoryButton path={`/p/${id}/story`} /></div></aside>
   </div></section>;
 }

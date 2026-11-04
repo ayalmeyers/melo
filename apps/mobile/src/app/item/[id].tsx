@@ -4,7 +4,7 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import { ago, flag, genreName, LIMITS, mmss, parseTimestamp, starsText, type Target } from '@melo/core';
 import { api } from '../../lib/supabase';
 import { useSession } from '../../lib/session';
-import { fail, go, rememberItem, shareLink, useLoad } from '../../lib/hooks';
+import { fail, go, rememberItem, shareMenu, useLoad } from '../../lib/hooks';
 import { Screen, Seg } from '../../components/screen';
 import { moderate, PostList } from '../../components/post';
 import { WikiBox } from '../../components/social';
@@ -51,7 +51,7 @@ export default function ItemScreen() {
   };
 
   return <Screen top={false} keyboard onRefresh={() => Promise.all([rating.reload(), posts.reload(), moments.reload()])}>
-    <Stack.Screen options={{ title: '', headerRight: () => <Pressable hitSlop={10} onPress={() => shareLink(`/album/${id}`, `${it.title} by ${it.artist_name} on Melo`)}><Icon name="square.and.arrow.up" size={20} color="#fff" /></Pressable> }} />
+    <Stack.Screen options={{ title: '', headerRight: () => <Pressable hitSlop={10} onPress={() => shareMenu({ path: `/album/${id}`, storyPath: `/album/${id}/story`, message: `${it.title} by ${it.artist_name} on Melo` })}><Icon name="square.and.arrow.up" size={20} color="#fff" /></Pressable> }} />
     <Band>
       <View style={{ flexDirection: 'row', gap: 16 }}>
         <ItemCover item={it} size={132} radius={18} />

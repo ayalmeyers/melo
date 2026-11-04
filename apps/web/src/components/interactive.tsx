@@ -383,3 +383,19 @@ export function Moments({ itemId, durMin, initial, names }: { itemId: string; du
     <div className="card stack"><b>Add a moment</b><div className="row" style={{ flexWrap: 'nowrap' }}><input className="inp" style={{ width: 100, background: '#fff', textAlign: 'center' }} value={ts} onChange={e => setTs(e.target.value)} aria-label="Timestamp" /><input className="inp" style={{ background: '#fff' }} value={text} onChange={e => setText(e.target.value)} placeholder="What happened at this minute?" aria-label="Moment" maxLength={LIMITS.moment} /></div><div><button className="btn sm" onClick={add}>Post moment</button></div></div>
   </div>;
 }
+
+/* ---------------- story cards ---------------- */
+/** Shares the 1080×1920 story image: the phone's share sheet when the browser supports files (Instagram shows up there), else opens it to save. */
+export function StoryButton({ path, label = 'Share to story', dark }: { path: string; label?: string; dark?: boolean }) {
+  const { toast } = useMelo(); const [busy, setBusy] = useState(false);
+  async function go() {
+    setBusy(true);
+    try {
+      const blob = await (await fetch(path)).blob();
+      const file = new File([blob], 'melo-story.png', { type: 'image/png' });
+      if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) await navigator.share({ files: [file] });
+      else { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'melo-story.png'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 5000); toast('Story image saved'); }
+    } catch (e) { if ((e as Error).name !== 'AbortError') toast('Could not make the story image.'); } finally { setBusy(false); }
+  }
+  return <button className={`btn ${dark ? 'dark' : 'ghost'} sm`} onClick={go} disabled={busy}><Icon name="share" size={16} /> {busy ? 'Making it…' : label}</button>;
+}

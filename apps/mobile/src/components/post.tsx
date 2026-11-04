@@ -4,7 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { ago, flag, type FeedPost, type Target } from '@melo/core';
 import { api } from '../lib/supabase';
 import { useSession } from '../lib/session';
-import { fail, go, loadArtists, loadItems, shareLink, targetHref, targetLabel } from '../lib/hooks';
+import { fail, go, loadArtists, loadItems, shareMenu, targetHref, targetLabel } from '../lib/hooks';
 import { Avatar, Empty, Icon, ItemCover, ArtistCover, GenreCover, Stars, T } from './ui';
 import { C, F } from './theme';
 
@@ -88,7 +88,7 @@ export function PostCard({ post, liked, laughed, vote, onChange, full, hideTarge
       <Pressable hitSlop={8} onPress={() => go(`/post/${post.id}`)} style={s.act} accessibilityLabel="Comments"><Icon name="bubble.left" size={17} color={C.dim} /><Text style={s.count}>{post.comment_count || ''}</Text></Pressable>
       <View style={{ flex: 1 }} />
       <Pressable hitSlop={8} onPress={() => go(`/chats/new?share=post:${post.id}`)} accessibilityLabel="Send in a chat"><Icon name="paperplane" size={17} color={C.dim} /></Pressable>
-      <Pressable hitSlop={8} onPress={() => shareLink(`/p/${post.id}`, `${post.author_name} on Melo`)} accessibilityLabel="Share"><Icon name="square.and.arrow.up" size={17} color={C.dim} /></Pressable>
+      <Pressable hitSlop={8} onPress={() => shareMenu({ path: `/p/${post.id}`, storyPath: `/p/${post.id}/story`, message: `${post.author_name} on Melo` })} accessibilityLabel="Share"><Icon name="square.and.arrow.up" size={17} color={C.dim} /></Pressable>
     </View>
   </Pressable>;
 }
