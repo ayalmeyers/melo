@@ -39,12 +39,23 @@ export function createApi(sb: SupabaseClient) {
       if (r.error) throw new MeloError(/invalid/i.test(r.error.message) ? 'Wrong email or password.' : r.error.message);
       return r.data.user;
     },
-    async signUp(email: string, password: string) {
+    /** emailRedirectTo is where the confirmation link lands when email confirmation is on (the website's /auth/confirm). */
+    async signUp(email: string, password: string, emailRedirectTo?: string) {
       if (password.length < 8) throw new MeloError('Use at least 8 characters for your password.');
-      const r = await sb.auth.signUp({ email, password });
+      const r = await sb.auth.signUp({ email, password, options: emailRedirectTo ? { emailRedirectTo } : undefined });
       if (r.error) throw new MeloError(/registered|exists/i.test(r.error.message) ? 'That email already has an account. Sign in instead.' : r.error.message);
       if (!r.data.session) throw new MeloError('Account created. Check your email to confirm it, then sign in.');
       return r.data.user;
+    },
+    /** Emails a reset link. redirectTo is the website page that sets the new password. */
+    async resetPassword(email: string, redirectTo: string) {
+      const r = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+      if (r.error) throw new MeloError(/rate|seconds/i.test(r.error.message) ? 'Too many tries. Wait a minute and try again.' : r.error.message);
+    },
+    async updatePassword(password: string) {
+      if (password.length < 8) throw new MeloError('Use at least 8 characters for your password.');
+      const r = await sb.auth.updateUser({ password });
+      if (r.error) throw new MeloError(/same|different/i.test(r.error.message) ? 'Pick a password you haven’t used here before.' : r.error.message);
     },
     async signOut() { await sb.auth.signOut(); },
     async deleteAccount() { ok(await sb.rpc('delete_account')); await sb.auth.signOut(); },
@@ -114,7 +125,7 @@ export function createApi(sb: SupabaseClient) {
     async editWiki(key: string, body: string): Promise<number> { return ok(await sb.rpc('edit_wiki', { p_key: key, p_body: body })) as number; },
 
     /* ---------- posts ---------- */
-    async feed(mode: FeedMode, opts: { limit?: number; before?: string; target?: Target; author?: string; targets?: Target[]; authors?: string[] } = {}): Promise<FeedPost[]> {
+    async feed(mode: FeedMode, opts: { limit?: number; offset?: number; before?: string; target?: Target; author?: string; targets?: Target[]; authors?: string[] } = {}): Promise<FeedPost[]> {
       let q = sb.from('post_feed').select('*').limit(opts.limit ?? 30);
       if (opts.target) q = q.eq('target_type', opts.target.type).eq('target_id', opts.target.id);
       if (opts.author) q = q.eq('author', opts.author);
@@ -126,7 +137,9 @@ export function createApi(sb: SupabaseClient) {
         q = q.or(ors.join(','));
       }
       if (opts.before) q = q.lt('created_at', opts.before);
-      q = mode === 'hot' ? q.order('hot', { ascending: false }) : q.order('created_at', { ascending: false });
+      q = mode === 'hot' ? q.order('hot', { ascending: false }).order('id') : q.order('created_at', { ascending: false });
+      // Paging: Newest pages by time (stable as posts arrive); Hot pages by position.
+      if (opts.offset) q = q.range(opts.offset, opts.offset + (opts.limit ?? 30) - 1);
       return ok(await q);
     },
     async post(id: string): Promise<FeedPost | null> { return ok(await sb.from('post_feed').select('*').eq('id', id).maybeSingle()); },

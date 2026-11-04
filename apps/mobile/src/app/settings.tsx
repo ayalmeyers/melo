@@ -63,6 +63,7 @@ export default function Settings() {
       {user && <>
         <T.Label>Account</T.Label>
         <T.Dim>Signed in as {user.email}</T.Dim>
+        <Button kind="ghost" title="Change password" onPress={() => Alert.prompt?.('New password', 'At least 8 characters.', [{ text: 'Cancel', style: 'cancel' }, { text: 'Save', onPress: v => api.updatePassword(v ?? '').then(() => toast('Password updated')).catch(fail) }], 'secure-text')} />
         <Button kind="ghost" title="Sign out" onPress={async () => { await forgetPush(); await api.signOut(); await reload(); router.replace('/'); }} />
         <View style={{ backgroundColor: '#fdecec', borderRadius: 18, padding: 16, gap: 10, marginTop: 10 }}>
           <Text style={{ fontFamily: F.bold, fontSize: 16, color: C.bad }}>Delete account</Text>

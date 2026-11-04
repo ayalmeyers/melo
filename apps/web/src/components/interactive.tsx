@@ -169,16 +169,20 @@ export function Feed() {
   const { api, user, follows, ready } = useMelo();
   const [mode, setMode] = useState<'hot' | 'new' | 'following'>('hot');
   const [posts, setPosts] = useState<FeedPost[] | null>(null);
+  const [pages, setPages] = useState(1); const [more, setMore] = useState(false);
+  const limit = 40 * pages;
+  useEffect(() => { setPages(1); setPosts(null); }, [mode]);
   useEffect(() => {
     if (!ready) return;
-    setPosts(null);
     const targets: Target[] = [...[...follows.artists].map(id => ({ type: 'artist' as const, id })), ...[...follows.genres].map(id => ({ type: 'genre' as const, id }))];
     const authors = user ? [...follows.users, user.id] : [];
-    api.feed(mode, { limit: 40, targets, authors }).then(setPosts).catch(() => setPosts([]));
-  }, [api, mode, follows, user, ready]);
+    setMore(true);
+    api.feed(mode, { limit, targets, authors }).then(setPosts).catch(() => setPosts([])).finally(() => setMore(false));
+  }, [api, mode, follows, user, ready, limit]);
   return <>
     <div className="seg" style={{ marginBottom: 18 }}>{([['hot', 'Hot'], ['new', 'Newest'], ['following', 'Following']] as const).map(([v, l]) => <button key={v} className={mode === v ? 'on' : ''} onClick={() => setMode(v)}>{l}</button>)}</div>
     {posts === null ? <p className="empty">Loading…</p> : <PostList posts={posts} empty={mode === 'following' ? 'Follow people, artists and genres and their posts land here.' : 'Nothing posted yet. Be the first take this place ever had.'} />}
+    {posts?.length === limit && pages < 10 && <div style={{ marginTop: 16 }}><button className="btn ghost block" disabled={more} onClick={() => setPages(p => p + 1)}>{more ? 'Loading…' : 'Load more'}</button></div>}
   </>;
 }
 

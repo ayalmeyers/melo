@@ -163,3 +163,18 @@ Then in Supabase → Database → Webhooks → Create a new hook:
 - HTTP header `x-melo-secret` = the same secret
 
 Push works in Expo Go on iPhone for testing. Store builds need an Apple push key, which `eas build` sets up when asked.
+
+## Email: confirmations and password resets (before inviting anyone)
+
+Supabase's built-in email sends only a few messages an hour and can't use custom templates. Connect a real sender:
+
+1. **Resend** (free up to 3,000 emails a month): sign up at resend.com → Domains → Add domain. Use a domain you control, for example `mail.meyerslink.com` (or Melo's own domain once you buy it). Add the DNS records Resend shows at your domain registrar and wait for "Verified".
+2. Resend → API Keys → Create (sending access). Copy it.
+3. Supabase → Authentication → Emails → SMTP Settings → enable custom SMTP:
+   - Sender email `hello@mail.meyerslink.com`, sender name `Melo`
+   - Host `smtp.resend.com`, port `465`, username `resend`, password = the API key
+4. Supabase → Authentication → Emails → Templates: paste `supabase/templates/confirm-signup.html` into **Confirm signup** and `supabase/templates/reset-password.html` into **Reset password** (subjects are in the first line of each file).
+5. Supabase → Authentication → URL Configuration: Site URL = your website (e.g. `https://melo.vercel.app`); Redirect URLs add `https://melo.vercel.app/**`.
+6. Supabase → Authentication → Sign In / Providers → Email: turn **Confirm email** back on.
+
+What people see: new accounts get a "Confirm your email" message before they can sign in; "Forgot password?" on the website and in the app sends a reset link that opens the website to choose a new password; Settings has "Change password" on both.

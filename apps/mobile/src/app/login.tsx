@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Platform, Pressable, Text, View } from 'react-nat
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { EMAIL_RE } from '@melo/core';
-import { api } from '../lib/supabase';
+import { api, WEB_URL } from '../lib/supabase';
 import { useSession } from '../lib/session';
 import { errText, openWeb } from '../lib/hooks';
 import { Button, Icon, Input, T } from '../components/ui';
@@ -23,7 +23,7 @@ export default function Login() {
     if (!EMAIL_RE.test(em)) return setErr('Enter a valid email address.');
     setBusy(true); setErr(null);
     try {
-      if (mode === 'up') await api.signUp(em, password); else await api.signIn(em, password);
+      if (mode === 'up') await api.signUp(em, password, `${WEB_URL.replace(/\/$/, '')}/confirmed`); else await api.signIn(em, password);
       await reload();
       const me = await api.me();
       if (!me || !me.accepted_terms_at) router.replace('/onboarding'); else router.back();
@@ -39,6 +39,7 @@ export default function Login() {
       <Input dark value={password} onChangeText={setPassword} placeholder={mode === 'up' ? 'Password (8+ characters)' : 'Password'} secureTextEntry autoCapitalize="none" textContentType={mode === 'up' ? 'newPassword' : 'password'} autoComplete={mode === 'up' ? 'new-password' : 'current-password'} returnKeyType="go" onSubmitEditing={submit} />
       {err && <Text style={{ color: '#ff8a8a', fontFamily: F.medium, fontSize: 14.5 }}>{err}</Text>}
       <Button title={mode === 'in' ? 'Sign in' : 'Create account'} loading={busy} disabled={!email.trim() || !password} onPress={submit} />
+      {mode === 'in' && <Text onPress={() => openWeb('/login?mode=forgot')} style={{ color: C.onInkDim, fontFamily: F.semibold, textAlign: 'center', fontSize: 15 }}>Forgot password?</Text>}
       <Text onPress={() => { setMode(mode === 'in' ? 'up' : 'in'); setErr(null); }} style={{ color: C.onInkDim, fontFamily: F.semibold, textAlign: 'center', fontSize: 15 }}>{mode === 'in' ? 'New here? Create an account' : 'Have an account? Sign in'}</Text>
     </View>
     <Text style={{ color: C.onInkDim, fontFamily: F.medium, fontSize: 12.5, textAlign: 'center', lineHeight: 18 }}>

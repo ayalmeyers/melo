@@ -26,10 +26,21 @@ export default function Settings() {
       <div className="g2" style={{ gap: 10 }}><div className="field"><label htmlFor="s-city">City</label><input id="s-city" className="inp" style={{ background: '#fff' }} value={f.city} onChange={e => setF({ ...f, city: e.target.value })} maxLength={40} /></div><div className="field"><label htmlFor="s-cc">Country</label><select id="s-cc" className="inp" style={{ background: '#fff' }} value={f.cc} onChange={e => setF({ ...f, cc: e.target.value })}>{Object.keys(FLAG).map(c => <option key={c} value={c}>{FLAG[c]} {CNAME[c]}</option>)}</select></div></div>
       <div><button className="btn" onClick={save} disabled={busy}>{busy ? 'Saving…' : 'Save profile'}</button></div></div>
     {profile?.is_admin && <div className="card stack"><b>Admin</b><div><Link className="btn dark" href="/moderation">Moderation queue</Link></div></div>}
+    <PasswordCard />
     <div className="card stack"><b>Listening history</b><p className="muted">Bring your Spotify or Apple Music history into your diary.</p><div><Link className="btn ghost" href="/import">Import history</Link></div></div>
     <div className="card stack"><b>Account</b><p className="muted">Signed in as {user?.email}</p><div><button className="btn ghost" onClick={async () => { await api.signOut(); router.push('/'); router.refresh(); }}>Sign out</button></div></div>
     <div className="card stack" style={{ border: '2px solid #fde6e6' }}><b>Delete account</b><p className="muted">This permanently deletes your profile, posts, replies, diary, forecasts and chats. It cannot be undone.</p>
       <div className="field"><label htmlFor="s-del">Type DELETE to confirm</label><input id="s-del" className="inp" style={{ background: '#fff' }} value={confirmDelete} onChange={e => setConfirmDelete(e.target.value)} /></div>
       <div><button className="btn danger" disabled={confirmDelete !== 'DELETE'} onClick={del}>Delete my account</button></div></div>
   </div></section>;
+}
+
+function PasswordCard() {
+  const { api, toast } = useMelo();
+  const [pw, setPw] = useState(''); const [busy, setBusy] = useState(false);
+  return <div className="card stack"><b>Password</b>
+    <form className="row" style={{ flexWrap: 'nowrap' }} onSubmit={async e => { e.preventDefault(); setBusy(true); try { await api.updatePassword(pw); setPw(''); toast('Password updated'); } catch (er) { toast((er as Error).message); } finally { setBusy(false); } }}>
+      <input type="password" className="inp" autoComplete="new-password" placeholder="New password (8+ characters)" value={pw} onChange={e => setPw(e.target.value)} minLength={8} aria-label="New password" />
+      <button className="btn" disabled={busy || pw.length < 8}>Change</button>
+    </form></div>;
 }
