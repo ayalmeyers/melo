@@ -70,8 +70,10 @@ function dryRpc(fn: string, body: unknown): unknown {
 }
 
 /* ---------- 1. Who belongs in the library ---------- */
-interface Target { apple: number; qid?: string; label?: string; sl: number; image?: string; cc?: string; enwiki?: string; charts: number }
+interface Target { apple: number; alts?: number[]; qid?: string; label?: string; sl: number; image?: string; cc?: string; enwiki?: string; charts: number }
 const targets = new Map<number, Target>();
+// Some artists carry two Apple ids on Wikidata (an old and a new profile). One page per artist: extra ids become alternates.
+const byQid = new Map<string, number>(); const altOf = new Map<number, number>();
 
 const PREFIXES = `PREFIX wd: <http://www.wikidata.org/entity/>
 PREFIX wdt: <http://www.wikidata.org/prop/direct/>
@@ -99,6 +101,10 @@ function absorb(bindings: Binding[]): number {
     const raw = b.apple?.value ?? ''; const apple = Number(raw); if (!apple || !/^\d+$/.test(raw)) continue;
     const prev = targets.get(apple); const sl = Number(b.sl?.value ?? 0);
     if (prev && prev.sl >= sl) continue;
+    const qid = b.item.value.split('/').pop()!;
+    const main = byQid.get(qid);
+    if (main !== undefined && main !== apple) { const m = targets.get(main)!; if (!m.alts?.includes(apple)) m.alts = [...(m.alts ?? []), apple]; altOf.set(apple, main); continue; }
+    byQid.set(qid, apple);
     const file = b.image?.value ? decodeURIComponent(b.image.value.split('/Special:FilePath/')[1] ?? b.image.value.split('/').pop() ?? '').replace(/_/g, ' ') : '';
     targets.set(apple, { apple, qid: b.item.value.split('/').pop(), label: b.label?.value, sl, charts: prev?.charts ?? 0,
       image: file || undefined, cc: b.cc?.value?.toUpperCase(), enwiki: b.enwiki?.value });
@@ -147,7 +153,7 @@ await Promise.all(Array.from({ length: 8 }, async () => {
     const rows = await chartFeed(cc, kind);
     if (rows.length) feeds++;
     for (const r of rows) {
-      const id = Number(r.artistId); if (!id) continue;
+      const id0 = Number(r.artistId); if (!id0) continue; const id = altOf.get(id0) ?? id0;
       const t = targets.get(id); if (t) t.charts++; else { targets.set(id, { apple: id, label: r.artistName, sl: 0, charts: 1 }); chartArtists++; }
     }
   }
@@ -250,8 +256,16 @@ for (let i = 0; i < queue.length; i += CHUNK) {
   const chunk = queue.slice(i, i + CHUNK);
   const disco = new Map<number, { name?: string; albums: AppleRaw[] }>();
   for (let k = 0; k < chunk.length; k += APPLE_BATCH) {
-    const ids = chunk.slice(k, k + APPLE_BATCH).map(t => t.apple);
-    try { for (const [id, v] of await discographies(ids)) disco.set(id, v); } catch (e) { log('apple lookup failed', ids.join(','), String(e).slice(0, 100)); }
+    const t = chunk[k];
+    try {
+      // With alternate ids, keep whichever Apple profile holds the bigger discography.
+      let best: { name?: string; albums: AppleRaw[] } | undefined;
+      for (const id of [t.apple, ...(t.alts ?? [])]) {
+        const got = (await discographies([id])).get(id);
+        if (got && (!best || got.albums.length > best.albums.length)) best = got;
+      }
+      if (best) disco.set(t.apple, best);
+    } catch (e) { log('apple lookup failed', t.apple, String(e).slice(0, 100)); }
   }
   const [bio, pics] = await Promise.all([
     bios(chunk.map(t => t.enwiki).filter((x): x is string => !!x)).catch(() => new Map<string, string>()),
