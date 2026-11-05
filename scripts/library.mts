@@ -87,10 +87,15 @@ PREFIX schema: <http://schema.org/>
 const query = (min: number, max: number) => `${PREFIXES}SELECT ?item ?apple ?sl (SAMPLE(?lbl) AS ?label) (SAMPLE(?img) AS ?image) (SAMPLE(?code) AS ?cc) (SAMPLE(?t) AS ?enwiki) WHERE {
   ?item wdt:P2850 ?apple ; wikibase:sitelinks ?sl .
   FILTER(?sl >= ${min} && ?sl < ${max})
-  # Music only: bands and groups, or people whose occupation is musician, composer, record producer or DJ (or a kind of those).
-  # Apple also lists authors and politicians as audiobook "artists"; this keeps them out.
-  FILTER EXISTS { { ?item wdt:P31/wdt:P279* wd:Q215380 } UNION { ?item wdt:P106/wdt:P279* wd:Q639669 } UNION { ?item wdt:P106/wdt:P279* wd:Q36834 }
-                  UNION { ?item wdt:P106 wd:Q183945 } UNION { ?item wdt:P106 wd:Q130857 } }
+  # Music only: groups; people listed directly as singer, musician, composer, rapper, singer-songwriter, guitarist, pianist,
+  # DJ, record producer or songwriter; or another kind of musician who is not also a writer, poet, novelist, philosopher,
+  # politician, journalist or playwright (Apple lists authors as audiobook "artists").
+  FILTER(
+    EXISTS { ?item wdt:P31/wdt:P279* wd:Q215380 }
+    || EXISTS { ?item wdt:P106 ?core . VALUES ?core { wd:Q177220 wd:Q639669 wd:Q36834 wd:Q2252262 wd:Q488205 wd:Q855091 wd:Q486748 wd:Q130857 wd:Q183945 wd:Q753110 } }
+    || ( EXISTS { { ?item wdt:P106/wdt:P279* wd:Q639669 } UNION { ?item wdt:P106/wdt:P279* wd:Q36834 } }
+         && NOT EXISTS { ?item wdt:P106 ?other . VALUES ?other { wd:Q36180 wd:Q49757 wd:Q6625963 wd:Q4964182 wd:Q82955 wd:Q1930187 wd:Q214917 } } )
+  )
   OPTIONAL { ?item rdfs:label ?lbl FILTER(LANG(?lbl) = "en") }
   OPTIONAL { ?item wdt:P18 ?img }
   OPTIONAL { ?item wdt:P495 ?c1 . ?c1 wdt:P297 ?code }
