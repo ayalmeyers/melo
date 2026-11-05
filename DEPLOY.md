@@ -140,8 +140,18 @@ New features sometimes add a file to `supabase/migrations/`. Apply each new file
 | `20261105000001_images.sql` | Artist photos (Wikimedia Commons) and genre mosaics |
 | `20261105000002_history_charts.sql` | Spotify / Apple Music history import, weekly charts |
 | `20261105000003_taste_lists.sql` | Taste match, people who hear like you, lists |
+| `20261106000001_genres.sql` | K-pop, J-pop, Indian & Bollywood, Country, Soundtracks & Musicals |
 
 Each batch is also bundled into one paste-in file in `supabase/updates/` (`2026-11-04.sql`, `2026-11-05.sql`).
+
+### The catalog (real covers, artist photos, Apple's charts)
+
+`supabase/updates/catalog-<date>.sql` is rebuilt every Monday by the **Catalog** GitHub workflow (and whenever its script changes).
+It holds every starting album's real cover, a credited photo for each artist, the new genres, and the 50 most-played albums in 14 countries plus the top podcasts.
+Run the newest one after the dated updates. It is safe to run again: it never replaces art Melo already has and never creates duplicates.
+`catalog-report.md` at the top of the repo says what matched, what didn't, and how many artists got photos.
+
+Screenshots of the iPhone app with real artwork are rebuilt on every push and published to the `ci-shots` branch.
 
 `supabase/setup.sql` always contains everything, for a brand-new project.
 

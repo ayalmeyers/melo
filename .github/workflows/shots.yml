@@ -5,7 +5,7 @@ on:
   workflow_run: { workflows: [Catalog], types: [completed] }
   push:
     branches: [main]
-    paths: [apps/mobile/**, packages/core/**, scripts/shots.mjs, .github/workflows/shots.yml]
+    paths: [apps/mobile/**, packages/core/**, scripts/shots.mjs, scripts/debug-photo.mts, .github/workflows/shots.yml]
 permissions: { contents: write }
 concurrency: { group: shots, cancel-in-progress: true }
 jobs:
@@ -18,6 +18,9 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - run: npm ci
+      - name: Photo lookup diagnostics
+        continue-on-error: true
+        run: npx --yes tsx@4.19.2 scripts/debug-photo.mts
       - name: Export the app for the web with demo data
         working-directory: apps/mobile
         env: { EXPO_PUBLIC_DEMO: '1' }
