@@ -303,3 +303,16 @@ footer a:hover { color: #fff; }
 .match .pct { font-size: 30px; font-weight: 800; color: var(--blue); }
 .match .covers { display: flex; gap: 8px; }
 .match .covers .art { width: 52px; border-radius: 8px; }
+
+/* accessibility */
+.skip { position: absolute; left: 12px; top: -60px; z-index: 100; background: var(--blue); color: #fff; padding: 10px 14px; border-radius: 10px; font-weight: 700; }
+.skip:focus { top: 12px; }
+main:focus { outline: none; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+/* loading skeletons */
+.sk { background: #e6e8ec; border-radius: 8px; animation: sk 1.3s ease-in-out infinite; }
+.band .sk { background: var(--ink-2); }
+@keyframes sk { 0%, 100% { opacity: .55 } 50% { opacity: 1 } }
+.sk-row { display: flex; gap: 12px; align-items: center; padding: 8px 0; }
+.sk-card { background: var(--mist); border-radius: 22px; padding: 18px; display: grid; gap: 12px; }

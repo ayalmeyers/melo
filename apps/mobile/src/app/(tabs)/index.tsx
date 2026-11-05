@@ -8,6 +8,7 @@ import { Screen, Seg } from '../../components/screen';
 import { PostList } from '../../components/post';
 import { Avatar, Band, Button, Icon, Sheet, T } from '../../components/ui';
 import { C, F } from '../../components/theme';
+import { ErrorView } from '../../components/skeleton';
 
 const PAGE = 30;
 
@@ -46,7 +47,7 @@ export default function Home() {
         <Icon name="square.and.pencil" size={20} color={C.blue} />
         <Text style={{ fontFamily: F.medium, fontSize: 16, color: C.dim, flex: 1 }}>Review, hot take, or start a thread</Text>
       </Pressable>
-      {feed.error ? <T.Dim>{feed.error}</T.Dim> : <PostList posts={feed.data} empty={mode === 'following' ? 'Follow people, artists and genres and their posts land here.' : 'Nothing posted yet. Be the first take this place ever had.'} />}
+      {feed.error ? <ErrorView message={feed.error} onRetry={feed.reload} /> : <PostList posts={feed.data} empty={mode === 'following' ? 'Follow people, artists and genres and their posts land here.' : 'Nothing posted yet. Be the first take this place ever had.'} />}
       {feed.data?.length === limit && pages < 10 && <Button kind="ghost" title="Load more" loading={feed.loading} onPress={() => setPages(p => p + 1)} />}
     </Sheet>
   </Screen>;

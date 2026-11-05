@@ -15,6 +15,7 @@ import { apple } from '../../lib/apple';
 import { artwork } from '../../lib/artwork';
 import { Band, Button, Empty, Icon, Input, ItemCover, Sheet, T } from '../../components/ui';
 import { C, F } from '../../components/theme';
+import { ErrorView, Loading, Shimmer } from '../../components/skeleton';
 
 export default function ItemScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -39,7 +40,8 @@ export default function ItemScreen() {
   const [mBody, setMBody] = useState(''); const [mT, setMT] = useState('');
 
   const it = item.data;
-  if (item.loading && !it) return <Screen top={false}><Band><T.Dim>Loading…</T.Dim></Band></Screen>;
+  if (item.error && !it) return <Screen top={false}><Sheet style={{ marginTop: 0 }}><ErrorView message={item.error} onRetry={item.reload} /></Sheet></Screen>;
+  if (item.loading && !it) return <Screen top={false}><Band><View style={{ flexDirection: 'row', gap: 16 }}><Shimmer w={132} h={132} r={18} dark /><View style={{ flex: 1, gap: 10, justifyContent: 'flex-end' }}><Shimmer w="40%" h={11} dark /><Shimmer w="85%" h={24} dark /><Shimmer w="55%" h={14} dark /></View></View></Band><Sheet><Loading kind="post" n={2} /></Sheet></Screen>;
   if (!it) return <Screen top={false}><Band><T.Display>Not found.</T.Display></Band><Sheet><Empty text="This album or episode isn't on Melo." /></Sheet></Screen>;
   const target: Target = { type: 'item', id };
   const reviews = (posts.data ?? []).filter(p => p.kind === 'review');
@@ -56,7 +58,7 @@ export default function ItemScreen() {
   };
 
   return <Screen top={false} keyboard onRefresh={() => Promise.all([rating.reload(), posts.reload(), moments.reload()])}>
-    <Stack.Screen options={{ title: '', headerRight: () => <Pressable hitSlop={10} onPress={() => shareMenu({ path: `/album/${id}`, storyPath: `/album/${id}/story`, message: `${it.title} by ${it.artist_name} on Melo` })}><Icon name="square.and.arrow.up" size={20} color="#fff" /></Pressable> }} />
+    <Stack.Screen options={{ title: '', headerRight: () => <Pressable hitSlop={10} accessibilityLabel="Share" onPress={() => shareMenu({ path: `/album/${id}`, storyPath: `/album/${id}/story`, message: `${it.title} by ${it.artist_name} on Melo` })}><Icon name="square.and.arrow.up" size={20} color="#fff" /></Pressable> }} />
     <Band>
       <View style={{ flexDirection: 'row', gap: 16 }}>
         <ItemCover item={it} size={132} radius={18} />

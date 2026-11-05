@@ -5,6 +5,7 @@ import { api } from '../lib/supabase';
 import { useSession } from '../lib/session';
 import { fail, go, useLoad } from '../lib/hooks';
 import { moderate } from './post';
+import { Loading } from './skeleton';
 import { Avatar, Button, Empty, Icon, Input, T } from './ui';
 import { C, F } from './theme';
 
@@ -48,14 +49,14 @@ export function Comments({ on }: { on: { post?: string; forecast?: string } }) {
           <Text style={s.meta}><Text style={s.name}>{c.author_name}</Text> · {ago(c.created_at)}</Text>
           <T.Body>{c.body}</T.Body>
           <View style={{ flexDirection: 'row', gap: 18, paddingTop: 2 }}>
-            <Pressable hitSlop={8} style={s.act} onPress={() => {
+            <Pressable hitSlop={8} style={s.act} accessibilityLabel={isLiked ? 'Unlike comment' : 'Like comment'} onPress={() => {
               if (!user) return go('/login');
               const n = new Set(liked); if (isLiked) n.delete(c.id + ':like'); else n.add(c.id + ':like'); setLiked(n);
               setData(list.map(x => (x.id === c.id ? { ...x, likes: x.likes + (isLiked ? -1 : 1) } : x)));
               api.react('comment', c.id, 'like', !isLiked).catch(fail);
             }}><Icon name={isLiked ? 'heart.fill' : 'heart'} size={14} color={isLiked ? '#e0245e' : C.dim} /><Text style={s.meta}>{c.likes || ''}</Text></Pressable>
             {depth === 0 && <Text style={s.link} onPress={() => setReplyTo(c)}>Reply</Text>}
-            <Pressable hitSlop={8} onPress={() => moderate({ kind: 'comment', id: c.id, authorId: c.author, authorHandle: c.author_handle, mine: user?.id === c.author, onDeleted: () => api.deleteComment(c.id).then(reload).catch(fail), onBlocked: () => { toast('Blocked'); reload(); } })}><Icon name="ellipsis" size={14} color={C.dim} /></Pressable>
+            <Pressable hitSlop={8} accessibilityLabel="Comment options" onPress={() => moderate({ kind: 'comment', id: c.id, authorId: c.author, authorHandle: c.author_handle, mine: user?.id === c.author, onDeleted: () => api.deleteComment(c.id).then(reload).catch(fail), onBlocked: () => { toast('Blocked'); reload(); } })}><Icon name="ellipsis" size={14} color={C.dim} /></Pressable>
           </View>
         </View>
       </View>
@@ -70,7 +71,7 @@ export function Comments({ on }: { on: { post?: string; forecast?: string } }) {
       <Input value={body} onChangeText={setBody} placeholder={user ? 'Add to the discussion' : 'Sign in to join the discussion'} multiline maxLength={LIMITS.comment} editable={!!user} onPressIn={() => !user && go('/login')} />
       {!!body.trim() && <Button small title="Post" loading={busy} onPress={send} style={{ alignSelf: 'flex-end' }} />}
     </View>
-    {data && !top.length ? <Empty text="No comments yet. Say the first thing." /> : top.map(c => row(c))}
+    {!data ? <Loading n={2} round /> : !top.length ? <Empty text="No comments yet. Say the first thing." /> : top.map(c => row(c))}
   </View>;
 }
 

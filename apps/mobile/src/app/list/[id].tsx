@@ -32,7 +32,7 @@ export default function ListScreen() {
   const del = () => Alert.alert('Delete this list?', 'The list goes away; the albums stay on Melo.', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: () => api.deleteList(id).then(() => { toast('List deleted'); router.back(); }).catch(fail) }]);
 
   return <Screen top={false} keyboard onRefresh={data.reload}>
-    <Stack.Screen options={{ title: '', headerRight: () => <Pressable hitSlop={10} onPress={() => shareLink(`/lists/${id}`, `${list.title}, a list by ${list.owner_name} on Melo`)}><Icon name="square.and.arrow.up" size={20} color="#fff" /></Pressable> }} />
+    <Stack.Screen options={{ title: '', headerRight: () => <Pressable hitSlop={10} accessibilityLabel="Share list" onPress={() => shareLink(`/lists/${id}`, `${list.title}, a list by ${list.owner_name} on Melo`)}><Icon name="square.and.arrow.up" size={20} color="#fff" /></Pressable> }} />
     <Band>
       {editing ? <View style={{ gap: 10 }}>
         <Input dark value={title} onChangeText={setTitle} maxLength={100} placeholder="Title" />

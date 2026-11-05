@@ -7,6 +7,7 @@ import { ChartRowView, loadChart } from '../components/chart';
 import { Screen, Seg } from '../components/screen';
 import { Band, Button, Empty, Sheet, T } from '../components/ui';
 import { C, F } from '../components/theme';
+import { ErrorView, Loading } from '../components/skeleton';
 
 /** This week on Melo: what everyone, or just the people you follow, logged most. */
 export default function Charts() {
@@ -25,6 +26,8 @@ export default function Charts() {
       {scope === 'friends' && !user ? <Button title="Sign in to see your friends' chart" onPress={() => go('/login')} />
         : scope === 'friends' && !follows.users.size ? <View style={{ gap: 12 }}><Empty text="Follow people to build your friends' chart. It counts you and everyone you follow." /><Button kind="ghost" title="Find people" onPress={() => go('/discover')} /></View>
         : chart.data && !chart.data.length ? <Empty text={scope === 'friends' ? 'Nobody in your circle has logged anything this week. Be the first.' : 'The chart fills up as people log what they listen to this week.'} />
+        : chart.error ? <ErrorView message={chart.error} onRetry={chart.reload} />
+        : !chart.data ? <Loading n={8} />
         : <View style={{ gap: 14 }}>{(chart.data ?? []).map(r => <ChartRowView key={r.subject_id} r={r} />)}</View>}
       {scope === 'public' && !!chart.data?.length && <Button kind="ghost" title="Share this chart" icon="square.and.arrow.up" onPress={() => shareLink(`/charts?kind=${kind}`, `This week's ${kind} chart on Melo`)} />}
     </Sheet>

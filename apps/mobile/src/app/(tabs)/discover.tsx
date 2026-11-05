@@ -11,6 +11,7 @@ import { ItemRow } from '../../components/rows';
 import { ChartRowView, loadChart } from '../../components/chart';
 import { ArtistCover, Avatar, Band, Empty, GenreCover, Icon, Input, ItemCover, Sheet, Stars, T } from '../../components/ui';
 import { C, F } from '../../components/theme';
+import { Loading } from '../../components/skeleton';
 
 export default function Discover() {
   const [q, setQ] = useState('');
@@ -70,7 +71,7 @@ export default function Discover() {
         </Pressable>
       </View> : <>
         <SectionTitle title="This week on Melo" action="Charts" onAction={() => go('/charts')} />
-        {chart.data?.length ? <View style={{ gap: 14 }}>{chart.data.map(r => <ChartRowView key={r.subject_id} r={r} />)}</View> : <T.Dim>The weekly chart fills up as people log what they listen to.</T.Dim>}
+        {!chart.data && !chart.error ? <Loading n={3} /> : chart.data?.length ? <View style={{ gap: 14 }}>{chart.data.map(r => <ChartRowView key={r.subject_id} r={r} />)}</View> : <T.Dim>The weekly chart fills up as people log what they listen to.</T.Dim>}
 
         {!!similar.data?.length && <View style={{ gap: 12 }}>
           <SectionTitle title="People who hear like you" />

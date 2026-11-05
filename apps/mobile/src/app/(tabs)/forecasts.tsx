@@ -8,6 +8,7 @@ import { Screen, Seg } from '../../components/screen';
 import { ForecastCard } from '../../components/rows';
 import { Avatar, Band, Button, Empty, Sheet, T } from '../../components/ui';
 import { C, F } from '../../components/theme';
+import { ErrorView, Loading } from '../../components/skeleton';
 
 export default function Forecasts() {
   const { user } = useSession();
@@ -37,8 +38,9 @@ export default function Forecasts() {
             <View style={{ flex: 1 }}><T.Bold>{b.p.name}</T.Bold><T.Dim>{b.resolved} resolved</T.Dim></View>
             <Text style={{ fontFamily: F.heavy, fontSize: 24, color: C.blue }}>{Math.round(b.ear)}</Text>
           </Pressable>)
+        : list.error ? <ErrorView message={list.error} onRetry={list.reload} />
         : list.data && !list.data.length ? <Empty text={tab === 'open' ? 'No open questions. Ask one.' : 'Nothing has resolved yet.'} />
-          : <View style={{ gap: 12 }}>{(list.data ?? []).map(f => <ForecastCard key={f.id} f={f} />)}</View>}
+          : !list.data ? <Loading kind="post" n={3} /> : <View style={{ gap: 12 }}>{list.data.map(f => <ForecastCard key={f.id} f={f} />)}</View>}
     </Sheet>
   </Screen>;
 }

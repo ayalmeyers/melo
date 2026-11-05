@@ -8,6 +8,7 @@ import { pushStatus, registerPush } from '../lib/push';
 import { Screen } from '../components/screen';
 import { Avatar, Button, Empty, Icon, Sheet } from '../components/ui';
 import { C, F } from '../components/theme';
+import { ErrorView, Loading } from '../components/skeleton';
 
 const VERB: Record<string, string> = { comment: 'commented on your post', reply: 'replied to you', follow: 'followed you', like: 'liked your post', laugh: 'laughed at your post', resolved: 'A forecast you made resolved' };
 const hrefOf = (n: MeloNotification, actor?: Profile) => n.forecast_id ? `/forecast/${n.forecast_id}` : n.post_id ? `/post/${n.post_id}` : actor ? `/user/${actor.handle}` : '/';
@@ -33,7 +34,7 @@ export default function Activity() {
           <Text style={{ fontFamily: F.medium, fontSize: 14.5, color: C.dim }}>Get a notification for replies, new followers, messages and resolved forecasts.</Text>
           <Button small title="Turn on notifications" onPress={async () => setPush(await registerPush(true))} style={{ alignSelf: 'flex-start' }} />
         </View>}
-        {list.data && !list.data.ns.length ? <Empty text="Replies, likes, new followers and resolved forecasts show up here." /> : (list.data?.ns ?? []).map(n => {
+        {list.error ? <ErrorView message={list.error} onRetry={list.reload} /> : !list.data ? <Loading n={6} round /> : !list.data.ns.length ? <Empty text="Replies, likes, new followers and resolved forecasts show up here." /> : (list.data?.ns ?? []).map(n => {
           const who = n.actor ? list.data!.people[n.actor] : undefined;
           return <Pressable key={n.id} onPress={() => go(hrefOf(n, who))} style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
             {who ? <Avatar name={who.name} color={who.color} size={42} /> : <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: C.ink, alignItems: 'center', justifyContent: 'center' }}><Icon name="chart.line.uptrend.xyaxis" size={20} color="#fff" /></View>}

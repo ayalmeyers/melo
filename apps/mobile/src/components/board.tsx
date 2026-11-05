@@ -10,6 +10,7 @@ import { PostList } from './post';
 import { FollowButton, WikiBox } from './social';
 import { ItemRow } from './rows';
 import { Band, Button, Empty, Icon, Sheet, T } from './ui';
+import { Loading } from './skeleton';
 import { C, F } from './theme';
 
 /** Shared page for artists and genres: a community board, a wiki, and the catalog. Like a subreddit with a record shelf. */
@@ -28,7 +29,7 @@ export function Board({ kind, id, name, sub, art, credit, wikiKey, wikiFallback,
   const followers = useLoad(() => api.followCount(kind, id), [id]);
 
   return <Screen top={false} onRefresh={() => Promise.all([posts.reload(), records.reload(), followers.reload()])}>
-    <Stack.Screen options={{ title: '', headerRight: () => <Pressable hitSlop={10} onPress={() => shareLink(sharePath, `${name} on Melo`)}><Icon name="square.and.arrow.up" size={20} color="#fff" /></Pressable> }} />
+    <Stack.Screen options={{ title: '', headerRight: () => <Pressable hitSlop={10} accessibilityLabel="Share" onPress={() => shareLink(sharePath, `${name} on Melo`)}><Icon name="square.and.arrow.up" size={20} color="#fff" /></Pressable> }} />
     <Band>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
         {art}
@@ -51,7 +52,7 @@ export function Board({ kind, id, name, sub, art, credit, wikiKey, wikiFallback,
         <Seg dark={false} value={sort} onChange={setSort} options={[['hot', 'Hot'], ['new', 'Newest']]} />
         <PostList posts={posts.data} hideTarget empty={`No posts on the ${name} board yet. Start the first thread.`} />
       </>}
-      {tab === 'records' && (records.data && !records.data.length ? <Empty text="Nothing in the catalog yet." /> : (records.data ?? []).map(it => <ItemRow key={it.id} it={it} />))}
+      {tab === 'records' && (!records.data ? <Loading n={5} /> : !records.data.length ? <Empty text="Nothing in the catalog yet." /> : (records.data ?? []).map(it => <ItemRow key={it.id} it={it} />))}
       {tab === 'wiki' && <WikiBox wkey={wikiKey} fallback={wikiFallback} />}
       {tab === 'records' && recordsExtra?.(new Set((records.data ?? []).map(r => r.id)))}
       {tab === 'records' && <Button kind="ghost" icon="plus" title="Add a record" onPress={() => go(`/add-item${kind === 'artist' ? `?artist=${id}` : `?genre=${id}`}`)} />}

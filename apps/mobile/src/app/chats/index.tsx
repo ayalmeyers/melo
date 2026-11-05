@@ -7,6 +7,7 @@ import { go, useLoad } from '../../lib/hooks';
 import { Screen } from '../../components/screen';
 import { Avatar, Button, Empty, Icon, Sheet } from '../../components/ui';
 import { C, F } from '../../components/theme';
+import { ErrorView, Loading } from '../../components/skeleton';
 
 export default function Chats() {
   const { user } = useSession();
@@ -27,7 +28,9 @@ export default function Chats() {
     <Stack.Screen options={{ title: 'Chats', headerRight: () => <Pressable hitSlop={10} onPress={() => go('/chats/new')} accessibilityLabel="New chat"><Icon name="square.and.pencil" size={20} color="#fff" /></Pressable> }} />
     <Sheet style={{ marginTop: 0 }}>
       {!user ? <Button title="Sign in to chat" onPress={() => go('/login')} />
-        : chats.data && !chats.data.length ? <><Empty text="No chats yet. Start one with people you follow, or send an album to a friend." /><Button title="New chat" onPress={() => go('/chats/new')} /></>
+        : chats.error ? <ErrorView message={chats.error} onRetry={chats.reload} />
+        : !chats.data ? <Loading n={6} round />
+        : !chats.data.length ? <><Empty text="No chats yet. Start one with people you follow, or send an album to a friend." /><Button title="New chat" onPress={() => go('/chats/new')} /></>
           : (chats.data ?? []).map(c => <Pressable key={c.id} onPress={() => go(`/chats/${c.id}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <View>{c.others[0] ? <Avatar name={c.others[0].name} color={c.others[0].color} size={50} /> : <Avatar name={c.label} size={50} />}
               {c.others.length > 1 && <View style={{ position: 'absolute', right: -4, bottom: -4, backgroundColor: C.ink, borderRadius: 10, paddingHorizontal: 6, paddingVertical: 2 }}><Text style={{ color: '#fff', fontFamily: F.bold, fontSize: 11 }}>{c.others.length}</Text></View>}

@@ -8,6 +8,7 @@ import { Screen, Seg } from './screen';
 import { moderate, PostList } from './post';
 import { FollowButton } from './social';
 import { ListCardView } from './lists';
+import { Loading } from './skeleton';
 import { Avatar, Band, Button, Empty, Icon, ItemCover, Sheet, Stars, T } from './ui';
 import { C, F } from './theme';
 
@@ -67,10 +68,10 @@ export function ProfileView({ profile, top = true }: { profile: Profile; top?: b
     </Band>
     <Sheet>
       {tab === 'posts' && <PostList posts={posts.data} empty={mine ? 'Your reviews, takes and threads land here.' : 'No posts yet.'} />}
-      {tab === 'diary' && (diary.data && !diary.data.length ? <Empty text={mine ? 'Log what you listen to. Open any album and tap Log.' : 'Nothing logged yet.'} /> : (diary.data ?? []).map(l => <DiaryRow key={l.id} l={l} mine={mine} onGone={diary.reload} />))}
+      {tab === 'diary' && (!diary.data ? <Loading n={5} /> : !diary.data.length ? <Empty text={mine ? 'Log what you listen to. Open any album and tap Log.' : 'Nothing logged yet.'} /> : (diary.data ?? []).map(l => <DiaryRow key={l.id} l={l} mine={mine} onGone={diary.reload} />))}
       {tab === 'lists' && <View style={{ gap: 12 }}>
         {mine && <Button kind="ghost" icon="plus" title="New list" onPress={() => go('/list/new')} />}
-        {lists.data && !lists.data.length ? <Empty text={mine ? 'Make a list: your Top 10 of the year, a road-trip shelf, every album by one artist ranked.' : 'No lists yet.'} /> : (lists.data ?? []).map(l => <ListCardView key={l.id} l={l} showOwner={false} />)}
+        {!lists.data ? <Loading n={2} kind="post" /> : !lists.data.length ? <Empty text={mine ? 'Make a list: your Top 10 of the year, a road-trip shelf, every album by one artist ranked.' : 'No lists yet.'} /> : (lists.data ?? []).map(l => <ListCardView key={l.id} l={l} showOwner={false} />)}
       </View>}
       {tab === 'top4' && (profile.top4.length ? <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
         {profile.top4.map(id => { const it = cachedItem(id); return <Pressable key={id} onPress={() => go(`/item/${id}`)} style={{ width: '47%', gap: 6 }}>{it && <ItemCover item={it} size={156} radius={16} />}<T.Bold>{it?.title ?? id}</T.Bold><T.Dim>{it?.artist_name}</T.Dim></Pressable>; })}

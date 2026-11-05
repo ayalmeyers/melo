@@ -11,9 +11,10 @@ import { C, F, R } from './theme';
 /* ---------- text ---------- */
 type TP = { children: React.ReactNode; style?: StyleProp<TextStyle>; numberOfLines?: number; onPress?: () => void };
 export const T = {
-  Display: (p: TP) => <Text {...p} style={[s.display, p.style]} />,
-  H1: (p: TP) => <Text {...p} style={[s.h1, p.style]} />,
-  H2: (p: TP) => <Text {...p} style={[s.h2, p.style]} />,
+  // Headings are announced as headings to VoiceOver; large text scales with Dynamic Type up to a point the layout can hold.
+  Display: (p: TP) => <Text accessibilityRole="header" maxFontSizeMultiplier={1.3} {...p} style={[s.display, p.style]} />,
+  H1: (p: TP) => <Text accessibilityRole="header" maxFontSizeMultiplier={1.4} {...p} style={[s.h1, p.style]} />,
+  H2: (p: TP) => <Text accessibilityRole="header" maxFontSizeMultiplier={1.5} {...p} style={[s.h2, p.style]} />,
   Body: (p: TP) => <Text {...p} style={[s.body, p.style]} />,
   Dim: (p: TP) => <Text {...p} style={[s.dim, p.style]} />,
   Label: (p: TP) => <Text {...p} style={[s.label, p.style]} />,
@@ -28,7 +29,7 @@ export function Icon({ name, size = 22, color = C.text }: { name: React.Componen
 /* ---------- covers ---------- */
 export function Cover({ cover, size, radius = 12, round }: { cover: CoverT; size: number; radius?: number; round?: boolean }) {
   const gid = useMemo(() => 'g' + hash(cover.from + cover.to + cover.shapes.length + Math.random()).toString(36), [cover]);
-  return <View style={{ width: size, height: size, borderRadius: round ? size / 2 : radius, overflow: 'hidden', backgroundColor: C.mist }}>
+  return <View accessible={false} importantForAccessibility="no-hide-descendants" style={{ width: size, height: size, borderRadius: round ? size / 2 : radius, overflow: 'hidden', backgroundColor: C.mist }}>
     <Svg width={size} height={size} viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
       <Defs><LinearGradient id={gid} x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor={cover.from} /><Stop offset="1" stopColor={cover.to} /></LinearGradient></Defs>
       <Rect width={100} height={100} fill={`url(#${gid})`} />
@@ -47,7 +48,7 @@ export function Cover({ cover, size, radius = 12, round }: { cover: CoverT; size
 }
 /** Real artwork from Apple when Melo has it, otherwise the generated cover. */
 function Art({ uri, size, radius, round }: { uri: string; size: number; radius: number; round?: boolean }) {
-  return <Image source={{ uri: appleArt(uri, size <= 64 ? 200 : 600) }} style={{ width: size, height: size, borderRadius: round ? size / 2 : radius, backgroundColor: C.mist }} contentFit="cover" transition={150} recyclingKey={uri} accessibilityIgnoresInvertColors />;
+  return <Image source={{ uri: appleArt(uri, size <= 64 ? 200 : 600) }} style={{ width: size, height: size, borderRadius: round ? size / 2 : radius, backgroundColor: C.mist }} contentFit="cover" transition={150} recyclingKey={uri} accessibilityIgnoresInvertColors accessible={false} />;
 }
 export const ItemCover = ({ item, size, radius = 12 }: { item: Pick<CatalogItem, 'id' | 'title' | 'type'> & { artwork_url?: string | null }; size: number; radius?: number }) => {
   const art = item.artwork_url ?? cachedItem(item.id)?.artwork_url;

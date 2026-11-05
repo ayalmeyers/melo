@@ -8,6 +8,7 @@ import {
   type CatalogItem, type Comment, type FeedPost, type FollowKind, type Moment, type Target,
 } from '@melo/core';
 import { useMelo } from './session';
+import { SkCards } from './skeleton';
 import { AppleSection, useAppleSearch } from './apple';
 import { ArtistArt, Avatar, GenreArt, Icon, ItemArt, Stars } from './ui';
 
@@ -181,7 +182,7 @@ export function Feed() {
   }, [api, mode, follows, user, ready, limit]);
   return <>
     <div className="seg" style={{ marginBottom: 18 }}>{([['hot', 'Hot'], ['new', 'Newest'], ['following', 'Following']] as const).map(([v, l]) => <button key={v} className={mode === v ? 'on' : ''} onClick={() => setMode(v)}>{l}</button>)}</div>
-    {posts === null ? <p className="empty">Loading…</p> : <PostList posts={posts} empty={mode === 'following' ? 'Follow people, artists and genres and their posts land here.' : 'Nothing posted yet. Be the first take this place ever had.'} />}
+    {posts === null ? <SkCards /> : <PostList posts={posts} empty={mode === 'following' ? 'Follow people, artists and genres and their posts land here.' : 'Nothing posted yet. Be the first take this place ever had.'} />}
     {posts?.length === limit && pages < 10 && <div style={{ marginTop: 16 }}><button className="btn ghost block" disabled={more} onClick={() => setPages(p => p + 1)}>{more ? 'Loading…' : 'Load more'}</button></div>}
   </>;
 }

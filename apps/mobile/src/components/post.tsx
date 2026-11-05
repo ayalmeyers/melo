@@ -7,6 +7,7 @@ import { useSession } from '../lib/session';
 import { fail, go, loadArtists, loadItems, shareMenu, targetHref, targetLabel } from '../lib/hooks';
 import { Avatar, Empty, Icon, ItemCover, ArtistCover, GenreCover, Stars, T } from './ui';
 import { C, F } from './theme';
+import { Loading } from './skeleton';
 
 export function TargetChip({ t }: { t: Target }) {
   return <Pressable onPress={() => go(targetHref(t))} style={s.chip} accessibilityRole="link">
@@ -83,9 +84,9 @@ export function PostCard({ post, liked, laughed, vote, onChange, full, hideTarge
       {total > 0 && <Text style={s.handle}>{total} {total === 1 ? 'vote' : 'votes'}</Text>}
     </View>}
     <View style={s.actions}>
-      <Pressable hitSlop={8} onPress={() => react('like')} style={s.act} accessibilityLabel="Like"><Icon name={liked ? 'heart.fill' : 'heart'} size={18} color={liked ? '#e0245e' : C.dim} /><Text style={s.count}>{post.likes || ''}</Text></Pressable>
-      <Pressable hitSlop={8} onPress={() => react('laugh')} style={s.act} accessibilityLabel="Funny"><Text style={{ fontSize: 16, opacity: laughed ? 1 : 0.55 }}>😂</Text><Text style={s.count}>{post.laughs || ''}</Text></Pressable>
-      <Pressable hitSlop={8} onPress={() => go(`/post/${post.id}`)} style={s.act} accessibilityLabel="Comments"><Icon name="bubble.left" size={17} color={C.dim} /><Text style={s.count}>{post.comment_count || ''}</Text></Pressable>
+      <Pressable hitSlop={8} onPress={() => react('like')} style={s.act} accessibilityRole="button" accessibilityLabel={`Like, ${post.likes} ${post.likes === 1 ? 'like' : 'likes'}`} accessibilityState={{ selected: !!liked }}><Icon name={liked ? 'heart.fill' : 'heart'} size={18} color={liked ? '#e0245e' : C.dim} /><Text style={s.count}>{post.likes || ''}</Text></Pressable>
+      <Pressable hitSlop={8} onPress={() => react('laugh')} style={s.act} accessibilityRole="button" accessibilityLabel={`Funny, ${post.laughs} ${post.laughs === 1 ? 'laugh' : 'laughs'}`} accessibilityState={{ selected: !!laughed }}><Text style={{ fontSize: 16, opacity: laughed ? 1 : 0.55 }}>😂</Text><Text style={s.count}>{post.laughs || ''}</Text></Pressable>
+      <Pressable hitSlop={8} onPress={() => go(`/post/${post.id}`)} style={s.act} accessibilityRole="button" accessibilityLabel={`${post.comment_count} comments`}><Icon name="bubble.left" size={17} color={C.dim} /><Text style={s.count}>{post.comment_count || ''}</Text></Pressable>
       <View style={{ flex: 1 }} />
       <Pressable hitSlop={8} onPress={() => go(`/chats/new?share=post:${post.id}`)} accessibilityLabel="Send in a chat"><Icon name="paperplane" size={17} color={C.dim} /></Pressable>
       <Pressable hitSlop={8} onPress={() => shareMenu({ path: `/p/${post.id}`, storyPath: `/p/${post.id}/story`, message: `${post.author_name} on Melo` })} accessibilityLabel="Share"><Icon name="square.and.arrow.up" size={17} color={C.dim} /></Pressable>
@@ -127,7 +128,8 @@ export function usePostState(posts: FeedPost[] | null) {
 
 export function PostList({ posts, empty = 'Nothing here yet. Start it.', hideTarget }: { posts: FeedPost[] | null; empty?: string; hideTarget?: boolean }) {
   const { list, render } = usePostState(posts);
-  if (posts && !list.length) return <Empty text={empty} />;
+  if (!posts) return <Loading kind="post" n={3} />;
+  if (!list.length) return <Empty text={empty} />;
   return <View style={{ gap: 12 }}>{list.map(p => render(p, { hideTarget }))}</View>;
 }
 
