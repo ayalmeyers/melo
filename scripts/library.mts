@@ -186,8 +186,14 @@ async function discographies(ids: number[]): Promise<Map<number, { name?: string
 }
 /** One release per record: drop clean versions when the explicit one exists, and editions when the original exists. */
 const NOT_MUSIC = /spoken word|audiobook|hörbuch|livres audio|audiolibro|fitness/i;
+// Versions people don't log as records: remix packages, store sessions, tour setlists, "(Live)" tour cuts.
+// Albums whose title starts with "Live at/in/from…" are kept: those are records in their own right.
+const NOISE = /\bremix(es|ed)?\b|\bsped up\b|\bslowed\b|\bkaraoke\b|\binstrumentals?\b|\ba cappella\b|\bacapella\b|apple music|spotify|amazon (music|original)|\bsetlist\b|\bhome session\b|[([\-–]\s*live\b[^)\]]*[)\]]?\s*$|\(live\)/i;
 function tidy(raw: AppleRaw[]): AppleRaw[] {
-  const albums = raw.filter(a => !NOT_MUSIC.test(a.primaryGenreName ?? ''));
+  // Older live albums (Stop Making Sense, At Folsom Prison) are classics; recent "(Live)" releases are mostly tour cuts.
+  const LIVE_ONLY = /[([\-–]\s*live\b[^)\]]*[)\]]?\s*$|\(live\)/i;
+  const noise = (a: AppleRaw) => { const t = a.collectionName ?? ''; if (!NOISE.test(t)) return false; return !(LIVE_ONLY.test(t) && !NOISE.test(t.replace(LIVE_ONLY, '')) && (a.releaseDate ?? '9999') < '2005'); };
+  const albums = raw.filter(a => !NOT_MUSIC.test(a.primaryGenreName ?? '') && !noise(a));
   const byKey = new Map<string, AppleRaw[]>();
   for (const a of albums) { const k = norm((a.collectionName ?? '').replace(EDITION, '')); byKey.set(k, [...(byKey.get(k) ?? []), a]); }
   const keep: AppleRaw[] = [];
@@ -254,13 +260,16 @@ for (let i = 0; i < queue.length; i += CHUNK) {
   const artists: unknown[] = []; const albums: unknown[] = [];
   for (const t of chunk) {
     const d = disco.get(t.apple);
-    const name = d?.name ?? d?.albums[0]?.artistName ?? t.label;
+    // Apple's own artist name first; then Wikidata's; a chart credit ("A, B & C") only as the first name in it.
+    const name = d?.name ?? t.label?.split(/,\s|\s&\s|\sx\s|\sfeat\.?\s/i)[0] ?? d?.albums[0]?.artistName;
     // No discography from Apple this time: leave the artist for a later run instead of adding an empty page.
     if (!d) { totals.emptyApple++; continue; }
     if (!name) continue;
     const kept = tidy(d?.albums ?? []);
     // Nothing left after removing audiobooks and spoken word: not a music artist on Apple.
     if (!kept.length) { totals.emptyApple++; continue; }
+    // Only real artists: at least one record credited to them alone (keeps out poets who appear on readings, one-off credits).
+    if (!kept.some(a => norm(a.artistName ?? '') === norm(name))) { totals.emptyApple++; continue; }
     const genreVotes = new Map<string, number>();
     for (const a of kept) { const g = toMeloGenre([a.primaryGenreName ?? '']); if (g) genreVotes.set(g, (genreVotes.get(g) ?? 0) + 1); }
     const genres = [...genreVotes].sort((x, y) => y[1] - x[1]).slice(0, 3).map(([g]) => g);

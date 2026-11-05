@@ -1,4 +1,4 @@
--- Melo update, Nov 7 2026: the music library (bulk artists and discographies, Classical genre, fast search, popularity ordering).
+-- Melo update, Nov 7 2026: the music library (bulk artists and discographies, five new genres, fast search, popularity ordering).
 -- Paste all of this into Supabase → SQL Editor → New query, then Run. Run it after 2026-11-05.sql and the newest catalog-*.sql.
 -- ===== supabase/migrations/20261107000001_library.sql =====
 -- Melo's library: tens of thousands of artists and their full discographies, loaded in bulk by the Library job
@@ -38,13 +38,17 @@ grant select on public.genre_art to anon, authenticated;
   Nothing a person or admin set is overwritten: photos, bios and covers only fill gaps. Albums are matched by Apple id,
   then by title + artist, so the hand-picked albums are enriched instead of duplicated.
 */
--- Classical joins the genres (Apple: Classical, Opera).
-insert into public.genres (id, name) values ('classical', 'Classical') on conflict (id) do nothing;
+-- New genres for the full library: Classical, Reggae & Dancehall, Blues, Folk & Singer-Songwriter, Gospel & Christian.
+insert into public.genres (id, name) values ('classical', 'Classical'), ('reggae', 'Reggae & Dancehall'), ('blues', 'Blues'), ('folk', 'Folk & Singer-Songwriter'), ('gospel', 'Gospel & Christian') on conflict (id) do nothing;
 create or replace function public.melo_genre(apple_genre text)
 returns text language sql immutable as $fn$
   select case
     when apple_genre is null then null
     when apple_genre ~* 'classical|opera' then 'classical'
+    when apple_genre ~* 'reggae|dancehall|ska|dub' then 'reggae'
+    when apple_genre ~* 'blues' then 'blues'
+    when apple_genre ~* 'gospel|christian' then 'gospel'
+    when apple_genre ~* 'folk|singer/songwriter' then 'folk'
     when apple_genre ~* 'k-pop' then 'kpop'
     when apple_genre ~* 'j-pop|anime|j-rock|vocaloid' then 'jpop'
     when apple_genre ~* 'bollywood|indian|tamil|telugu|punjabi|hindi|bhangra' then 'indian'
