@@ -25,7 +25,9 @@ const DRY = !URL_ || !KEY;
 if (DRY) console.log('SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set: dry run (nothing is written). Add them as repository secrets to fill the library.');
 const MIN_SL = Number(process.env.LIB_MIN_SITELINKS ?? 12);
 const DEADLINE = Date.now() + Number(process.env.LIB_MAX_MINUTES ?? 320) * 60_000;
-const LIMIT = Number(process.env.LIB_LIMIT ?? 0) || (DRY ? 60 : 0);
+const LIMIT = Number(process.env.LIB_LIMIT ?? 0) || (DRY ? 40 : 0);
+// Several runners split the work (each has its own Apple rate limit): this one takes every SHARDS-th artist.
+const SHARD = Number(process.env.LIB_SHARD ?? 0), SHARDS = Math.max(1, Number(process.env.LIB_SHARDS ?? 1));
 const UA = 'MeloLibrary/1.0 (https://github.com/ayalmeyers/melo)';
 const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
@@ -56,13 +58,14 @@ const rpc = (fn: string, body: unknown): Promise<unknown> => DRY ? Promise.resol
 }, 3);
 
 const dry = { artists: 0, albums: 0, bios: 0, photos: 0, sample: [] as string[] };
+const albumsBy = new Map<string, string[]>();
 function dryRpc(fn: string, body: unknown): unknown {
   if (fn === 'library_synced') return [];
   if (fn === 'library_stats') return dry;
   const p = (body as { p: { artists?: { name: string; wiki?: string; image_url?: string; genres: string[]; cc: string }[]; albums?: { title: string; artist_name: string }[] } }).p;
   for (const a of p.artists ?? []) { dry.artists++; if (a.wiki) dry.bios++; if (a.image_url) dry.photos++; if (dry.sample.length < 25) dry.sample.push(`${a.name} [${a.cc}] ${a.genres.join('/')}${a.image_url ? ' photo' : ''}${a.wiki ? ' bio' : ''}`); }
   dry.albums += p.albums?.length ?? 0;
-  if (p.albums?.length && dry.sample.length < 40) dry.sample.push('  albums: ' + p.albums.slice(0, 6).map(a => a.title).join(' | '));
+  for (const a of p.albums ?? []) albumsBy.set(a.artist_name, [...(albumsBy.get(a.artist_name) ?? []), a.title]);
   return { artists: p.artists?.length ?? 0, albums: p.albums?.length ?? 0 };
 }
 
@@ -159,9 +162,9 @@ for (let i = 0; i < queue.length; i += 1000) {
   const ids = queue.slice(i, i + 1000).map(t => t.apple);
   for (const id of await rpc('library_synced', { p_ids: ids, p_days: 45 }) as number[]) fresh.add(Number(id));
 }
-queue = queue.filter(t => !fresh.has(t.apple));
+queue = queue.filter(t => !fresh.has(t.apple)).filter((_, i) => i % SHARDS === SHARD);
 if (LIMIT) queue = queue.slice(0, LIMIT);
-log(`already fresh: ${fresh.size} · to sync now: ${queue.length}`);
+log(`already fresh: ${fresh.size} · shard ${SHARD + 1}/${SHARDS} syncs ${queue.length}`);
 summary(`### Library run\n- Artists found: ${targets.size} (Wikidata ≥ ${MIN_SL} sitelinks + Apple charts in ${STOREFRONTS.length} countries)\n- Already fresh: ${fresh.size}\n- To sync: ${queue.length}`);
 
 /* ---------- 3. Sync in chunks ---------- */
@@ -234,7 +237,8 @@ async function photos(files: string[]): Promise<Map<string, { url: string; credi
 }
 
 const totals = { artists: 0, new_artists: 0, albums: 0, new_albums: 0, wiki: 0, photos: 0, emptyApple: 0 };
-const CHUNK = 30; const APPLE_BATCH = 10;
+// Apple's lookup returns at most 200 albums per request in total, so each artist gets a request of their own.
+const CHUNK = 30; const APPLE_BATCH = 1;
 for (let i = 0; i < queue.length; i += CHUNK) {
   if (Date.now() > DEADLINE) { log('time limit reached; the next run continues from here'); break; }
   const chunk = queue.slice(i, i + CHUNK);
@@ -255,6 +259,8 @@ for (let i = 0; i < queue.length; i += CHUNK) {
     if (!d) { totals.emptyApple++; continue; }
     if (!name) continue;
     const kept = tidy(d?.albums ?? []);
+    // Nothing left after removing audiobooks and spoken word: not a music artist on Apple.
+    if (!kept.length) { totals.emptyApple++; continue; }
     const genreVotes = new Map<string, number>();
     for (const a of kept) { const g = toMeloGenre([a.primaryGenreName ?? '']); if (g) genreVotes.set(g, (genreVotes.get(g) ?? 0) + 1); }
     const genres = [...genreVotes].sort((x, y) => y[1] - x[1]).slice(0, 3).map(([g]) => g);
@@ -278,6 +284,6 @@ for (let i = 0; i < queue.length; i += CHUNK) {
 }
 
 const stats = await rpc('library_stats', {}).catch(e => ({ error: String(e) }));
-if (DRY) console.log(dry.sample.join('\n'));
+if (DRY) { console.log(dry.sample.join('\n')); for (const [n, t] of [...albumsBy].slice(0, 12)) console.log(`${n} (${t.length}): ${t.slice(0, 14).join(' | ')}`); }
 log('done', JSON.stringify(totals), JSON.stringify(stats));
 summary(`- This run: ${JSON.stringify(totals)}\n- Library now: ${JSON.stringify(stats)}`);

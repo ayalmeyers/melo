@@ -1362,6 +1362,34 @@ grant select on public.genre_art to anon, authenticated;
   Nothing a person or admin set is overwritten: photos, bios and covers only fill gaps. Albums are matched by Apple id,
   then by title + artist, so the hand-picked albums are enriched instead of duplicated.
 */
+-- Classical joins the genres (Apple: Classical, Opera).
+insert into public.genres (id, name) values ('classical', 'Classical') on conflict (id) do nothing;
+create or replace function public.melo_genre(apple_genre text)
+returns text language sql immutable as $fn$
+  select case
+    when apple_genre is null then null
+    when apple_genre ~* 'classical|opera' then 'classical'
+    when apple_genre ~* 'k-pop' then 'kpop'
+    when apple_genre ~* 'j-pop|anime|j-rock|vocaloid' then 'jpop'
+    when apple_genre ~* 'bollywood|indian|tamil|telugu|punjabi|hindi|bhangra' then 'indian'
+    when apple_genre ~* 'country|americana|bluegrass' then 'country'
+    when apple_genre ~* 'soundtrack|musical|original score|cast recording' then 'soundtrack'
+    when apple_genre ~* 'hip-hop|rap' then 'hiphop'
+    when apple_genre ~* 'r&b|soul' then 'rnb'
+    when apple_genre ~* 'afro' then 'afro'
+    when apple_genre ~* 'latin|reggaeton|urbano|salsa|bachata|regional mexicano|corrido' then 'latin'
+    when apple_genre ~* 'city pop' then 'citypop'
+    when apple_genre ~* 'brazil|mpb|bossa|samba|sertanejo|pagode' then 'brazil'
+    when apple_genre ~* 'alternative|indie' then 'indie'
+    when apple_genre ~* 'rock|metal|punk' then 'rock'
+    when apple_genre ~* 'electronic|dance|house|techno' then 'electronic'
+    when apple_genre ~* 'jazz' then 'jazz'
+    when apple_genre ~* 'pop' then 'pop'
+    when apple_genre ~* 'world|african' then 'afro'
+    else null
+  end
+$fn$;
+
 create or replace function public.library_import(p jsonb)
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare
@@ -1482,6 +1510,7 @@ insert into public.genres (id,name) values
 ('kpop','K-pop'),
 ('jpop','J-pop'),
 ('country','Country'),
+('classical','Classical'),
 ('indian','Indian & Bollywood'),
 ('soundtrack','Soundtracks & Musicals'),
 ('podcasts','Music Podcasts')
@@ -2911,6 +2940,7 @@ Post which one you mean. People here care.',1),
 ('g:kpop','Popular music from South Korea, built around trained idol groups, sharp choreography and fandoms that organize across borders. BTS and BLACKPINK took it to stadiums worldwide in the late 2010s, and a new generation of groups keeps it on charts everywhere.',1),
 ('g:jpop','Japanese popular music, from idol groups and anime theme songs to bands and bedroom producers. City pop, its glossy 1980s cousin, has its own room on Melo.',1),
 ('g:country','Country grew out of the folk, blues and gospel of the rural American South, with Nashville as its industry home. In the 2020s country records regularly top the overall charts, and the line between country, rock and pop keeps moving.',1),
+('g:classical','Western art music from the medieval era to living composers: symphonies, opera, chamber music and solo works. On Melo the conversation is about recordings as much as pieces: which conductor, which pianist, which decade.',1),
 ('g:indian','Film music from Hindi, Tamil, Telugu and other Indian cinemas, plus Punjabi pop and independent artists. Bollywood soundtracks are among the most-streamed records in the world, and playback singers can be as famous as the stars on screen.',1),
 ('g:soundtrack','Music written for film, television, games and the stage, including original cast recordings. Some of the most-played records of any year come from here.',1),
 ('g:podcasts','Shows about music: interviews, song breakdowns, history and arguments. Episodes on Melo get timestamped comments, so you can talk about the exact minute.',1),

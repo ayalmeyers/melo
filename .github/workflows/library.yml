@@ -14,6 +14,8 @@ permissions: { contents: read }
 concurrency: { group: library, cancel-in-progress: true }   # runs are resumable, so the newest code wins
 jobs:
   fill:
+    # Four runners, four Apple rate limits: each takes every fourth artist.
+    strategy: { fail-fast: false, matrix: { shard: [0, 1, 2, 3] } }
     runs-on: ubuntu-24.04
     timeout-minutes: 350
     steps:
@@ -28,4 +30,6 @@ jobs:
           LIB_MIN_SITELINKS: ${{ inputs.min_sitelinks || '12' }}
           LIB_LIMIT: ${{ inputs.limit || '0' }}
           LIB_MAX_MINUTES: '320'
+          LIB_SHARD: ${{ matrix.shard }}
+          LIB_SHARDS: '4'
         run: npx --yes tsx@4.19.2 scripts/library.mts
