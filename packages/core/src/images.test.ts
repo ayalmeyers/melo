@@ -40,6 +40,10 @@ describe('artist photos', () => {
     expect(pickTitlePage(sza, 'SZA')?.qid).toBe('Q5');
     expect(pickTitlePage({ query: { pages: {} } }, 'Nobody')).toBeNull();
   });
+  it('accepts the thumb.wikimedia.org host and drops tracking parameters', () => {
+    const p = pickPhoto({ query: { pages: { x: { title: 'File:K.jpg', imageinfo: [{ thumburl: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/K.jpg/960px-K.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo' }] } } } });
+    expect(p?.url).toBe('https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/K.jpg/960px-K.jpg');
+  });
   it('only accepts free images hosted on Commons', () => {
     expect(pickPhoto({ query: { pages: { x: { imageinfo: [{ url: 'https://upload.wikimedia.org/wikipedia/en/a/ab/Nonfree.jpg' }] } } } })).toBeNull();
   });

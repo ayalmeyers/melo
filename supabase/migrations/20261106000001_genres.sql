@@ -23,3 +23,19 @@ returns text language sql immutable as $$
     else null
   end
 $$;
+
+-- Wikimedia now serves thumbnails from thumb.wikimedia.org as well as upload.wikimedia.org. Accept both, Commons files only.
+create or replace function public.set_artist_image(p_id text, p_url text, p_credit text default null, p_source text default null)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null then raise exception 'Sign in first' using errcode = '28000'; end if;
+  if p_url is not null and p_url !~ '^https://(upload|thumb)\.wikimedia\.org/' then raise exception 'Unsupported image host'; end if;
+  if p_source is not null and p_source !~ '^https://commons\.wikimedia\.org/' then p_source := null; end if;
+  update artists set
+    image_url = case when p_url is null then image_url else p_url end,
+    image_credit = case when p_url is null then image_credit else left(p_credit, 300) end,
+    image_source = case when p_url is null then image_source else p_source end,
+    image_checked_at = now()
+  where id = p_id
+    and (public.is_admin() or (image_url is null and (image_checked_at is null or image_checked_at < now() - interval '30 days')));
+end $$;

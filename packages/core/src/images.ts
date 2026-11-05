@@ -38,8 +38,11 @@ export function pickImageFile(json: unknown): string | null {
 export function pickPhoto(json: unknown): ArtistPhoto | null {
   const page = Object.values((json as Pages)?.query?.pages ?? {})[0];
   const info = page?.imageinfo?.[0];
-  const url = info?.thumburl ?? info?.url;
-  if (!url || !url.startsWith('https://upload.wikimedia.org/wikipedia/commons/')) return null;
+  // Wikimedia serves thumbnails from upload.wikimedia.org or thumb.wikimedia.org. Only Commons (free) files count;
+  // the tracking parameters it now appends are dropped so the URL stays stable.
+  const raw = info?.thumburl ?? info?.url;
+  const url = raw?.split('?')[0];
+  if (!url || !/^https:\/\/(upload|thumb)\.wikimedia\.org\/wikipedia\/commons\//.test(url)) return null;
   const meta = info?.extmetadata ?? {};
   const author = strip(meta.Artist?.value).slice(0, 120);
   const license = strip(meta.LicenseShortName?.value).slice(0, 60);
