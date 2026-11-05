@@ -20,8 +20,8 @@ export default async function ListPage({ params }: P) {
     <section className="band"><div className="wrap stack" style={{ paddingTop: 40, paddingBottom: 72, gap: 14, maxWidth: 820 }}>
       <span className="eyebrow">{list.ranked ? 'Ranked list' : 'List'}</span>
       <h1 style={{ fontSize: 'clamp(30px,5vw,44px)' }}>{list.title}</h1>
-      {list.description && <p style={{ color: '#c3c8d4', fontSize: 17, maxWidth: '60ch', whiteSpace: 'pre-wrap' }}>{list.description}</p>}
-      <Link href={`/u/${list.owner_handle}`} className="row" style={{ color: '#c3c8d4', fontWeight: 600 }}><Avatar name={list.owner_name} color={list.owner_color} size="xs" /> {list.owner_name} · {list.item_count} records</Link>
+      {list.description && <p style={{ color: 'var(--dim)', fontSize: 17, maxWidth: '60ch', whiteSpace: 'pre-wrap' }}>{list.description}</p>}
+      <Link href={`/u/${list.owner_handle}`} className="row" style={{ color: 'var(--dim)', fontWeight: 600 }}><Avatar name={list.owner_name} color={list.owner_color} size="xs" /> {list.owner_name} · {list.item_count} records</Link>
     </div></section>
     <div className="sheet"><div className="wrap sec two" style={{ maxWidth: 1100 }}>
       <ol className="chart">{entries.map((e, i) => { const it = items[e.item_id]; if (!it) return null; return <li key={e.item_id}><Link href={`/album/${it.id}`} className="chart-row">

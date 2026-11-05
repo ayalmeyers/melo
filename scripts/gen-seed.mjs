@@ -43,5 +43,7 @@ sql += 'insert into public.forecasts (id,question,detail,closes_on,target_type,t
   F.map(f => `(${q(f.id)},${q(f.question)},${q(f.detail)},${q(f.closes_on)},${q(f.target_type)},${q(f.target_id)},null)`).join(',\n') + '\non conflict (id) do nothing;\n';
 writeFileSync(new URL('../supabase/seed.sql', import.meta.url), sql);
 // The same statements are safe to run again on a live database, so they double as the update file.
-if (itemArt.length) writeFileSync(new URL(`../supabase/updates/catalog-${ART.built}.sql`, import.meta.url), `-- Real artwork, artist photos and Apple's charts (built ${ART.built}). Safe to run more than once.\n-- Paste into the Supabase SQL editor and run.\n\n` + sql);
+// Bundles the genre migration first, so this is the only file to paste.
+const genresMigration = readFileSync(new URL('../supabase/migrations/20261106000001_genres.sql', import.meta.url), 'utf8');
+if (itemArt.length) writeFileSync(new URL(`../supabase/updates/catalog-${ART.built}.sql`, import.meta.url), `-- Real artwork, artist photos, new genres and Apple's charts (built ${ART.built}). Safe to run more than once.\n-- Paste into the Supabase SQL editor and run. Needs the 2026-11-04 and 2026-11-05 updates first.\n\n` + genresMigration + '\n' + sql);
 console.log('seed.sql written:', Object.keys(GENRES).length, 'genres,', Object.keys(ARTISTS).length, 'artists,', ALBUMS.length + SHOWS.length + extras.length, 'items,', itemArt.length, 'with art,', wiki.length, 'wiki pages,', F.length, 'forecasts');

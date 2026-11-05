@@ -1,4 +1,7 @@
 -- Artist photo rules and genre mosaics.
+-- The seed already fills photos; start these three from "never looked".
+reset role;
+update public.artists set image_url = null, image_credit = null, image_source = null, image_checked_at = null where id in ('frank','tems','kendrick');
 set role authenticated;
 select set_config('request.jwt.claim.sub','dddddddd-0000-0000-0000-000000000004',false);
 select tests.expect_fail($$select public.set_artist_image('frank','https://evil.example.com/x.jpg','x',null)$$, 'foreign photo host');

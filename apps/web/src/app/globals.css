@@ -316,3 +316,93 @@ main:focus { outline: none; }
 @keyframes sk { 0%, 100% { opacity: .55 } 50% { opacity: 1 } }
 .sk-row { display: flex; gap: 12px; align-items: center; padding: 8px 0; }
 .sk-card { background: var(--mist); border-radius: 22px; padding: 18px; display: grid; gap: 12px; }
+
+/* ===================================================================================
+   Light design (Nov 2026). Matches the iPhone app: soft tinted page, white cards with a
+   gentle lift, pill controls, one blue accent. The old "ink band" variables now point at the
+   light palette, and the rules below fix the places that used ink as a solid dark fill.
+   =================================================================================== */
+:root {
+  --ink: #f4f5f9; --ink-2: #ffffff; --ink-3: #eef1f6; --on-ink: #0e1116; --on-ink-dim: #6a7080;
+  --mist: #ffffff; --paper: #f4f5f9; --text: #0e1116; --dim: #6a7080; --faint: #a2a7b4; --line: #e6e8ef;
+  --card2: #eef1f6; --heart: #f0365f; --dark: #0e1116; --blue-mid: #9ccaf8;
+  --lift: 0 4px 14px rgba(26,35,64,.06); --lift-2: 0 10px 28px rgba(26,35,64,.12);
+}
+body { background: var(--paper); }
+.band { background: transparent; color: var(--text); }
+.band .eyebrow, .eyebrow.blue { color: var(--blue); }
+.band .muted, .hero .lede { color: var(--dim); }
+.sheet { background: transparent; border-radius: 0; margin-top: 0; }
+.nav { background: rgba(244,245,249,.86); backdrop-filter: saturate(1.6) blur(18px); -webkit-backdrop-filter: saturate(1.6) blur(18px); border-bottom: 1px solid var(--line); color: var(--text); }
+.nav-links a { color: var(--dim); }
+.nav-links a[aria-current="page"], .nav-links a:hover { color: var(--blue); }
+.disc { background: radial-gradient(circle at 50% 50%, #fff 0 3px, var(--blue) 3.5px 11px, #5fb0f7 11.5px 12px); }
+.bell { color: var(--text); background: #fff; border: 1px solid var(--line); border-radius: 50%; }
+.bell:hover { background: var(--card2); }
+.bell .badge { background: var(--heart); border: 2px solid #fff; }
+
+.btn { border-radius: 999px; box-shadow: 0 6px 16px rgba(4,126,239,.22); }
+.btn.sm { border-radius: 999px; }
+.btn.ghost, .btn.dark { background: #fff; color: var(--text); box-shadow: none; border: 1px solid var(--line); }
+.btn.ghost:hover, .btn.dark:hover { background: var(--card2); }
+.btn.danger { box-shadow: none; }
+.chip, .seg button, .seg a { border-radius: 999px; background: #fff; color: var(--text); border: 1px solid var(--line); height: 38px; }
+.chip.on, .chip.light.on, .seg .on { background: var(--blue-soft); color: var(--blue); border-color: var(--blue); }
+.chip.light { background: #fff; color: var(--text); }
+.inp, .band .inp { background: #fff; color: var(--text); border: 1px solid var(--line); border-radius: 16px; }
+.inp:focus { box-shadow: 0 0 0 3px var(--blue-soft); border-color: var(--blue); }
+.wl { background: #fff; border: 1px solid var(--line); box-shadow: var(--lift); border-radius: 999px; }
+.wl input { color: var(--text); }
+
+.card, .post, .fc, .mod-card, .list-card, .sk-card, .match { background: #fff; box-shadow: var(--lift); border-radius: 24px; }
+.match { background: #fff; }
+.list-card:hover, .post:hover { box-shadow: var(--lift-2); }
+.list-card .fan .art { border-color: #fff; }
+.chart-row:hover, .pick button:hover { background: #fff; box-shadow: var(--lift); }
+.art { background: var(--card2); }
+.cover-tile .art { border-radius: 20px; box-shadow: var(--lift); }
+.hero-art .art { box-shadow: var(--lift-2); }
+
+.stars .on svg { fill: var(--blue); }
+.stars .off svg { fill: #dcdfe7; }
+.kind { background: var(--blue-soft); color: var(--blue); border-radius: 999px; text-transform: none; letter-spacing: 0; font-size: 12px; }
+.kind.take { background: #fff1e6; color: #e06a12; }
+.kind.thread { background: var(--card2); color: var(--dim); }
+.tchip { background: var(--card2); }
+.tchip .gdot { background: var(--blue); }
+.vote button { background: #fff; border: 1.5px solid var(--line); }
+.vote .disagree .fill { background: var(--card2); }
+.vote .disagree.mine { box-shadow: inset 0 0 0 2px var(--text); }
+.act.heart.on { color: var(--heart); }
+.act.heart.on svg { fill: var(--heart); }
+.status { background: var(--card2); }
+.play-on a { background: #fff; border: 1px solid var(--line); border-radius: 999px; }
+.x { background: #fff; border: 1px solid var(--line); border-radius: 50%; }
+.note-row .ic { background: var(--blue-soft); color: var(--blue); }
+.msg .bub { background: #fff; box-shadow: var(--lift); }
+.shared { background: #fff; }
+.composer { background: var(--paper); }
+.modal { background: var(--paper); }
+.toast { background: var(--dark); }
+.counts small { color: var(--dim); }
+.photo-credit { color: var(--dim); }
+.visa { border-color: #cfd3dc; background: #fff; }
+.sk, .band .sk { background: #e6e8ef; }
+footer.site { background: #fff; color: var(--dim); border-top: 1px solid var(--line); }
+footer a:hover { color: var(--blue); }
+
+/* What a post is about: cover, kind, title and maker, always above the words. */
+.ref { display: flex; align-items: center; gap: 12px; background: var(--card2); border-radius: 16px; padding: 8px 14px 8px 8px; color: var(--text); min-width: 0; }
+.ref:hover { background: #e6eaf2; }
+.ref .art { width: 54px; border-radius: 10px; }
+.ref .m { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.ref .k { font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--blue); }
+.ref .t { font-weight: 700; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ref .s { color: var(--dim); font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ref .score { text-align: right; display: grid; justify-items: end; gap: 2px; }
+.ref .score b { font-size: 18px; font-weight: 800; }
+.wall { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; transform: rotate(-3deg); margin: 8px 0 18px; }
+.wall a .art { width: 100%; border-radius: 18px; box-shadow: var(--lift-2); transition: transform .25s; }
+.wall a:nth-child(3n+2) { transform: translateY(18px); }
+.wall a:hover .art { transform: scale(1.04); }
+@media (max-width: 900px) { .wall { transform: none; } .wall a:nth-child(3n+2) { transform: none; } }

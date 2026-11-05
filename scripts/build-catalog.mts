@@ -12,7 +12,6 @@
 import { writeFileSync } from 'node:fs';
 import { ALBUMS, ARTISTS, SHOWS } from '../packages/core/src/catalog-data.js';
 import { appleArt, appleSearchUrl, parseApple, type AppleResult } from '../packages/core/src/apple';
-import { matchApple } from '../packages/core/src/artwork';
 import { findArtistPhoto, type ArtistPhoto } from '../packages/core/src/images';
 
 const UA = 'MeloCatalogBuilder/1.0 (https://github.com/ayalmeyers/melo)';
@@ -38,11 +37,17 @@ async function apple(url: string): Promise<AppleResult[]> {
 const wiki = (url: string) => getJson(url, { 'Api-User-Agent': UA });
 
 const MELO_GENRE: [RegExp, string][] = [
+  [/k-pop/i, 'kpop'], [/j-pop|anime|j-rock|vocaloid/i, 'jpop'], [/country|americana|bluegrass/i, 'country'], [/soundtrack|musicals?|original score|cast recording/i, 'soundtrack'],
   [/hip-hop|rap/i, 'hiphop'], [/r&b|soul/i, 'rnb'], [/afro/i, 'afro'], [/latin|reggaeton|urbano|salsa|bachata|regional mexicano|música mexicana|corrido/i, 'latin'],
-  [/j-pop|city pop|anime/i, 'citypop'], [/brazil|mpb|bossa|samba|sertanejo|funk brasileiro|pagode/i, 'brazil'], [/alternative|indie/i, 'indie'],
+  [/city pop/i, 'citypop'], [/brazil|mpb|bossa|samba|sertanejo|funk brasileiro|pagode/i, 'brazil'], [/alternative|indie/i, 'indie'],
   [/rock|metal|punk/i, 'rock'], [/electronic|dance|house|techno/i, 'electronic'], [/jazz/i, 'jazz'], [/pop|k-pop/i, 'pop'], [/world|african/i, 'afro'],
 ];
-const meloGenre = (names: string[]) => { for (const n of names) for (const [re, g] of MELO_GENRE) if (re.test(n)) return g; return null; };
+const unmapped = new Map<string, number>();
+const meloGenre = (names: string[]) => {
+  for (const n of names) for (const [re, g] of MELO_GENRE) if (re.test(n)) return g;
+  const key = names.filter(n => n !== 'Music').join(' / ') || '(none)'; unmapped.set(key, (unmapped.get(key) ?? 0) + 1);
+  return null;
+};
 const norm = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
 
 export interface ItemArt { apple_id: number; artwork_url: string; apple_url?: string; release_date?: string; track_count?: number }
@@ -61,15 +66,18 @@ const toArt = (r: AppleResult): ItemArt => ({ apple_id: r.apple_id, artwork_url:
    First a plain search in the US store and the artist's home store; if that misses, find the artist on Apple
    and look through their whole discography, which catches records the search ranks below singles and remixes. */
 const STORES = new Set(['US', 'GB', 'NG', 'JP', 'ES', 'KR', 'FR', 'BR', 'PK', 'CO', 'MX', 'DE', 'CA', 'GH', 'ZA', 'IN', 'JM', 'AU', 'IE', 'SE']);
-const plain = (t: string) => norm(t.replace(/\s*[([](deluxe|explicit|clean|remaster(ed)?|\d+(th)? anniversary|expanded|edition)[^)\]]*[)\]]/gi, ''));
+const EDITION = /\s*(?:[([](?:[^)\]]*?)(?:deluxe|explicit|clean|remaster(?:ed)?|anniversary|expanded|edition|version)[^)\]]*[)\]]|\s[-–]\s.*(?:deluxe|remaster(?:ed)?|anniversary|expanded|edition|version).*)$/i;
+const plain = (t: string) => norm(t.replace(EDITION, ''));
+// A different record that happens to share the name: instrumentals, remixes, live sets, karaoke.
+const OTHER = /instrumental|remix|acapella|a cappella|karaoke|live (at|from|in)|\blive\b|commentary|tribute|reimagined|sped up|slowed/i;
 function pick(hits: AppleResult[], title: string, artist: string): AppleResult | null {
   const t = norm(title), a = norm(artist);
-  const mine = hits.filter(h => h.kind === 'album' && (norm(h.artist) === a || norm(h.artist).includes(a) || a.includes(norm(h.artist))));
+  const mine = hits.filter(h => h.kind === 'album' && (norm(h.artist) === a || norm(h.artist).includes(a) || a.includes(norm(h.artist))) && (OTHER.test(title) || !OTHER.test(h.title)));
   const exact = mine.filter(h => norm(h.title) === t);
   const loose = mine.filter(h => plain(h.title) === t || plain(h.title) === plain(title));
   // Prefer the standard edition (fewest extras in the title), then the earliest release.
   const best = (xs: AppleResult[]) => xs.sort((x, y) => x.title.length - y.title.length || (x.release_date ?? '').localeCompare(y.release_date ?? ''))[0] ?? null;
-  return best(exact) ?? best(loose) ?? matchApple(hits, title, artist);
+  return best(exact) ?? best(loose);
 }
 const artistAppleIds = new Map<string, number>();
 async function appleArtistId(name: string, cc: string): Promise<number | null> {
@@ -191,6 +199,7 @@ writeFileSync(new URL('../packages/core/src/catalog-art.js', import.meta.url),
 report.splice(4, 0,
   `Hand-picked albums and podcasts with art: ${Object.keys(items).length} of ${ALBUMS.length + SHOWS.length}`,
   `Chart albums added: ${out.extraAlbums.length} · chart podcasts added: ${out.extraShows.length} · new artists: ${out.extraArtists.length}`,
-  `Artists with a Commons photo: ${photos} of ${allArtists.length}`, '', '## Misses', ...(misses.length ? misses.map(m => '- ' + m) : ['- none']), '');
+  `Artists with a Commons photo: ${photos} of ${allArtists.length}`, '',
+  '## Apple genres with no Melo genre', ...[...unmapped].sort((a, b) => b[1] - a[1]).map(([g, n]) => `- ${g}: ${n}`), '', '## Misses', ...(misses.length ? misses.map(m => '- ' + m) : ['- none']), '');
 writeFileSync(new URL('../catalog-report.md', import.meta.url), report.join('\n') + '\n');
 console.log(report.slice(4, 12).join('\n'));

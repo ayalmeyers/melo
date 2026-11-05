@@ -12,6 +12,10 @@ insert into public.genres (id,name) values
 ('mbalax','Mbalax'),
 ('indie','Indie'),
 ('jazz','Jazz & Beyond'),
+('kpop','K-pop'),
+('jpop','J-pop'),
+('country','Country'),
+('soundtrack','Soundtracks & Musicals'),
 ('podcasts','Music Podcasts')
 on conflict (id) do update set name=excluded.name;
 
@@ -1422,6 +1426,10 @@ Post which one you mean. People here care.',1),
 ('g:mbalax','Senegalese popular music built on sabar drumming and Wolof singing, made internationally famous by Youssou N''Dour and Super Étoile de Dakar.',1),
 ('g:indie','Records made outside the major-label system or in its spirit. On Melo this includes indie rock, bedroom pop and the Seoul, Tokyo and Lagos indie scenes.',1),
 ('g:jazz','Jazz and the music around it: spiritual jazz, fusion, ghazal-inflected records and anything where improvisation leads.',1),
+('g:kpop','Popular music from South Korea, built around trained idol groups, sharp choreography and fandoms that organize across borders. BTS and BLACKPINK took it to stadiums worldwide in the late 2010s, and a new generation of groups keeps it on charts everywhere.',1),
+('g:jpop','Japanese popular music, from idol groups and anime theme songs to bands and bedroom producers. City pop, its glossy 1980s cousin, has its own room on Melo.',1),
+('g:country','Country grew out of the folk, blues and gospel of the rural American South, with Nashville as its industry home. In the 2020s country records regularly top the overall charts, and the line between country, rock and pop keeps moving.',1),
+('g:soundtrack','Music written for film, television, games and the stage, including original cast recordings. Some of the most-played records of any year come from here.',1),
 ('g:podcasts','Shows about music: interviews, song breakdowns, history and arguments. Episodes on Melo get timestamped comments, so you can talk about the exact minute.',1),
 ('r:kendrick','Rapper and songwriter from Compton, California. Known for dense, character-driven albums including good kid, m.A.A.d city (2012) and To Pimp a Butterfly (2015). DAMN. (2017) won the 2018 Pulitzer Prize for Music, a first for a non-classical, non-jazz work.',1),
 ('r:charli','English singer and songwriter whose work moves between mainstream pop and club and hyperpop production. BRAT (2024) became one of the most talked-about records of that year.',1),

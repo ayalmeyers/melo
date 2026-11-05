@@ -24,7 +24,7 @@ export function SearchBox() {
   const have = new Set(items.map(i => i.id));
   const genres = ql ? Object.entries(GENRES).filter(([, g]) => g.name.toLowerCase().includes(ql)) : [];
   return <div className="stack">
-    <label className="row" style={{ background: 'var(--ink-2)', borderRadius: 16, padding: '0 16px', height: 54, color: 'var(--on-ink-dim)', flexWrap: 'nowrap' }}><Icon name="search" /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Albums, artists, genres, people" aria-label="Search Melo" style={{ flex: 1, background: 'none', border: 0, outline: 0, color: '#fff', fontSize: 17 }} /></label>
+    <label className="row" style={{ background: '#fff', border: '1px solid var(--line)', boxShadow: 'var(--lift)', borderRadius: 999, padding: '0 18px', height: 54, color: 'var(--dim)', flexWrap: 'nowrap' }}><Icon name="search" /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Albums, artists, genres, people" aria-label="Search Melo" style={{ flex: 1, background: 'none', border: 0, outline: 0, color: '#fff', fontSize: 17 }} /></label>
     {ql && <div className="card stack" style={{ color: 'var(--text)' }}>
       {artists.map(a => <Link key={a.id} className="list-row" href={`/artist/${a.id}`}><ArtistArt id={a.id} name={a.name} art={a.image_url ?? a.artwork_url} size={48} /><span className="m"><b>{a.name}</b><small>Artist {flag(a.cc)}</small></span></Link>)}
       {items.map(it => <Link key={it.id} className="list-row" href={`/album/${it.id}`}><ItemArt item={it} size={48} /><span className="m"><b>{it.title}</b><small>{it.artist_name} · {it.type}</small></span></Link>)}

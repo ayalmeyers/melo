@@ -21,6 +21,7 @@ const PATHS: Record<string, string> = {
   trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
   flag: '<path d="M5 21V4h11l-1.5 4L16 12H5"/>',
   headphones: '<path d="M4 15.5V12a8 8 0 0 1 16 0v3.5"/><path d="M4 14.5h3v6H5.5A1.5 1.5 0 0 1 4 19zM20 14.5h-3v6h1.5A1.5 1.5 0 0 0 20 19z"/>',
+  chevron: '<path d="m9 6 6 6-6 6"/>',
   link: '<path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/>',
   comment: '<path d="M20.5 12a8.5 8.5 0 0 1-12.4 7.5L3.5 20.5l1-4.4A8.5 8.5 0 1 1 20.5 12z"/>',
 };

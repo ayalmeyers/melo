@@ -32,9 +32,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <footer className="site">
             <div className="wrap">
               <div className="cols">
-                <div style={{ maxWidth: 320 }}><Link className="logo" href="/" style={{ color: '#fff' }}><span className="disc" aria-hidden="true" />melo</Link><p style={{ marginTop: 12 }}>Log, rate and argue about albums and podcast episodes. Works with Spotify and Apple Music.</p></div>
-                <div><b style={{ color: '#fff' }}>Melo</b><Link href="/explore">Explore</Link><Link href="/charts">Charts</Link><Link href="/forecasts">Forecasts</Link><Link href="/feed">Feed</Link><Link href="/import">Import history</Link></div>
-                <div><b style={{ color: '#fff' }}>Help</b><Link href="/support">Support</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></div>
+                <div style={{ maxWidth: 320 }}><Link className="logo" href="/" style={{ color: 'var(--text)' }}><span className="disc" aria-hidden="true" />melo</Link><p style={{ marginTop: 12 }}>Log, rate and argue about albums and podcast episodes. Works with Spotify and Apple Music.</p></div>
+                <div><b style={{ color: 'var(--text)' }}>Melo</b><Link href="/explore">Explore</Link><Link href="/charts">Charts</Link><Link href="/forecasts">Forecasts</Link><Link href="/feed">Feed</Link><Link href="/import">Import history</Link></div>
+                <div><b style={{ color: 'var(--text)' }}>Help</b><Link href="/support">Support</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></div>
               </div>
             </div>
           </footer>

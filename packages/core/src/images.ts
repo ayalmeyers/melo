@@ -39,7 +39,7 @@ export function pickPhoto(json: unknown): ArtistPhoto | null {
   const page = Object.values((json as Pages)?.query?.pages ?? {})[0];
   const info = page?.imageinfo?.[0];
   const url = info?.thumburl ?? info?.url;
-  if (!url || !url.startsWith('https://upload.wikimedia.org/')) return null;
+  if (!url || !url.startsWith('https://upload.wikimedia.org/wikipedia/commons/')) return null;
   const meta = info?.extmetadata ?? {};
   const author = strip(meta.Artist?.value).slice(0, 120);
   const license = strip(meta.LicenseShortName?.value).slice(0, 60);
@@ -47,12 +47,38 @@ export function pickPhoto(json: unknown): ArtistPhoto | null {
   return { url, credit, source: info?.descriptionurl ?? `https://commons.wikimedia.org/wiki/${encodeURIComponent(page?.title ?? '')}` };
 }
 
+/* Direct title lookup: the artist's own Wikipedia page by exact name, or the usual "(musician)" style variants.
+   A page only counts when Wikipedia's short description says it is about a musician, so "Future" the concept
+   or "Drake" the disambiguation page never wins. This finds far more artists than full-text search. */
+const QUALIFIERS = ['', ' (musician)', ' (singer)', ' (rapper)', ' (band)', ' (group)', ' (entertainer)', ' (DJ)', ' (producer)'];
+export const wikiTitlesUrl = (name: string) => `${WP}?${qs({ action: 'query', format: 'json', origin: '*', redirects: '1', prop: 'pageprops|description|pageimages', piprop: 'name', ppprop: 'wikibase_item|disambiguation', titles: QUALIFIERS.map(q => name + q).join('|') })}`;
+const MUSIC = /singer|rapper|musician|band|group|duo|trio|producer|\bDJ\b|disc jockey|composer|songwriter|vocalist|guitarist|pianist|drummer|bassist|music|idol|orchestra|ensemble|entertainer|artist/i;
+type TitlePage = { title?: string; missing?: string; description?: string; pageimage?: string; pageprops?: { wikibase_item?: string; disambiguation?: string } };
+/** Picks the artist's page from a titles lookup: an existing, non-disambiguation page described as a musician, the plain name first. */
+export function pickTitlePage(json: unknown, name: string): { qid: string | null; pageimage: string | null } | null {
+  const q = (json as { query?: { pages?: Record<string, TitlePage>; redirects?: { from: string; to: string }[]; normalized?: { from: string; to: string }[] } })?.query;
+  const pages = Object.values(q?.pages ?? {}).filter(p => p.missing === undefined && p.title && !p.pageprops?.disambiguation && MUSIC.test(p.description ?? ''));
+  if (!pages.length) return null;
+  // Resolve each requested title through normalization and redirects, then keep the requested order.
+  const hop = (t: string) => { let x = t; for (const m of [...(q?.normalized ?? []), ...(q?.redirects ?? [])]) if (m.from === x) x = m.to; return x; };
+  for (const qual of QUALIFIERS) {
+    const target = hop(name + qual);
+    const page = pages.find(p => p.title === target);
+    if (page) return { qid: page.pageprops?.wikibase_item ?? null, pageimage: page.pageimage ?? null };
+  }
+  return null;
+}
+
 /** Looks up a photo for an artist by name. Returns null when Wikipedia has no confident match or no free image. */
 export async function findArtistPhoto(name: string, fetchJson: FetchJson): Promise<ArtistPhoto | null> {
   try {
-    const qid = pickPage(await fetchJson(wikiSearchUrl(name)), name);
-    if (!qid) return null;
-    const file = pickImageFile(await fetchJson(wikidataImageUrl(qid)));
+    let qid: string | null = null; let pageimage: string | null = null;
+    const direct = pickTitlePage(await fetchJson(wikiTitlesUrl(name)).catch(() => null), name);
+    if (direct) { qid = direct.qid; pageimage = direct.pageimage; }
+    else qid = pickPage(await fetchJson(wikiSearchUrl(name)), name);
+    if (!qid && !pageimage) return null;
+    // Wikidata's chosen image first; the Wikipedia lead image when Wikidata has none. Either way it must live on Commons.
+    const file = (qid ? pickImageFile(await fetchJson(wikidataImageUrl(qid)).catch(() => null)) : null) ?? pageimage;
     if (!file) return null;
     return pickPhoto(await fetchJson(commonsInfoUrl(file)));
   } catch {

@@ -28,11 +28,11 @@ export default async function ProfilePage({ params, searchParams }: P) {
     <section className="band ent-band"><div className="wrap stack" style={{ gap: 20 }}>
       <div className="in"><Avatar name={p.name} color={p.color} size="xl" /><div style={{ flex: 1, minWidth: 220 }}><h1>{p.name}</h1><p className="muted" style={{ fontWeight: 600 }}>@{p.handle} · {flag(p.cc)} {p.city || countryName(p.cc)}</p>
         <div className="counts" style={{ marginTop: 10 }}><div><b>{stats?.followers ?? 0}</b><small>Followers</small></div><div><b>{stats?.following ?? 0}</b><small>Following</small></div><div><b>{stats?.logged ?? 0}</b><small>Logged</small></div>{stats?.ear != null && <div><b>{stats.ear}</b><small>Ear score</small></div>}</div></div></div>
-      {p.bio && <p style={{ color: '#c3c8d4', fontSize: 17, maxWidth: '60ch' }}>{p.bio}</p>}
+      {p.bio && <p style={{ color: 'var(--dim)', fontSize: 17, maxWidth: '60ch' }}>{p.bio}</p>}
       <div className="row">{isMe ? <Link className="btn sm" href="/settings">Edit profile</Link> : <><FollowButton kind="user" target={p.id} dark /><MessageButton userId={p.id} /><BlockButton userId={p.id} /></>}</div>
       {p.top4.length > 0 && <div><span className="eyebrow">Top 4</span><div className="top4" style={{ marginTop: 10 }}>{p.top4.map(i => items[i] ? <Link key={i} href={`/album/${i}`} aria-label={items[i].title}><ItemArt item={items[i]} /></Link> : null)}</div></div>}
       {match && match.shared_items + match.shared_artists > 0 && <div className="match">
-        <div className="row" style={{ alignItems: 'baseline' }}><span className="pct">{match.score}%</span><b style={{ color: '#fff' }}>taste match</b><span className="muted">· {match.shared_items} albums and {match.shared_artists} artists in common</span></div>
+        <div className="row" style={{ alignItems: 'baseline' }}><span className="pct">{match.score}%</span><b>taste match</b><span className="muted">· {match.shared_items} albums and {match.shared_artists} artists in common</span></div>
         {!!shared.length && <div className="covers">{shared.map(i => sharedItems[i] ? <Link key={i} href={`/album/${i}`} aria-label={sharedItems[i].title}><ItemArt item={sharedItems[i]} /></Link> : null)}</div>}
         {!!match.both_loved?.length && <small className="muted">You both rated these 4 stars or more</small>}
       </div>}

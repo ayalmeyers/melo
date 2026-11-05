@@ -33,7 +33,7 @@ function Login() {
       <button type="button" className="btn ghost block" onClick={() => { setMode(mode === 'in' ? 'up' : 'in'); setErr(''); setSent(false); }}>{mode === 'in' ? 'New here? Create an account' : 'Have an account? Sign in'}</button>
     </form>
     {err && <p className="err" style={{ marginTop: 14 }}>{err}</p>}
-    <p className="muted" style={{ marginTop: 24, fontSize: 14 }}>By continuing you agree to the <a href="/terms" style={{ color: '#fff' }}>Terms</a> and <a href="/privacy" style={{ color: '#fff' }}>Privacy Policy</a>.</p>
+    <p className="muted" style={{ marginTop: 24, fontSize: 14 }}>By continuing you agree to the <a href="/terms" style={{ color: 'var(--blue)' }}>Terms</a> and <a href="/privacy" style={{ color: 'var(--blue)' }}>Privacy Policy</a>.</p>
   </div></section>;
 }
 export default function LoginPage() { return <Suspense><Login /></Suspense>; }

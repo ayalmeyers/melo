@@ -93,6 +93,16 @@ export function TargetChip({ t, items }: { t: Target; items?: Record<string, Cat
   const it = items?.[t.id];
   return <Link className="tchip" href={`/album/${t.id}`}>{it && <ItemArt item={it} size={24} />}<span>{it ? `${it.title} · ${it.artist_name}` : 'Open'}</span></Link>;
 }
+/** What a post is about, as a card with the real cover: kind, title, who made it, and the score for reviews. */
+export function RefCard({ t, items, rating }: { t: Target; items?: Record<string, CatalogItem>; rating?: number | null }) {
+  const a = useArtist(t.type === 'artist' ? t.id : '');
+  if (t.type === 'genre') { const g = GENRES[t.id]; return <Link className="ref" href={`/genre/${t.id}`}><GenreArt id={t.id} size={54} /><span className="m"><span className="k">Genre</span><span className="t">{g?.name ?? t.id}</span><span className="s">Community board</span></span><Icon name="chevron" size={18} /></Link>; }
+  if (t.type === 'artist') return <Link className="ref" href={`/artist/${t.id}`}><ArtistArt id={t.id} name={a?.name} art={a?.image_url ?? a?.artwork_url} size={54} /><span className="m"><span className="k">Artist</span><span className="t">{a?.name ?? 'Artist'}</span><span className="s">Discussion and wiki</span></span><Icon name="chevron" size={18} /></Link>;
+  const it = items?.[t.id];
+  const kind = it?.type === 'show' ? 'Podcast' : it?.type === 'episode' ? 'Episode' : 'Album';
+  return <Link className="ref" href={`/album/${t.id}`}>{it ? <ItemArt item={it} size={54} /> : <span className="art" style={{ width: 54 }} />}<span className="m"><span className="k">{kind}</span><span className="t">{it?.title ?? 'Open'}</span><span className="s">{[it?.artist_name, it?.year].filter(Boolean).join(' · ')}</span></span>
+    {rating != null ? <span className="score"><b>{(rating / 2).toFixed(1)}</b><Stars r10={rating} size={12} /></span> : <Icon name="chevron" size={18} />}</Link>;
+}
 export function ItemRow({ it, size = 64, extra }: { it: CatalogItem; size?: number; extra?: React.ReactNode }) {
   return <Link className="item-row" href={`/album/${it.id}`}><ItemArt item={it} size={size} /><span className="txt"><span className="t">{it.title}</span><span className="a">{it.artist_name}</span><span className="y">{flag(it.cc)} {it.type === 'album' ? `${it.year ?? ''} · ${genreName(it.genre)}` : it.type === 'episode' ? `Episode${it.dur_min ? ` · ${it.dur_min} min` : ''}` : 'Podcast'}</span>{extra}</span></Link>;
 }
@@ -127,12 +137,12 @@ function PostCard({ p, items, mine, onChange, full }: { p: FeedPost; items: Reco
   return (
     <article className="post">
       <div className="post-h"><Link href={`/u/${p.author_handle}`}><Avatar name={p.author_name} color={p.author_color} /></Link><Link className="meta" href={`/u/${p.author_handle}`}><b>{p.author_name}</b><small>@{p.author_handle} · {ago(p.created_at)} {flag(p.author_cc)}</small></Link><span className={`kind ${p.kind}`}>{KIND[p.kind]}</span></div>
-      {p.kind === 'review' && it && <ItemRow it={it} size={70} extra={p.rating ? <span style={{ marginTop: 2 }}><Stars r10={p.rating} /></span> : null} />}
+      {t && <RefCard t={t} items={items} rating={p.kind === 'review' ? p.rating : null} />}
       {p.kind === 'review' && p.body && <Link href={`/p/${p.id}`}><p className={`body-text ${full ? '' : 'clamp'}`}>{p.body}</p></Link>}
-      {p.kind === 'take' && <><Link href={`/p/${p.id}`}><p className="take-text">{p.body}</p></Link>{t && <div><TargetChip t={t} items={items} /></div>}
+      {p.kind === 'take' && <><Link href={`/p/${p.id}`}><p className="take-text">{p.body}</p></Link>
         <div className="vote"><button className={`agree ${local.vote === 'agree' ? 'mine' : ''}`} onClick={() => vote('agree')}><span className="fill" style={{ width: `${local.vote && total ? pa : 0}%` }} /><span>Agree</span><span className="pct">{local.vote && total ? pa + '%' : ''}</span></button><button className={`disagree ${local.vote === 'disagree' ? 'mine' : ''}`} onClick={() => vote('disagree')}><span className="fill" style={{ width: `${local.vote && total ? 100 - pa : 0}%` }} /><span>Disagree</span><span className="pct">{local.vote && total ? 100 - pa + '%' : ''}</span></button></div>
         <p className="vote-note">{total} vote{total === 1 ? '' : 's'}{local.vote ? '' : ' · vote to see the split'}</p></>}
-      {p.kind === 'thread' && <><Link href={`/p/${p.id}`}><p className="thread-title">{p.title}</p>{p.body && <p className={`body-text ${full ? '' : 'clamp'}`} style={{ color: '#3c4250', marginTop: 6 }}>{p.body}</p>}</Link>{t && <div><TargetChip t={t} items={items} /></div>}</>}
+      {p.kind === 'thread' && <><Link href={`/p/${p.id}`}><p className="thread-title">{p.title}</p>{p.body && <p className={`body-text ${full ? '' : 'clamp'}`} style={{ color: '#3c4250', marginTop: 6 }}>{p.body}</p>}</Link></>}
       <div className="actions">
         <button className={`act heart ${local.like ? 'on' : ''}`} onClick={() => react('like')} aria-pressed={!!local.like} aria-label="Like"><Icon name="heart" size={19} /><span>{counts.likes}</span></button>
         <button className={`act ${local.laugh ? 'on' : ''}`} onClick={() => react('laugh')} aria-pressed={!!local.laugh} aria-label="Laugh"><Icon name="laugh" size={19} /><span>{counts.laughs}</span></button>

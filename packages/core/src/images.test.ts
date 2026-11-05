@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findArtistPhoto, pickPage, pickPhoto } from './images';
+import { findArtistPhoto, pickPage, pickPhoto, pickTitlePage } from './images';
 
 const search = { query: { pages: {
   '1': { title: 'Frank Ocean discography', index: 2, pageprops: { wikibase_item: 'Q2' } },
@@ -23,8 +23,24 @@ describe('artist photos', () => {
     const calls: string[] = [];
     const photo = await findArtistPhoto('Frank Ocean', async url => { calls.push(url); return url.includes('wikipedia.org') ? search : url.includes('wikidata') ? claims : info; });
     expect(photo?.credit).toContain('Jane Photographer');
-    expect(calls).toHaveLength(3);
-    expect(calls[2]).toContain('File%3AFrank%20Ocean%202012.jpg');
+    // Title lookup finds nothing described as a musician in this mock, so it falls back to search.
+    expect(calls).toHaveLength(4);
+    expect(calls[3]).toContain('File%3AFrank%20Ocean%202012.jpg');
     expect(await findArtistPhoto('Nobody', async () => ({ query: { pages: {} } }))).toBeNull();
+  });
+  it('finds the artist page by title and skips disambiguations and non-music pages', () => {
+    const drake = { query: { normalized: [], redirects: [], pages: {
+      '1': { title: 'Drake', pageprops: { disambiguation: '', wikibase_item: 'Q0' }, description: 'Topics referred to by the same term' },
+      '2': { title: 'Drake (musician)', pageprops: { wikibase_item: 'Q33240' }, description: 'Canadian rapper (born 1986)', pageimage: 'Drake_July_2016.jpg' },
+      '-1': { title: 'Drake (singer)', missing: '' } } } };
+    expect(pickTitlePage(drake, 'Drake')).toEqual({ qid: 'Q33240', pageimage: 'Drake_July_2016.jpg' });
+    const future = { query: { pages: { '1': { title: 'Future', description: 'Time after the present', pageprops: { wikibase_item: 'Q1' } }, '2': { title: 'Future (rapper)', description: 'American rapper (born 1983)', pageprops: { wikibase_item: 'Q2' } } } } };
+    expect(pickTitlePage(future, 'Future')?.qid).toBe('Q2');
+    const sza = { query: { normalized: [{ from: 'SZA (singer)', to: 'SZA (singer)' }], redirects: [{ from: 'SZA (singer)', to: 'SZA' }], pages: { '5': { title: 'SZA', description: 'American singer (born 1989)', pageprops: { wikibase_item: 'Q5' } } } } };
+    expect(pickTitlePage(sza, 'SZA')?.qid).toBe('Q5');
+    expect(pickTitlePage({ query: { pages: {} } }, 'Nobody')).toBeNull();
+  });
+  it('only accepts free images hosted on Commons', () => {
+    expect(pickPhoto({ query: { pages: { x: { imageinfo: [{ url: 'https://upload.wikimedia.org/wikipedia/en/a/ab/Nonfree.jpg' }] } } } })).toBeNull();
   });
 });
