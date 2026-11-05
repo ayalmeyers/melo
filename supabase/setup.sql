@@ -1282,13 +1282,14 @@ select l.*, p.handle as owner_handle, p.name as owner_name, p.color as owner_col
 grant select on public.list_cards to anon, authenticated;
 
 -- ===== supabase/migrations/20261106000001_genres.sql =====
--- More genres for Apple's charts: K-pop, J-pop, Country, Soundtracks & Musicals. J-pop no longer lands in City Pop.
+-- More genres for Apple's charts: K-pop, J-pop, Indian & Bollywood, Country, Soundtracks & Musicals. J-pop no longer lands in City Pop.
 create or replace function public.melo_genre(apple_genre text)
 returns text language sql immutable as $$
   select case
     when apple_genre is null then null
     when apple_genre ~* 'k-pop' then 'kpop'
     when apple_genre ~* 'j-pop|anime|j-rock|vocaloid' then 'jpop'
+    when apple_genre ~* 'bollywood|indian|tamil|telugu|punjabi|hindi|bhangra' then 'indian'
     when apple_genre ~* 'country|americana|bluegrass' then 'country'
     when apple_genre ~* 'soundtrack|musical|original score|cast recording' then 'soundtrack'
     when apple_genre ~* 'hip-hop|rap' then 'hiphop'
@@ -1325,6 +1326,7 @@ insert into public.genres (id,name) values
 ('kpop','K-pop'),
 ('jpop','J-pop'),
 ('country','Country'),
+('indian','Indian & Bollywood'),
 ('soundtrack','Soundtracks & Musicals'),
 ('podcasts','Music Podcasts')
 on conflict (id) do update set name=excluded.name;
@@ -2739,6 +2741,7 @@ Post which one you mean. People here care.',1),
 ('g:kpop','Popular music from South Korea, built around trained idol groups, sharp choreography and fandoms that organize across borders. BTS and BLACKPINK took it to stadiums worldwide in the late 2010s, and a new generation of groups keeps it on charts everywhere.',1),
 ('g:jpop','Japanese popular music, from idol groups and anime theme songs to bands and bedroom producers. City pop, its glossy 1980s cousin, has its own room on Melo.',1),
 ('g:country','Country grew out of the folk, blues and gospel of the rural American South, with Nashville as its industry home. In the 2020s country records regularly top the overall charts, and the line between country, rock and pop keeps moving.',1),
+('g:indian','Film music from Hindi, Tamil, Telugu and other Indian cinemas, plus Punjabi pop and independent artists. Bollywood soundtracks are among the most-streamed records in the world, and playback singers can be as famous as the stars on screen.',1),
 ('g:soundtrack','Music written for film, television, games and the stage, including original cast recordings. Some of the most-played records of any year come from here.',1),
 ('g:podcasts','Shows about music: interviews, song breakdowns, history and arguments. Episodes on Melo get timestamped comments, so you can talk about the exact minute.',1),
 ('r:kendrick','Rapper and songwriter from Compton, California. Known for dense, character-driven albums including good kid, m.A.A.d city (2012) and To Pimp a Butterfly (2015). DAMN. (2017) won the 2018 Pulitzer Prize for Music, a first for a non-classical, non-jazz work.',1),

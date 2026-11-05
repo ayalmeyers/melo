@@ -1,10 +1,11 @@
--- More genres for Apple's charts: K-pop, J-pop, Country, Soundtracks & Musicals. J-pop no longer lands in City Pop.
+-- More genres for Apple's charts: K-pop, J-pop, Indian & Bollywood, Country, Soundtracks & Musicals. J-pop no longer lands in City Pop.
 create or replace function public.melo_genre(apple_genre text)
 returns text language sql immutable as $$
   select case
     when apple_genre is null then null
     when apple_genre ~* 'k-pop' then 'kpop'
     when apple_genre ~* 'j-pop|anime|j-rock|vocaloid' then 'jpop'
+    when apple_genre ~* 'bollywood|indian|tamil|telugu|punjabi|hindi|bhangra' then 'indian'
     when apple_genre ~* 'country|americana|bluegrass' then 'country'
     when apple_genre ~* 'soundtrack|musical|original score|cast recording' then 'soundtrack'
     when apple_genre ~* 'hip-hop|rap' then 'hiphop'
