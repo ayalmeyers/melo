@@ -123,6 +123,9 @@ try {
   const j = await getJson(`https://qlever.cs.uni-freiburg.de/api/wikidata?query=${encodeURIComponent(query(MIN_SL, 100000))}`, { headers: { Accept: 'application/sparql-results+json' } }, 2, 180_000) as { results?: { bindings: Binding[] } };
   log(`qlever: ${absorb(j.results?.bindings ?? [])} artists in ${Math.round((Date.now() - t0) / 1000)}s`);
 } catch (e) { log('qlever unavailable:', String(e).slice(0, 160)); }
+// Hand-curated: writers whose Wikidata entries also say singer/composer, but whose Apple profile is readings and settings.
+const EXCLUDE = new Set(['Q5879' /* Goethe */, 'Q44403' /* Heinrich Heine */, 'Q37030' /* Thomas Mann */, 'Q38757' /* Brecht */, 'Q9358' /* Nietzsche */, 'Q692' /* Shakespeare */]);
+const writerQids = new Set<string>();
 // Writers, poets, philosophers, politicians, journalists, playwrights and actors stay only when Wikidata lists them
 // directly as singer, musician, composer, rapper, singer-songwriter, guitarist or pianist, or they are a group.
 // Asked only about our own artists (in chunks of 1,500, posted), so the answers are complete rather than a capped sample.
@@ -146,9 +149,10 @@ async function qids(where: string): Promise<Set<string>> {
   const musicians = await qids('{ ?item wdt:P264 ?x } UNION { ?item wdt:P1303 ?x } UNION { ?item wdt:P412 ?x } UNION { VALUES ?c { wd:Q36834 wd:Q158852 wd:Q177220 wd:Q488205 wd:Q2252262 } ?item wdt:P106 ?c }');
   const groups = await qids('?item wdt:P31/wdt:P279* wd:Q215380 .');
   log(`occupations: ${writers.size} writers/politicians, ${musicians.size} with a label, instrument or voice type, ${groups.size} groups`);
+  for (const q of writers) writerQids.add(q);
   let dropped = 0; const examples: string[] = [];
   for (const t of [...targets.values()]) {
-    if (t.qid && writers.has(t.qid) && !musicians.has(t.qid) && !groups.has(t.qid)) { targets.delete(t.apple); dropped++; if (examples.length < 25) examples.push(t.label ?? t.qid); }
+    if (t.qid && (EXCLUDE.has(t.qid) || (writers.has(t.qid) && !musicians.has(t.qid) && !groups.has(t.qid)))) { targets.delete(t.apple); dropped++; if (examples.length < 25) examples.push(t.label ?? t.qid); }
   }
   log(`not musicians (writers, politicians, actors…): ${dropped} removed, e.g. ${examples.join(', ')}`);
 }
@@ -334,6 +338,8 @@ for (let i = 0; i < queue.length; i += CHUNK) {
     const genreVotes = new Map<string, number>();
     for (const a of kept) { const g = toMeloGenre([a.primaryGenreName ?? '']); if (g) genreVotes.set(g, (genreVotes.get(g) ?? 0) + 1); }
     const genres = [...genreVotes].sort((x, y) => y[1] - x[1]).slice(0, 3).map(([g]) => g);
+    // A writer whose records fit no music genre at all is a reader, not a musician.
+    if (!genres.length && t.qid && writerQids.has(t.qid)) { totals.emptyApple++; continue; }
     const pic = t.image ? pics.get(t.image) : undefined; if (pic) totals.photos++;
     artists.push({ apple_id: t.apple, name, cc: t.cc ?? '', genres, wikidata_id: t.qid, popularity: popularity(t),
       image_url: pic?.url, image_credit: pic?.credit, image_source: pic?.source, wiki: t.enwiki ? bio.get(t.enwiki) : undefined, synced: !!d });
