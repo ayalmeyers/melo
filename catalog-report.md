@@ -1,33 +1,36 @@
 # Catalog build report
 
-Built 2026-11-05T06:42:02.701Z
+Built 2026-11-05T14:32:07.030Z
 
 Hand-picked albums and podcasts with art: 40 of 40
-Chart albums added: 461 · chart podcasts added: 96 · new artists: 335
-Artists with a Commons photo: 179 of 359
+Chart albums added: 464 · chart podcasts added: 97 · new artists: 340
+Artists with a Commons photo: 181 of 364
 
 ## Wikimedia responses
-- commons.wikimedia.org 200: 180
-- en.wikipedia.org 200: 416
-- www.wikidata.org 200: 218
+- commons.wikimedia.org 200: 182
+- en.wikipedia.org 200: 429
+- www.wikidata.org 200: 219
 
 ## Apple genres with no Melo genre
 - (none): 8
 - Musik für Kinder / Musik: 6
-- Música: 4
+- Música: 5
 - Musique: 3
 - Children's Music: 2
+- Música / Música para crianças: 2
 - Musik: 2
 - ミュージック: 1
 - チルドレン・ミュージック / ミュージック: 1
+- ジャズ / ミュージック: 1
 - OST / 음악: 1
 - Bandas sonoras / Música: 1
+- Música para niños / Música: 1
 - Variété française / Musique: 1
 - Musique pour enfants / Musique / Variété française: 1
+- Musique / Bande originale: 1
 - Christian: 1
 - Devotional & Spiritual: 1
 - Alternativa / Música: 1
-- Música para niños / Música: 1
 - Música / Músicas del mundo: 1
 - Musik / Musik für Kinder: 1
 
@@ -103,17 +106,17 @@ Artists with a Commons photo: 179 of 359
 
 ## CA albums chart: 50
 - no free photo: Anderson .Paak & Cordae (using newest cover)
-- no free photo: KPop Demon Hunters Cast, HUNTR/X & Saja Boys (using newest cover)
 - no free photo: Lin-Manuel Miranda, Leslie Odom, Jr., Phillipa Soo, Daveed Diggs & Christopher Jackson (using newest cover)
-- no free photo: Ms. Rachel (using newest cover)
-- no free photo: NoCap (using newest cover)
-- no free photo: Yeat & Lyfestyle Corporation (using newest cover)
 - no free photo: SleepTherapy (using newest cover)
-- no free photo: ADÉLA (using newest cover)
 - no free photo: Silent Chills (using newest cover)
-- no free photo: Scotty OTH & Lil Poppa (using newest cover)
-- no free photo: Rylo Rodriguez (using newest cover)
+- no free photo: KPop Demon Hunters Cast, HUNTR/X & Saja Boys (using newest cover)
+- no free photo: NoCap (using newest cover)
 - no free photo: Baby Lullaby Academy (using newest cover)
+- no free photo: Scotty OTH & Lil Poppa (using newest cover)
+- no free photo: Ms. Rachel (using newest cover)
+- no free photo: Yeat & Lyfestyle Corporation (using newest cover)
+- no free photo: ADÉLA (using newest cover)
+- no free photo: Rylo Rodriguez (using newest cover)
 - no free photo: PARTYNEXTDOOR & Drake (using newest cover)
 - no free photo: Rain Sounds (using newest cover)
 - no free photo: Nines (using newest cover)
@@ -130,13 +133,17 @@ Artists with a Commons photo: 179 of 359
 - no free photo: Dj Boat (using newest cover)
 - no free photo: Som De Chuva e Trovoadas (using newest cover)
 - no free photo: Barulho De Chuva (using newest cover)
+- no free photo: Chuva Para Dormir (using newest cover)
 - no free photo: Vários intérpretes (using newest cover)
 - no free photo: João Gomes, Mestrinho & Jota.pê (using newest cover)
-- no free photo: Chuva Para Dormir (using newest cover)
+- no free photo: Som De Chuva E Tempestades (using newest cover)
+- no free photo: Tz da Coronel (using newest cover)
 - no free photo: Ivy Skye (using newest cover)
+- no free photo: César Sol (using newest cover)
 - no free photo: LISA (using newest cover)
+- no free photo: Mundo Bita (using newest cover)
 - no free photo: Henrique & Juliano (using newest cover)
-- no free photo: Ícaro e Gilmar, Nattan, Panda & Xand Avião (using newest cover)
+- no free photo: Niño Prodigio (using newest cover)
 - no free photo: Mrs. GREEN APPLE (using newest cover)
 - no free photo: BE:FIRST (using newest cover)
 - no free photo: キタニタツヤ (using newest cover)
@@ -153,10 +160,9 @@ Artists with a Commons photo: 179 of 359
 - no free photo: 米津玄師 (using newest cover)
 - no free photo: Akira Senju/Tatsuhiko Saiki/Shu Kanematsu (using newest cover)
 - no free photo: Official髭男dism (using newest cover)
-- no free photo: 三代目 J SOUL BROTHERS from EXILE TRIBE (using newest cover)
+- no free photo: COFFEE MUSIC MODE (using newest cover)
 - no free photo: My Hair is Bad (using newest cover)
-- no free photo: Kis-My-Ft2 (using newest cover)
-- no free photo: PROJECT ACES & Bandai Namco Game Music (using newest cover)
+- no free photo: 三代目 J SOUL BROTHERS from EXILE TRIBE (using newest cover)
 - no free photo: 山下智久 (using newest cover)
 - no free photo: 양홍원 (using newest cover)
 - no free photo: 검정치마 (using newest cover)
@@ -167,14 +173,14 @@ Artists with a Commons photo: 179 of 359
 - no free photo: 닥스후드 & 양홍원 (using newest cover)
 - no free photo: 뉴진스 (using newest cover)
 - no free photo: SYSTEM SEOUL (using newest cover)
-- no free photo: 데이먼스 이어 (using newest cover)
 - no free photo: 식케이 & 릴 모쉬핏 (using newest cover)
-- no free photo: wave to earth (using newest cover)
-- no free photo: 잔나비 (using newest cover)
-- no free photo: viceversa & 피캐시디 (using newest cover)
 - no free photo: 재지팩트 (using newest cover)
+- no free photo: 잔나비 (using newest cover)
+- no free photo: 데이먼스 이어 (using newest cover)
+- no free photo: wave to earth (using newest cover)
 - no free photo: BIGBANG (using newest cover)
 - no free photo: 한로로 (using newest cover)
+- no free photo: viceversa & 피캐시디 (using newest cover)
 - no free photo: Victor Mendivil (using newest cover)
 - no free photo: Peso Pluma & Tito Double P (using newest cover)
 - no free photo: Omar Camacho (using newest cover)
@@ -183,6 +189,7 @@ Artists with a Commons photo: 179 of 359
 - no free photo: Chuyin (using newest cover)
 - no free photo: Calle 24 (using newest cover)
 - no free photo: Fred again.. & LATIN MAFIA (using newest cover)
+- no free photo: Música Infantil TV (using newest cover)
 - no free photo: Jimmy Guzman (using newest cover)
 - no free photo: Hamza (using newest cover)
 - no free photo: Mauvais Djo (using newest cover)
@@ -195,46 +202,46 @@ Artists with a Commons photo: 179 of 359
 - no free photo: TRIANGLE DES BERMUDES (using newest cover)
 - no free photo: BEN plg (using newest cover)
 - no free photo: La superstar des comptines rondes et berceuses (using newest cover)
+- no free photo: Bruit Blanc & Bruit Blanc Calme (using newest cover)
+- no free photo: Sons de la Nature Projet France de TraxLab (using newest cover)
 - no free photo: La Rvfleuze (using newest cover)
 - no free photo: Le Crime (using newest cover)
 - no free photo: Heuss L'enfoiré (using newest cover)
 - no free photo: Bedry (using newest cover)
-- no free photo: Bruit Blanc & Bruit Blanc Calme (using newest cover)
 - no free photo: La Mano 1.9 (using newest cover)
+- no free photo: Stixx (using newest cover)
 - no free photo: Dlala Thukzin (using newest cover)
 - no free photo: Young Stunna (using newest cover)
 - no free photo: Loatinover Pounds (using newest cover)
 - no free photo: Mr JazziQ (using newest cover)
-- no free photo: Stixx (using newest cover)
 - no free photo: Kudbeu & Kana (using newest cover)
 - no free photo: Rush-Awa, MashBeatz & DJ Sliqe (using newest cover)
 - no free photo: Rain Sounds Lab & Rain (using newest cover)
+- no free photo: Noted. (using newest cover)
 - no free photo: Mawelele (using newest cover)
 - no free photo: SANNERE (using newest cover)
-- no free photo: Noted. (using newest cover)
-- no free photo: Sminofu (using newest cover)
+- no free photo: G Man & Rainman capalot (using newest cover)
 - no free photo: Jabulile Majola (using newest cover)
+- no free photo: Sminofu (using newest cover)
 - no free photo: Kabza De Small (using newest cover)
 - no free photo: Kelvin Momo (using newest cover)
 - no free photo: GoldMax (using newest cover)
 - no free photo: Tman Xpress & Mellow & Sleazy (using newest cover)
 - no free photo: Mr Thela (using newest cover)
-- no free photo: Sfarzo Rtee (using newest cover)
-- no free photo: Mlindo The Vocalist (using newest cover)
 - no free photo: gxthestallion (using newest cover)
-- no free photo: African National Congress (using newest cover)
-- no free photo: Cleo Sol (using newest cover)
 - no free photo: Sjava (using newest cover)
+- no free photo: Sfarzo Rtee (using newest cover)
+- no free photo: Artwork Sounds, Deep Essentials & Mr Shane SA (using newest cover)
+- no free photo: Mlindo The Vocalist (using newest cover)
+- no free photo: Cleo Sol (using newest cover)
 - no free photo: Okmalumkoolkat (using newest cover)
 - no free photo: Mzukulu (using newest cover)
-- no free photo: Artwork Sounds, Deep Essentials & Mr Shane SA (using newest cover)
 - no free photo: Inkos'yamagcokama (using newest cover)
-- no free photo: D.General (using newest cover)
 - no free photo: Super Subu, Ritesh G Rao, HEISENBERG, Thamizh Aadhavan, Anirudh Ravichander, Vignesh Shivan & Arunraja Kamaraj (using newest cover)
 - no free photo: Shashwat Sachdev & Irshad Kamil (using newest cover)
 - no free photo: Gur Sidhu & Kaptaan (using newest cover)
-- no free photo: Sai Abhyankkar, Karthik Netha, KK Nagar Gana Jeeva & Thamizh Aadhavan (using newest cover)
 - no free photo: Shreyas Dharmadhikari, Sadhu Tiwari, Dhirendra Mulkalwar, Rishi Pathak, Suneel Lodhi, Shantanu Sudame, Guru Goraksh Nath, Sant Kavi Samarth Ramdas & Vishal Chaturvedi (using newest cover)
+- no free photo: Sai Abhyankkar, Karthik Netha, KK Nagar Gana Jeeva & Thamizh Aadhavan (using newest cover)
 - no free photo: Anirudh Ravichander, Heisenberg, Vedan & Ashwin Krishna (using newest cover)
 - no free photo: Karan Aujla & Ikky (using newest cover)
 - no free photo: Rambabu Gosala, Srinivasa Mouli, Super Subu, Krishna Kanth, Asura, Heisenberg, Anirudh Ravichander & Bhaskara Bhatla (using newest cover)
@@ -254,13 +261,12 @@ Artists with a Commons photo: 179 of 359
 - no free photo: Metrika (using newest cover)
 - no free photo: Alcalá Norte (using newest cover)
 - no free photo: Clarent (using newest cover)
-- no free photo: Música Infantil TV (using newest cover)
 - no free photo: YOLAMASCARA (using newest cover)
 - no free photo: Linda Beldad (using newest cover)
-- no free photo: Foyone (using newest cover)
-- no free photo: Ananda Calma (using newest cover)
-- no free photo: Romeo Santos & Prince Royce (using newest cover)
 - no free photo: Música Ambiente (using newest cover)
+- no free photo: Foyone (using newest cover)
+- no free photo: Romeo Santos & Prince Royce (using newest cover)
+- no free photo: Ananda Calma (using newest cover)
 - no free photo: BOM, Miranda! & Lali (using newest cover)
 - no free photo: Kris R. (using newest cover)
 - no free photo: Topboy TGR (using newest cover)
@@ -269,7 +275,6 @@ Artists with a Commons photo: 179 of 359
 - no free photo: FANTA ROSARIO (using newest cover)
 - no free photo: Peter Manjarrés & Luis Jose Villa (using newest cover)
 - no free photo: Kapo (using newest cover)
-- no free photo: J Balvin & Bad Bunny (using newest cover)
 - no free photo: JHAYCO (using newest cover)
 - no free photo: Lichterkinder (using newest cover)
 - no free photo: Torsten Abrolat & Regen Macher (using newest cover)
@@ -281,4 +286,5 @@ Artists with a Commons photo: 179 of 359
 - no free photo: Kati Breuer (using newest cover)
 - no free photo: BLOK3 (using newest cover)
 - no free photo: THIZZY52 (using newest cover)
+- no free photo: Regengeräusche Orchester von TraxLab (using newest cover)
 - no free photo: Peter Maffay & Johannes Oerding (using newest cover)
