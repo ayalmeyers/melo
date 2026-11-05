@@ -141,8 +141,9 @@ async function qids(where: string): Promise<Set<string>> {
 {
   // Writers, poets, novelists, philosophers, politicians, journalists, playwrights…
   const writers = await qids('VALUES ?w { wd:Q36180 wd:Q49757 wd:Q6625963 wd:Q4964182 wd:Q82955 wd:Q1930187 wd:Q214917 } ?item wdt:P106 ?w .');
-  // …stay when they have a working musician's facts: a record label, an instrument or a voice type.
-  const musicians = await qids('{ ?item wdt:P264 ?x } UNION { ?item wdt:P1303 ?x } UNION { ?item wdt:P412 ?x }');
+  // …stay when they have a working musician's facts (a record label, an instrument, a voice type) or are listed directly
+  // as composer, conductor, singer, singer-songwriter or rapper (Sondheim, Rodgers, Cohen).
+  const musicians = await qids('{ ?item wdt:P264 ?x } UNION { ?item wdt:P1303 ?x } UNION { ?item wdt:P412 ?x } UNION { VALUES ?c { wd:Q36834 wd:Q158852 wd:Q177220 wd:Q488205 wd:Q2252262 } ?item wdt:P106 ?c }');
   const groups = await qids('?item wdt:P31/wdt:P279* wd:Q215380 .');
   log(`occupations: ${writers.size} writers/politicians, ${musicians.size} with a label, instrument or voice type, ${groups.size} groups`);
   let dropped = 0; const examples: string[] = [];
