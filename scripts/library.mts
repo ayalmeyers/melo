@@ -33,6 +33,9 @@ const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
 const summary = (line: string) => { if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, line + '\n'); };
 
+// Compare names loosely; names in non-Latin scripts (周杰倫) keep their characters instead of collapsing to nothing.
+const norm = (x: string) => x.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^\p{L}\p{N}]/gu, '');
+
 /* ---------- polite HTTP with per-host pacing ---------- */
 const lastHit = new Map<string, number>();
 const GAP: Record<string, number> = { 'rss.marketingtools.apple.com': 0, 'rss.applemarketingtools.com': 0, 'itunes.apple.com': 3200, 'query.wikidata.org': 2000, 'qlever.cs.uni-freiburg.de': 1000, 'en.wikipedia.org': 600, 'commons.wikimedia.org': 600 };
@@ -158,6 +161,20 @@ await Promise.all(Array.from({ length: 8 }, async () => {
     }
   }
 }));
+// Apple's charts sometimes use a newer artist id than Wikidata has. A chart-only entry whose name matches a Wikidata
+// artist becomes that artist's alternate id, so each artist still gets exactly one page.
+{
+  const nameKey = (x: string) => norm(x.split(/,\s|\s&\s|\sx\s|\sfeat\.?\s/i)[0]);
+  const byName = new Map<string, Target>();
+  for (const t of targets.values()) if (t.sl > 0 && t.label) { const k = nameKey(t.label); const o = byName.get(k); if (!o || o.sl < t.sl) byName.set(k, t); }
+  let merged = 0;
+  for (const t of [...targets.values()]) {
+    if (t.sl > 0 || !t.label) continue;
+    const m = byName.get(nameKey(t.label)); if (!m) continue;
+    m.alts = [...(m.alts ?? []), t.apple]; m.charts += t.charts; altOf.set(t.apple, m.apple); targets.delete(t.apple); merged++; chartArtists--;
+  }
+  log(`chart entries merged into Wikidata artists: ${merged}`);
+}
 log(`artists added from Apple charts: ${chartArtists} (${feeds} feeds in ${Math.round((Date.now() - tCharts) / 1000)}s) · total: ${targets.size}`);
 
 /* ---------- 2. Skip what is already fresh, most notable first ---------- */
@@ -175,7 +192,6 @@ summary(`### Library run\n- Artists found: ${targets.size} (Wikidata ≥ ${MIN_S
 
 /* ---------- 3. Sync in chunks ---------- */
 const EDITION = /\s*(?:[([][^)\]]*(?:deluxe|remaster(?:ed)?|anniversary|expanded|edition|version)[^)\]]*[)\]]|\s[-–]\s.*(?:deluxe|remaster(?:ed)?|anniversary|expanded|edition|version).*)$/i;
-const norm = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
 type AppleRaw = { wrapperType: string; collectionType?: string; artistId?: number; artistName?: string; collectionId?: number; collectionName?: string; collectionExplicitness?: string;
   artworkUrl100?: string; collectionViewUrl?: string; releaseDate?: string; trackCount?: number; primaryGenreName?: string };
 
