@@ -1,10 +1,15 @@
 # Catalog build report
 
-Built 2026-11-05T05:49:47.384Z
+Built 2026-11-05T05:59:50.071Z
 
 Hand-picked albums and podcasts with art: 40 of 40
 Chart albums added: 461 · chart podcasts added: 96 · new artists: 335
 Artists with a Commons photo: 74 of 359
+
+## Wikimedia responses
+- commons.wikimedia.org 200: 180
+- en.wikipedia.org 200: 416
+- www.wikidata.org 200: 218
 
 ## Apple genres with no Melo genre
 - Bollywood: 11
