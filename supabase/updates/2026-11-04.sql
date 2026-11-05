@@ -267,8 +267,11 @@ create table if not exists public.notifications (
 );
 create index if not exists notifications_user on public.notifications(user_id, created_at desc);
 alter table public.notifications enable row level security;
+drop policy if exists "read own notifications" on public.notifications;
 create policy "read own notifications" on public.notifications for select to authenticated using (user_id = auth.uid());
+drop policy if exists "mark own notifications" on public.notifications;
 create policy "mark own notifications" on public.notifications for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+drop policy if exists "clear own notifications" on public.notifications;
 create policy "clear own notifications" on public.notifications for delete to authenticated using (user_id = auth.uid());
 revoke update on public.notifications from authenticated;
 grant select, delete on public.notifications to authenticated;
@@ -365,9 +368,13 @@ create table if not exists public.push_tokens (
 );
 create index if not exists push_tokens_user on public.push_tokens(user_id);
 alter table public.push_tokens enable row level security;
+drop policy if exists "own push tokens" on public.push_tokens;
 create policy "own push tokens" on public.push_tokens for select to authenticated using (user_id = auth.uid());
+drop policy if exists "add own push token" on public.push_tokens;
 create policy "add own push token" on public.push_tokens for insert to authenticated with check (user_id = auth.uid());
+drop policy if exists "update own push token" on public.push_tokens;
 create policy "update own push token" on public.push_tokens for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+drop policy if exists "remove own push token" on public.push_tokens;
 create policy "remove own push token" on public.push_tokens for delete to authenticated using (user_id = auth.uid());
 grant select, insert, update, delete on public.push_tokens to authenticated;
 
