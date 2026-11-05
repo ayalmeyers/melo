@@ -20,10 +20,12 @@ import { toMeloGenre } from './genres.mts';
 
 const URL_ = process.env.SUPABASE_URL?.replace(/\/$/, '');
 const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-if (!URL_ || !KEY) { console.log('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are not set; add them as repository secrets to fill the library.'); process.exit(0); }
+// Without keys this is a dry run: it gathers everything for the first 60 artists and reports, but writes nothing.
+const DRY = !URL_ || !KEY;
+if (DRY) console.log('SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set: dry run (nothing is written). Add them as repository secrets to fill the library.');
 const MIN_SL = Number(process.env.LIB_MIN_SITELINKS ?? 18);
 const DEADLINE = Date.now() + Number(process.env.LIB_MAX_MINUTES ?? 320) * 60_000;
-const LIMIT = Number(process.env.LIB_LIMIT ?? 0);
+const LIMIT = Number(process.env.LIB_LIMIT ?? 0) || (DRY ? 60 : 0);
 const UA = 'MeloLibrary/1.0 (https://github.com/ayalmeyers/melo)';
 const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
@@ -46,10 +48,21 @@ async function getJson(url: string, init: RequestInit = {}, tries = 5): Promise<
   }
   throw new Error('gave up ' + url);
 }
-const rpc = (fn: string, body: unknown) => getJson(`${URL_}/rest/v1/rpc/${fn}`, {
+const rpc = (fn: string, body: unknown): Promise<unknown> => DRY ? Promise.resolve(dryRpc(fn, body)) : getJson(`${URL_}/rest/v1/rpc/${fn}`, {
   method: 'POST', body: JSON.stringify(body),
   headers: { apikey: KEY!, ...(KEY!.startsWith('eyJ') ? { Authorization: `Bearer ${KEY}` } : {}), 'Content-Type': 'application/json' },
 }, 3);
+
+const dry = { artists: 0, albums: 0, bios: 0, photos: 0, sample: [] as string[] };
+function dryRpc(fn: string, body: unknown): unknown {
+  if (fn === 'library_synced') return [];
+  if (fn === 'library_stats') return dry;
+  const p = (body as { p: { artists?: { name: string; wiki?: string; image_url?: string; genres: string[]; cc: string }[]; albums?: { title: string; artist_name: string }[] } }).p;
+  for (const a of p.artists ?? []) { dry.artists++; if (a.wiki) dry.bios++; if (a.image_url) dry.photos++; if (dry.sample.length < 25) dry.sample.push(`${a.name} [${a.cc}] ${a.genres.join('/')}${a.image_url ? ' photo' : ''}${a.wiki ? ' bio' : ''}`); }
+  dry.albums += p.albums?.length ?? 0;
+  if (p.albums?.length && dry.sample.length < 40) dry.sample.push('  albums: ' + p.albums.slice(0, 6).map(a => a.title).join(' | '));
+  return { artists: p.artists?.length ?? 0, albums: p.albums?.length ?? 0 };
+}
 
 /* ---------- 1. Who belongs in the library ---------- */
 interface Target { apple: number; qid?: string; label?: string; sl: number; image?: string; cc?: string; enwiki?: string; charts: number }
@@ -226,5 +239,6 @@ for (let i = 0; i < queue.length; i += CHUNK) {
 }
 
 const stats = await rpc('library_stats', {}).catch(e => ({ error: String(e) }));
+if (DRY) console.log(dry.sample.join('\n'));
 log('done', JSON.stringify(totals), JSON.stringify(stats));
 summary(`- This run: ${JSON.stringify(totals)}\n- Library now: ${JSON.stringify(stats)}`);
