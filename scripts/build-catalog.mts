@@ -57,21 +57,58 @@ const artists: Record<string, ArtistArt> = {};
 const misses: string[] = [];
 const toArt = (r: AppleResult): ItemArt => ({ apple_id: r.apple_id, artwork_url: appleArt(r.artwork, 600)!, apple_url: r.url, release_date: r.release_date?.slice(0, 10), track_count: r.track_count });
 
-/* 1. Hand-picked albums and podcasts. Search the US store first, then the artist's home store. */
+/* 1. Hand-picked albums and podcasts.
+   First a plain search in the US store and the artist's home store; if that misses, find the artist on Apple
+   and look through their whole discography, which catches records the search ranks below singles and remixes. */
+const STORES = new Set(['US', 'GB', 'NG', 'JP', 'ES', 'KR', 'FR', 'BR', 'PK', 'CO', 'MX', 'DE', 'CA', 'GH', 'ZA', 'IN', 'JM', 'AU', 'IE', 'SE']);
+const plain = (t: string) => norm(t.replace(/\s*[([](deluxe|explicit|clean|remaster(ed)?|\d+(th)? anniversary|expanded|edition)[^)\]]*[)\]]/gi, ''));
+function pick(hits: AppleResult[], title: string, artist: string): AppleResult | null {
+  const t = norm(title), a = norm(artist);
+  const mine = hits.filter(h => h.kind === 'album' && (norm(h.artist) === a || norm(h.artist).includes(a) || a.includes(norm(h.artist))));
+  const exact = mine.filter(h => norm(h.title) === t);
+  const loose = mine.filter(h => plain(h.title) === t || plain(h.title) === plain(title));
+  // Prefer the standard edition (fewest extras in the title), then the earliest release.
+  const best = (xs: AppleResult[]) => xs.sort((x, y) => x.title.length - y.title.length || (x.release_date ?? '').localeCompare(y.release_date ?? ''))[0] ?? null;
+  return best(exact) ?? best(loose) ?? matchApple(hits, title, artist);
+}
+const artistAppleIds = new Map<string, number>();
+async function appleArtistId(name: string, cc: string): Promise<number | null> {
+  if (artistAppleIds.has(name)) return artistAppleIds.get(name)!;
+  for (const store of [...new Set(['US', cc])].filter(c => STORES.has(c))) {
+    const j = await getJson(`https://itunes.apple.com/search?term=${encodeURIComponent(name).replace(/%20/g, '+')}&entity=musicArtist&media=music&limit=10&country=${store}`).catch(() => null) as { results?: { artistName: string; artistId: number }[] } | null;
+    lastApple = Date.now();
+    const hit = j?.results?.find(r => norm(r.artistName) === norm(name)); if (hit) { artistAppleIds.set(name, hit.artistId); return hit.artistId; }
+    await wait(3300);
+  }
+  return null;
+}
+const candidates: Record<string, string[]> = {};
 for (const row of ALBUMS) {
   const [id, title, aid] = row as [string, string, string];
   const a = ARTISTS[aid as keyof typeof ARTISTS];
   let m: AppleResult | null = null;
-  for (const cc of [...new Set(['US', a.cc])]) {
-    const hits = await apple(appleSearchUrl(`${title} ${a.name}`, 'album', 15, cc));
-    m = matchApple(hits, title, a.name) ?? hits.find(h => norm(h.artist) === norm(a.name) && norm(h.title).includes(norm(title)) && !/single|ep\b/i.test(h.title)) ?? null;
+  for (const cc of [...new Set(['US', a.cc])].filter(c => STORES.has(c))) {
+    const hits = await apple(appleSearchUrl(`${title} ${a.name}`, 'album', 25, cc));
+    candidates[id] = hits.slice(0, 8).map(h => `${h.title} — ${h.artist}`);
+    m = pick(hits, title, a.name);
     if (m) break;
+  }
+  if (!m) {
+    const artistId = await appleArtistId(a.name, a.cc);
+    if (artistId) {
+      for (const cc of [...new Set(['US', a.cc])].filter(c => STORES.has(c))) {
+        const disco = await apple(`https://itunes.apple.com/lookup?id=${artistId}&entity=album&limit=200&country=${cc}`);
+        candidates[id] = disco.slice(0, 12).map(h => `${h.title} (${h.release_date?.slice(0, 4)})`);
+        m = pick(disco.map(d => ({ ...d, artist: d.artist || a.name })), title, a.name);
+        if (m) break;
+      }
+    }
   }
   if (m?.artwork) {
     items[id] = toArt(m);
     if (m.artist_apple_id && !artists[aid]?.apple_id) artists[aid] = { ...artists[aid], apple_id: m.artist_apple_id };
     report.push(`- album ${id}: ${m.title} — ${m.artist} (${m.apple_id})`);
-  } else { misses.push(`album ${id} (${title} — ${a.name})`); }
+  } else { misses.push(`album ${id} (${title} — ${a.name}); Apple offered: ${(candidates[id] ?? []).join(' | ') || 'nothing'}`); }
 }
 for (const [id, title, host] of SHOWS as [string, string, string, string, string][]) {
   const hits = await apple(appleSearchUrl(title, 'show', 10));
