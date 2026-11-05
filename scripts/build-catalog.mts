@@ -34,7 +34,24 @@ async function apple(url: string): Promise<AppleResult[]> {
   lastApple = Date.now();
   try { return parseApple(await getJson(url)); } catch (e) { console.warn('apple failed', url, String(e)); return []; }
 }
-const wiki = (url: string) => getJson(url, { 'Api-User-Agent': UA });
+// Wikimedia: one request at a time, at most ~1.5 a second, honoring Retry-After. Every response is counted for the report.
+const wikiStats = new Map<string, number>();
+let lastWiki = 0;
+async function wiki(url: string): Promise<unknown> {
+  const host = new URL(url).host;
+  for (let i = 0; i < 5; i++) {
+    const gap = 650 - (Date.now() - lastWiki); if (gap > 0) await wait(gap);
+    lastWiki = Date.now();
+    let r: Response;
+    try { r = await fetch(url, { headers: { 'User-Agent': UA, 'Api-User-Agent': UA } }); }
+    catch (e) { wikiStats.set(`${host} network`, (wikiStats.get(`${host} network`) ?? 0) + 1); await wait(5000); continue; }
+    wikiStats.set(`${host} ${r.status}`, (wikiStats.get(`${host} ${r.status}`) ?? 0) + 1);
+    if (r.status === 429 || r.status === 503 || r.status === 403) { await wait((Number(r.headers.get('retry-after')) || 30) * 1000); continue; }
+    if (!r.ok) throw new Error(`${r.status} ${url}`);
+    return r.json();
+  }
+  throw new Error('wikimedia gave up ' + url);
+}
 
 const MELO_GENRE: [RegExp, string][] = [
   [/k-pop/i, 'kpop'], [/j-pop|anime|j-rock|vocaloid/i, 'jpop'], [/country|americana|bluegrass/i, 'country'], [/soundtrack|musicals?|original score|cast recording/i, 'soundtrack'],
@@ -173,7 +190,7 @@ for (const row of ALBUMS as [string, string, string][]) if (items[row[0]]) noteC
 for (const a of extraAlbums.values()) noteCover(a.artist_id, a.art.release_date, a.art.artwork_url);
 
 /* 3. Artist photos from Wikimedia Commons. */
-const photoFor = async (name: string): Promise<ArtistPhoto | null> => { const p = await findArtistPhoto(name, wiki); await wait(250); return p; };
+const photoFor = (name: string): Promise<ArtistPhoto | null> => findArtistPhoto(name, wiki);
 let photos = 0;
 const allArtists: [string, string][] = [...Object.entries(ARTISTS).map(([k, v]) => [k, v.name] as [string, string]), ...[...extraArtists.values()].map(a => [a.id, a.name] as [string, string])];
 for (const [id, name] of allArtists) {
@@ -200,6 +217,7 @@ report.splice(4, 0,
   `Hand-picked albums and podcasts with art: ${Object.keys(items).length} of ${ALBUMS.length + SHOWS.length}`,
   `Chart albums added: ${out.extraAlbums.length} · chart podcasts added: ${out.extraShows.length} · new artists: ${out.extraArtists.length}`,
   `Artists with a Commons photo: ${photos} of ${allArtists.length}`, '',
+  '## Wikimedia responses', ...[...wikiStats].sort().map(([k, n]) => `- ${k}: ${n}`), '',
   '## Apple genres with no Melo genre', ...[...unmapped].sort((a, b) => b[1] - a[1]).map(([g, n]) => `- ${g}: ${n}`), '', '## Misses', ...(misses.length ? misses.map(m => '- ' + m) : ['- none']), '');
 writeFileSync(new URL('../catalog-report.md', import.meta.url), report.join('\n') + '\n');
 console.log(report.slice(4, 12).join('\n'));
