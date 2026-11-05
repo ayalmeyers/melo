@@ -120,11 +120,18 @@ log('artists from Wikidata:', targets.size);
 type Rss = { artistId?: string; artistName: string };
 const STOREFRONTS = ['us', 'gb', 'ca', 'au', 'ie', 'nz', 'ng', 'gh', 'ke', 'za', 'eg', 'ma', 'br', 'mx', 'ar', 'co', 'cl', 'pe', 'es', 'pt', 'fr', 'de', 'it', 'nl', 'se', 'no', 'dk', 'fi', 'pl', 'tr', 'jp', 'kr', 'tw', 'hk', 'ph', 'id', 'th', 'vn', 'in', 'pk', 'ae', 'sa', 'il'];
 let chartArtists = 0; const tCharts = Date.now(); let feeds = 0;
-for (const cc of STOREFRONTS) for (const kind of ['albums', 'songs']) {
-  let rows: Rss[] = [];
-  for (const host of ['rss.marketingtools.apple.com', 'rss.applemarketingtools.com']) {
-    try { rows = ((await getJson(`https://${host}/api/v2/${cc}/music/most-played/100/${kind}.json`, {}, 2, 20_000)) as { feed?: { results?: Rss[] } }).feed?.results ?? []; if (rows.length) break; } catch { /* next host */ }
+// Use whichever chart host answers, remember it, and give the whole step at most six minutes.
+let rssHosts = ['rss.marketingtools.apple.com', 'rss.applemarketingtools.com'];
+charts: for (const cc of STOREFRONTS) for (const kind of ['albums', 'songs']) {
+  if (Date.now() - tCharts > 6 * 60_000) { log('chart step hit its time limit'); break charts; }
+  let rows: Rss[] = []; const t = Date.now();
+  for (const host of rssHosts) {
+    try {
+      rows = ((await getJson(`https://${host}/api/v2/${cc}/music/most-played/100/${kind}.json`, {}, 1, 15_000)) as { feed?: { results?: Rss[] } }).feed?.results ?? [];
+      if (rows.length) { rssHosts = [host, ...rssHosts.filter(h => h !== host)]; break; }
+    } catch (e) { if (feeds < 3) log(`chart ${cc} ${kind} via ${host}:`, String(e).slice(0, 100)); }
   }
+  if (feeds < 3 || !rows.length) log(`chart ${cc} ${kind}: ${rows.length} rows in ${Date.now() - t}ms`);
   if (rows.length) feeds++;
   for (const r of rows) {
     const id = Number(r.artistId); if (!id) continue;
@@ -248,7 +255,7 @@ for (let i = 0; i < queue.length; i += CHUNK) {
       totals.albums += r2.albums ?? 0; totals.new_albums += r2.new_albums ?? 0;
     }
   } catch (e) { log('import failed for chunk', i, String(e).slice(0, 300)); }
-  if ((i / CHUNK) % 10 === 0) log(`${i + chunk.length}/${queue.length}`, JSON.stringify(totals));
+  if (DRY || (i / CHUNK) % 10 === 0) log(`${i + chunk.length}/${queue.length}`, JSON.stringify(totals));
 }
 
 const stats = await rpc('library_stats', {}).catch(e => ({ error: String(e) }));
