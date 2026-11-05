@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Linking, Pressable, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { ago, flag, genreName, LIMITS, mmss, parseTimestamp, starsText, type Target } from '@melo/core';
+import { Image } from 'expo-image';
+import { ago, appleArt, flag, genreName, LIMITS, mmss, parseTimestamp, starsText, type Target } from '@melo/core';
 import { api } from '../../lib/supabase';
 import { useSession } from '../../lib/session';
 import { fail, go, rememberItem, shareMenu, useLoad } from '../../lib/hooks';
@@ -13,8 +14,8 @@ import { AppleSection } from '../../components/apple';
 import { ListCardView } from '../../components/lists';
 import { apple } from '../../lib/apple';
 import { artwork } from '../../lib/artwork';
-import { Band, Button, Empty, Icon, Input, ItemCover, Sheet, T } from '../../components/ui';
-import { C, F } from '../../components/theme';
+import { Band, Button, Card, Empty, Icon, Input, ItemCover, Sheet, Stars, T } from '../../components/ui';
+import { C, F, shadow } from '../../components/theme';
 import { ErrorView, Loading, Shimmer } from '../../components/skeleton';
 
 export default function ItemScreen() {
@@ -49,6 +50,7 @@ export default function ItemScreen() {
   const q = encodeURIComponent(`${it.title} ${it.artist_name}`);
   const hist = rating.data?.histogram ?? [];
   const max = Math.max(1, ...hist);
+  const art = it.artwork_url;
 
   const addMoment = async () => {
     if (!user) return go('/login');
@@ -58,23 +60,27 @@ export default function ItemScreen() {
   };
 
   return <Screen top={false} keyboard onRefresh={() => Promise.all([rating.reload(), posts.reload(), moments.reload()])}>
-    <Stack.Screen options={{ title: '', headerRight: () => <Pressable hitSlop={10} accessibilityLabel="Share" onPress={() => shareMenu({ path: `/album/${id}`, storyPath: `/album/${id}/story`, message: `${it.title} by ${it.artist_name} on Melo` })}><Icon name="square.and.arrow.up" size={20} color="#fff" /></Pressable> }} />
-    <Band>
-      <View style={{ flexDirection: 'row', gap: 16 }}>
-        <ItemCover item={it} size={132} radius={18} />
-        <View style={{ flex: 1, gap: 6, justifyContent: 'flex-end' }}>
-          <Text style={{ fontFamily: F.semibold, fontSize: 12.5, letterSpacing: 1, color: C.blue, textTransform: 'uppercase' }}>{it.type === 'show' ? 'Podcast' : it.type === 'episode' ? 'Episode' : 'Album'}</Text>
-          <Text style={{ fontFamily: F.bold, fontSize: 24, lineHeight: 27, color: '#fff' }} numberOfLines={3}>{it.title}</Text>
-          <Text onPress={() => it.artist_id ? go(`/artist/${it.artist_id}`) : it.show_id ? go(`/item/${it.show_id}`) : undefined} style={{ fontFamily: F.semibold, fontSize: 15.5, color: C.onInk }}>{it.artist_name}</Text>
-          <Text style={{ fontFamily: F.medium, fontSize: 13.5, color: C.onInkDim }}>{[it.year, genreName(it.genre), flag(it.cc)].filter(Boolean).join(' · ')}{it.dur_min ? ` · ${it.dur_min} min` : ''}</Text>
-        </View>
-      </View>
-      {it.type !== 'show' && <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 16 }}>
-        <View><Text style={{ fontFamily: F.heavy, fontSize: 34, color: '#fff' }}>{rating.data ? starsText(Math.round(rating.data.avg_stars * 2)) : '—'}</Text><Text style={{ fontFamily: F.medium, fontSize: 12.5, color: C.onInkDim }}>{rating.data ? `${rating.data.n} ratings` : 'No ratings yet'}</Text></View>
-        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-end', gap: 3, height: 44 }}>
-          {Array.from({ length: 10 }, (_, i) => <View key={i} style={{ flex: 1, height: Math.max(3, ((hist[i] ?? 0) / max) * 44), backgroundColor: C.blue, opacity: 0.35 + (i / 10) * 0.65, borderRadius: 2 }} />)}
-        </View>
+    <Stack.Screen options={{ title: '', headerRight: () => <Pressable hitSlop={10} accessibilityLabel="Share" onPress={() => shareMenu({ path: `/album/${id}`, storyPath: `/album/${id}/story`, message: `${it.title} by ${it.artist_name} on Melo` })}><Icon name="square.and.arrow.up" size={20} color={C.text} /></Pressable> }} />
+    <Band style={{ alignItems: 'center', gap: 16, paddingTop: 4 }}>
+      {!!art && <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: -120, height: 420, overflow: 'hidden' }}>
+        <Image source={{ uri: appleArt(art, 200) }} blurRadius={60} style={{ position: 'absolute', inset: 0, opacity: 0.55 } as never} contentFit="cover" />
+        <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 220, backgroundColor: C.bg, opacity: 0.85 }} />
       </View>}
+      <View style={[{ borderRadius: 22 }, shadow(2)]}><ItemCover item={it} size={210} radius={22} /></View>
+      <View style={{ alignItems: 'center', gap: 4, paddingHorizontal: 8 }}>
+        <Text style={{ fontFamily: F.bold, fontSize: 12, letterSpacing: 1, color: C.blue, textTransform: 'uppercase' }}>{it.type === 'show' ? 'Podcast' : it.type === 'episode' ? 'Episode' : 'Album'}</Text>
+        <Text accessibilityRole="header" style={{ fontFamily: F.heavy, fontSize: 28, lineHeight: 32, color: C.text, textAlign: 'center', letterSpacing: -0.6 }} numberOfLines={3}>{it.title}</Text>
+        <Text onPress={() => it.artist_id ? go(`/artist/${it.artist_id}`) : it.show_id ? go(`/item/${it.show_id}`) : undefined} style={{ fontFamily: F.bold, fontSize: 16.5, color: C.blue }}>{it.artist_name}</Text>
+        <Text style={{ fontFamily: F.medium, fontSize: 13.5, color: C.dim }}>{[it.year, genreName(it.genre), flag(it.cc)].filter(Boolean).join(' · ')}{it.dur_min ? ` · ${it.dur_min} min` : ''}</Text>
+      </View>
+    </Band>
+    <Band>
+      {it.type !== 'show' && <Card style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 16 }}>
+        <View><Text style={{ fontFamily: F.heavy, fontSize: 36, color: C.text, letterSpacing: -1 }}>{rating.data ? rating.data.avg_stars.toFixed(1) : '—'}</Text>{rating.data && <Stars r10={Math.round(rating.data.avg_stars * 2)} size={12} />}<Text style={{ fontFamily: F.medium, fontSize: 12.5, color: C.dim, marginTop: 4 }}>{rating.data ? `${rating.data.n} ratings` : 'No ratings yet'}</Text></View>
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-end', gap: 4, height: 56 }}>
+          {Array.from({ length: 10 }, (_, i) => <View key={i} style={{ flex: 1, height: Math.max(4, ((hist[i] ?? 0) / max) * 56), backgroundColor: C.blue, opacity: 0.25 + (i / 10) * 0.75, borderRadius: 4 }} />)}
+        </View>
+      </Card>}
       <View style={{ flexDirection: 'row', gap: 10 }}>
         {it.type !== 'show' && <Button style={{ flex: 1 }} title="Log" icon="plus" onPress={() => go(user ? `/log/${id}` : '/login')} />}
         <Button style={{ flex: 1 }} kind="dark" title={it.type === 'show' ? 'Start a thread' : 'Review'} icon="square.and.pencil" onPress={() => go(user ? `/compose?kind=${it.type === 'show' ? 'thread' : 'review'}&target=item:${id}` : '/login')} />

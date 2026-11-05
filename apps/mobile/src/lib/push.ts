@@ -39,10 +39,13 @@ export async function pushStatus(): Promise<'on' | 'off' | 'unavailable'> {
 }
 
 /** Opens the screen a tapped notification points at (its data.url, e.g. /post/123). */
-export function usePushTaps() {
+function usePushTapsNative() {
   const last = Notifications.useLastNotificationResponse();
   useEffect(() => {
     const url = last?.notification.request.content.data?.url;
     if (typeof url === 'string' && url.startsWith('/')) router.push(url as never);
   }, [last]);
 }
+
+/** Notification taps only exist on phones; the web build skips the hook entirely. */
+export const usePushTaps: () => void = Platform.OS === 'web' ? () => {} : usePushTapsNative;

@@ -26,14 +26,14 @@ function Gate() {
 export default function Root() {
   const [loaded] = useFonts({ Urbanist_400Regular, Urbanist_500Medium, Urbanist_600SemiBold, Urbanist_700Bold, Urbanist_800ExtraBold });
   if (!loaded) return null;
-  return <GestureHandlerRootView style={{ flex: 1, backgroundColor: C.ink }}>
+  return <GestureHandlerRootView style={{ flex: 1, backgroundColor: C.bg }}>
     <SessionProvider>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <Gate />
       <Stack screenOptions={{
-        headerStyle: { backgroundColor: C.ink }, headerTintColor: '#fff', headerShadowVisible: false,
-        headerTitleStyle: { fontFamily: F.bold, color: '#fff' }, headerBackButtonDisplayMode: 'minimal',
-        contentStyle: { backgroundColor: C.paper },
+        headerStyle: { backgroundColor: C.bg }, headerTintColor: C.text, headerShadowVisible: false,
+        headerTitleStyle: { fontFamily: F.bold, color: C.text, fontSize: 17 }, headerBackButtonDisplayMode: 'minimal',
+        contentStyle: { backgroundColor: C.bg },
       }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ presentation: 'modal', headerShown: false }} />
@@ -53,9 +53,9 @@ export default function Root() {
         <Stack.Screen name="chats/[id]" options={{ title: 'Chat' }} />
         <Stack.Screen name="chats/new" options={{ presentation: 'modal', title: 'New chat' }} />
         <Stack.Screen name="settings" options={{ title: 'Settings' }} />
-        <Stack.Screen name="activity" options={{ title: 'Activity' }} />
         <Stack.Screen name="moderation" options={{ title: 'Moderation' }} />
-        <Stack.Screen name="charts" options={{ title: 'Charts' }} />
+        <Stack.Screen name="charts" options={{ title: '' }} />
+        <Stack.Screen name="forecasts" options={{ title: '' }} />
         <Stack.Screen name="list/[id]" options={{ title: '' }} />
         <Stack.Screen name="list/new" options={{ presentation: 'modal', title: 'New list' }} />
         <Stack.Screen name="list/add" options={{ presentation: 'modal', title: 'Add albums' }} />

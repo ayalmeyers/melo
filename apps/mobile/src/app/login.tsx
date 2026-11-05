@@ -30,10 +30,10 @@ export default function Login() {
     } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   };
 
-  return <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: C.ink, paddingTop: insets.top + 12, paddingHorizontal: 22, paddingBottom: insets.bottom + 20 }}>
-    <Pressable onPress={() => router.back()} hitSlop={12} accessibilityLabel="Close" style={{ alignSelf: 'flex-end' }}><Icon name="xmark" size={20} color="#fff" /></Pressable>
+  return <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1, backgroundColor: C.bg, paddingTop: insets.top + 12, paddingHorizontal: 22, paddingBottom: insets.bottom + 20 }}>
+    <Pressable onPress={() => router.back()} hitSlop={12} accessibilityLabel="Close" style={{ alignSelf: 'flex-end' }}><Icon name="xmark" size={20} color={C.text} /></Pressable>
     <View style={{ flex: 1, justifyContent: 'center', gap: 16 }}>
-      <Text style={{ fontFamily: F.heavy, fontSize: 44, color: '#fff', letterSpacing: -1.5 }}>melo<Text style={{ color: C.blue }}>.</Text></Text>
+      <Text style={{ fontFamily: F.heavy, fontSize: 44, color: C.text, letterSpacing: -1.5 }}>melo<Text style={{ color: C.blue }}>.</Text></Text>
       <T.Display>{mode === 'in' ? 'Welcome back.' : 'Join Melo.'}</T.Display>
       <Input dark value={email} onChangeText={setEmail} placeholder="you@example.com" keyboardType="email-address" autoCapitalize="none" autoComplete="email" textContentType="emailAddress" returnKeyType="next" />
       <Input dark value={password} onChangeText={setPassword} placeholder={mode === 'up' ? 'Password (8+ characters)' : 'Password'} secureTextEntry autoCapitalize="none" textContentType={mode === 'up' ? 'newPassword' : 'password'} autoComplete={mode === 'up' ? 'new-password' : 'current-password'} returnKeyType="go" onSubmitEditing={submit} />
@@ -43,7 +43,7 @@ export default function Login() {
       <Text onPress={() => { setMode(mode === 'in' ? 'up' : 'in'); setErr(null); }} style={{ color: C.onInkDim, fontFamily: F.semibold, textAlign: 'center', fontSize: 15 }}>{mode === 'in' ? 'New here? Create an account' : 'Have an account? Sign in'}</Text>
     </View>
     <Text style={{ color: C.onInkDim, fontFamily: F.medium, fontSize: 12.5, textAlign: 'center', lineHeight: 18 }}>
-      By continuing you agree to the <Text style={{ color: '#fff' }} onPress={() => openWeb('/terms')}>Terms</Text> and <Text style={{ color: '#fff' }} onPress={() => openWeb('/privacy')}>Privacy Policy</Text>.
+      By continuing you agree to the <Text style={{ color: C.blue }} onPress={() => openWeb('/terms')}>Terms</Text> and <Text style={{ color: C.blue }} onPress={() => openWeb('/privacy')}>Privacy Policy</Text>.
     </Text>
   </KeyboardAvoidingView>;
 }

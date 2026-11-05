@@ -9,4 +9,5 @@ export * from './apple';
 export * from './images';
 export * from './artwork';
 export * from './history';
+export * from './demo';
 export { FLAG, CNAME, ALBUMS, SHOWS } from './catalog-data.js';

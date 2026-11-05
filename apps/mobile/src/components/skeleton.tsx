@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { AccessibilityInfo, Animated, View, type DimensionValue, type ViewStyle } from 'react-native';
 import { Button, Icon, T } from './ui';
-import { C } from './theme';
+import { C, shadow } from './theme';
 
 /** A soft pulsing block that stands in for content while it loads. Holds still when Reduce Motion is on. */
 export function Shimmer({ w = '100%', h = 14, r = 8, dark, style }: { w?: DimensionValue; h?: number; r?: number; dark?: boolean; style?: ViewStyle }) {
@@ -20,7 +20,7 @@ export function Shimmer({ w = '100%', h = 14, r = 8, dark, style }: { w?: Dimens
 
 /** Placeholder shaped like a post card. */
 export function PostSkeleton() {
-  return <View style={{ backgroundColor: C.mist, borderRadius: 22, padding: 16, gap: 12 }}>
+  return <View style={{ backgroundColor: C.mist, borderRadius: 22, padding: 16, gap: 12 , ...shadow(1) }}>
     <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}><Shimmer w={34} h={34} r={17} /><View style={{ gap: 6, flex: 1 }}><Shimmer w="45%" h={12} /><Shimmer w="25%" h={10} /></View></View>
     <Shimmer w="92%" /><Shimmer w="80%" /><Shimmer w="55%" />
   </View>;

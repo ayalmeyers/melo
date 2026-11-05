@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ago, flag, type LogEntry, type Profile } from '@melo/core';
 import { api } from '../lib/supabase';
 import { useSession } from '../lib/session';
@@ -10,7 +11,7 @@ import { FollowButton } from './social';
 import { ListCardView } from './lists';
 import { Loading } from './skeleton';
 import { Avatar, Band, Button, Empty, Icon, ItemCover, Sheet, Stars, T } from './ui';
-import { C, F } from './theme';
+import { C, F, shadow } from './theme';
 
 export function ProfileView({ profile, top = true }: { profile: Profile; top?: boolean }) {
   const { user, toast } = useSession();
@@ -29,35 +30,42 @@ export function ProfileView({ profile, top = true }: { profile: Profile; top?: b
   }, [user?.id, profile.id]);
   const st = stats.data;
 
+  const insets = useSafeAreaInsets();
   const dm = async () => { if (!user) return go('/login'); try { go(`/chats/${await api.openDm(profile.id)}`); } catch (e) { fail(e); } };
 
-  return <Screen top={top} onRefresh={() => Promise.all([stats.reload(), posts.reload(), diary.reload(), lists.reload()])}>
-    <Band>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-        <Avatar name={profile.name} color={profile.color} size={72} />
-        <View style={{ flex: 1, gap: 2 }}>
-          <Text style={{ fontFamily: F.bold, fontSize: 24, color: '#fff' }} numberOfLines={1}>{profile.name}</Text>
-          <Text style={{ fontFamily: F.medium, fontSize: 15, color: C.onInkDim }}>@{profile.handle} {flag(profile.cc)}{profile.city ? ` · ${profile.city}` : ''}</Text>
-        </View>
+  const W = Math.min(useWindowDimensions().width, 600); const pad = top ? insets.top : 0;
+  return <Screen top={false} onRefresh={() => Promise.all([stats.reload(), posts.reload(), diary.reload(), lists.reload()])}>
+    {/* Banner: their Top 4, edge to edge. */}
+    <View style={{ flexDirection: 'row', height: W / 4 + 24 + pad, paddingTop: pad, overflow: 'hidden', backgroundColor: profile.color }}>
+      {(profile.top4 ?? []).slice(0, 4).map(iid => <ItemCover key={iid} item={{ id: iid, title: '', type: 'album' }} size={W / 4 + 24} radius={0} />)}
+      <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 40, backgroundColor: C.bg, opacity: 0.35 }} />
+      <View style={{ position: 'absolute', top: pad + 10, right: 16, flexDirection: 'row', gap: 8 }}>
         {mine
-          ? <Pressable hitSlop={10} onPress={() => go('/settings')} accessibilityLabel="Settings"><Icon name="gearshape" size={22} color="#fff" /></Pressable>
-          : <Pressable hitSlop={10} accessibilityLabel="More" onPress={() => moderate({ kind: 'profile', id: profile.id, authorId: profile.id, authorHandle: profile.handle, mine: false, onBlocked: () => toast('Blocked') })}><Icon name="ellipsis.circle" size={22} color="#fff" /></Pressable>}
+          ? <Pressable hitSlop={10} onPress={() => go('/settings')} accessibilityLabel="Settings" style={s.glass}><Icon name="gearshape" size={19} color={C.text} /></Pressable>
+          : <Pressable hitSlop={10} accessibilityLabel="More" style={s.glass} onPress={() => moderate({ kind: 'profile', id: profile.id, authorId: profile.id, authorHandle: profile.handle, mine: false, onBlocked: () => toast('Blocked') })}><Icon name="ellipsis" size={19} color={C.text} /></Pressable>}
       </View>
-      {!!profile.bio && <Text style={{ fontFamily: F.medium, fontSize: 15.5, lineHeight: 22, color: C.onInk }}>{profile.bio}</Text>}
-      <View style={{ flexDirection: 'row', gap: 22 }}>
-        {[['Logged', st?.logged], ['Posts', st?.posts], ['Followers', st?.followers], ['Following', st?.following], ['Ear', st?.ear != null ? Math.round(st.ear) : '—']].map(([l, v]) => <View key={String(l)}>
-          <Text style={{ fontFamily: F.heavy, fontSize: 19, color: l === 'Ear' ? C.blue : '#fff' }}>{v ?? 0}</Text>
-          <Text style={{ fontFamily: F.medium, fontSize: 12, color: C.onInkDim }}>{l}</Text>
+    </View>
+    <Band style={{ marginTop: -44 }}>
+      <View style={{ borderRadius: 46, borderWidth: 4, borderColor: C.bg, alignSelf: 'flex-start' }}><Avatar name={profile.name} color={profile.color} size={84} /></View>
+      <View style={{ gap: 2, marginTop: -6 }}>
+        <Text style={{ fontFamily: F.heavy, fontSize: 26, color: C.text, letterSpacing: -0.5 }} numberOfLines={1}>{profile.name}</Text>
+        <Text style={{ fontFamily: F.medium, fontSize: 15, color: C.dim }}>@{profile.handle} {flag(profile.cc)}{profile.city ? ` · ${profile.city}` : ''}</Text>
+      </View>
+      {!!profile.bio && <Text style={{ fontFamily: F.medium, fontSize: 15.5, lineHeight: 22, color: C.text }}>{profile.bio}</Text>}
+      <View style={s.stats}>
+        {[['Logged', st?.logged], ['Posts', st?.posts], ['Followers', st?.followers], ['Following', st?.following], ['Ear', st?.ear != null ? Math.round(st.ear) : '—']].map(([l, v], i) => <View key={String(l)} style={[{ flex: 1, alignItems: 'center' }, i > 0 && { borderLeftWidth: 1, borderLeftColor: C.line }]}>
+          <Text style={{ fontFamily: F.heavy, fontSize: 18, color: l === 'Ear' ? C.blue : C.text }}>{v ?? 0}</Text>
+          <Text style={{ fontFamily: F.medium, fontSize: 11.5, color: C.dim }}>{l}</Text>
         </View>)}
       </View>
       <View style={{ flexDirection: 'row', gap: 10 }}>
         {mine ? <Button small kind="dark" title="Edit profile" onPress={() => go('/settings')} style={{ flex: 1 }} /> : <><View style={{ flex: 1 }}><FollowButton kind="user" target={profile.id} onDark /></View><Button small kind="dark" title="Message" icon="paperplane" onPress={dm} style={{ flex: 1 }} /></>}
         <Button small kind="dark" title="" icon="square.and.arrow.up" accessibilityLabel="Share profile" onPress={() => shareLink(`/u/${profile.handle}`, `${profile.name} on Melo`)} />
       </View>
-      {match.data && match.data.shared_items + match.data.shared_artists > 0 && <View style={{ backgroundColor: C.ink2, borderRadius: 18, padding: 14, gap: 10 }}>
+      {match.data && match.data.shared_items + match.data.shared_artists > 0 && <View style={{ backgroundColor: C.card, borderRadius: 22, padding: 16, gap: 10, ...shadow(1) }}>
         <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 10 }}>
           <Text style={{ fontFamily: F.heavy, fontSize: 30, color: C.blue }}>{match.data.score}%</Text>
-          <Text style={{ fontFamily: F.semibold, fontSize: 15, color: '#fff', flex: 1 }}>taste match · {match.data.shared_items} albums and {match.data.shared_artists} artists in common</Text>
+          <Text style={{ fontFamily: F.semibold, fontSize: 15, color: C.text, flex: 1 }}>taste match · {match.data.shared_items} albums and {match.data.shared_artists} artists in common</Text>
         </View>
         {!!(match.data.both_loved ?? match.data.top_shared)?.length && <View style={{ flexDirection: 'row', gap: 8 }}>
           {(match.data.both_loved?.length ? match.data.both_loved : match.data.top_shared ?? []).slice(0, 5).map(iid => { const it = cachedItem(iid); return it ? <Pressable key={iid} onPress={() => go(`/item/${iid}`)}><ItemCover item={it} size={48} radius={8} /></Pressable> : null; })}
@@ -90,3 +98,8 @@ function DiaryRow({ l, mine, onGone }: { l: LogEntry; mine: boolean; onGone: () 
     </View>
   </Pressable>;
 }
+
+const s = StyleSheet.create({
+  glass: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,255,255,0.88)', alignItems: 'center', justifyContent: 'center' },
+  stats: { flexDirection: 'row', backgroundColor: C.card, borderRadius: 20, paddingVertical: 12, ...shadow(1) },
+});

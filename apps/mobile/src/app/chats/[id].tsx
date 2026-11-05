@@ -19,7 +19,7 @@ function Share({ m, mine }: { m: Message; mine: boolean }) {
     : m.share_type === 'genre' ? [`/genre/${id}`, genreName(id), <GenreCover key="a" id={id} size={44} radius={8} />]
     : m.share_type === 'forecast' ? [`/forecast/${id}`, 'A forecast', <Icon key="a" name="chart.line.uptrend.xyaxis" size={28} color={C.blue} />]
     : [`/post/${id}`, 'A post', <Icon key="a" name="text.bubble" size={28} color={C.blue} />];
-  return <Pressable onPress={() => go(href)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(255,255,255,0.14)', borderRadius: 12, padding: 8, minWidth: 180 }}>{art}<Text style={{ fontFamily: F.bold, fontSize: 14.5, color: mine ? '#fff' : C.text, flexShrink: 1 }} numberOfLines={2}>{label}</Text></Pressable>;
+  return <Pressable onPress={() => go(href)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: 12, padding: 8, minWidth: 180 }}>{art}<Text style={{ fontFamily: F.bold, fontSize: 14.5, color: mine ? '#fff' : C.text, flexShrink: 1 }} numberOfLines={2}>{label}</Text></Pressable>;
 }
 
 export default function ChatScreen() {
@@ -57,7 +57,7 @@ export default function ChatScreen() {
   const leave = () => Alert.alert('Leave chat?', 'You will stop getting messages here.', [{ text: 'Cancel', style: 'cancel' }, { text: 'Leave', style: 'destructive', onPress: () => api.leaveChat(id).then(() => router.back()).catch(fail) }]);
 
   return <KeyboardAvoidingView style={{ flex: 1, backgroundColor: C.paper }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={insets.top + 44}>
-    <Stack.Screen options={{ title, headerRight: () => <Pressable hitSlop={10} onPress={leave} accessibilityLabel="Leave chat"><Icon name="rectangle.portrait.and.arrow.right" size={20} color="#fff" /></Pressable> }} />
+    <Stack.Screen options={{ title, headerRight: () => <Pressable hitSlop={10} onPress={leave} accessibilityLabel="Leave chat"><Icon name="rectangle.portrait.and.arrow.right" size={20} color={C.text} /></Pressable> }} />
     <FlatList ref={list} inverted data={shown} keyExtractor={m => m.id} contentContainerStyle={{ padding: 16, gap: 6 }} keyboardDismissMode="interactive"
       renderItem={({ item: m, index }) => {
         const mine = m.author === user?.id;

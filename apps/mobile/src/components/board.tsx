@@ -29,13 +29,13 @@ export function Board({ kind, id, name, sub, art, credit, wikiKey, wikiFallback,
   const followers = useLoad(() => api.followCount(kind, id), [id]);
 
   return <Screen top={false} onRefresh={() => Promise.all([posts.reload(), records.reload(), followers.reload()])}>
-    <Stack.Screen options={{ title: '', headerRight: () => <Pressable hitSlop={10} accessibilityLabel="Share" onPress={() => shareLink(sharePath, `${name} on Melo`)}><Icon name="square.and.arrow.up" size={20} color="#fff" /></Pressable> }} />
+    <Stack.Screen options={{ title: '', headerRight: () => <Pressable hitSlop={10} accessibilityLabel="Share" onPress={() => shareLink(sharePath, `${name} on Melo`)}><Icon name="square.and.arrow.up" size={20} color={C.text} /></Pressable> }} />
     <Band>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
         {art}
         <View style={{ flex: 1, gap: 4 }}>
           <Text style={{ fontFamily: F.semibold, fontSize: 12.5, letterSpacing: 1, color: C.blue, textTransform: 'uppercase' }}>{kind === 'artist' ? 'Artist' : 'Genre'}</Text>
-          <Text style={{ fontFamily: F.bold, fontSize: 28, lineHeight: 31, color: '#fff' }}>{name}</Text>
+          <Text style={{ fontFamily: F.bold, fontSize: 28, lineHeight: 31, color: C.text }}>{name}</Text>
           <Text style={{ fontFamily: F.medium, fontSize: 14, color: C.onInkDim }}>{sub}{followers.data != null ? ` · ${compact(followers.data)} following` : ''}</Text>
         </View>
       </View>

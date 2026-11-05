@@ -45,7 +45,7 @@ export default function Onboarding() {
 
   const okStep0 = name.trim().length >= 1 && HANDLE_RE.test(handle.toLowerCase()) && avail !== false && terms;
 
-  return <View style={{ flex: 1, backgroundColor: C.ink, paddingTop: insets.top + 16 }}>
+  return <View style={{ flex: 1, backgroundColor: C.bg, paddingTop: insets.top + 16 }}>
     <ScrollView contentContainerStyle={{ padding: 22, gap: 18, paddingBottom: 140 }} keyboardShouldPersistTaps="handled">
       <Text style={{ fontFamily: F.semibold, color: C.blue, fontSize: 14 }}>Step {step + 1} of 3</Text>
       {step === 0 && <>
@@ -58,7 +58,7 @@ export default function Onboarding() {
         </View>
         <Text style={{ fontFamily: F.medium, fontSize: 13.5, color: avail === false ? '#ff8a8a' : C.onInkDim }}>{avail === false ? 'That username is taken.' : avail ? 'Available.' : '3 to 20 letters, numbers or underscores.'}</Text>
         <Pressable onPress={() => setCcOpen(!ccOpen)} style={{ backgroundColor: C.ink2, borderRadius: 14, padding: 14, flexDirection: 'row', justifyContent: 'space-between' }}>
-          <Text style={{ color: '#fff', fontFamily: F.medium, fontSize: 16 }}>Listening from: {FLAG[cc]} {CNAME[cc]}</Text><Icon name={ccOpen ? 'chevron.up' : 'chevron.down'} size={16} color={C.onInkDim} />
+          <Text style={{ color: C.text, fontFamily: F.medium, fontSize: 16 }}>Listening from: {FLAG[cc]} {CNAME[cc]}</Text><Icon name={ccOpen ? 'chevron.up' : 'chevron.down'} size={16} color={C.onInkDim} />
         </Pressable>
         {ccOpen && <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>{Object.keys(FLAG).map(c => <Chip key={c} label={`${FLAG[c]} ${CNAME[c]}`} on={c === cc} onPress={() => { setCc(c); setCcOpen(false); }} />)}</View>}
         <Pressable onPress={() => setTerms(!terms)} accessibilityRole="checkbox" accessibilityState={{ checked: terms }} style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
@@ -87,7 +87,7 @@ export default function Onboarding() {
         </View>
       </>}
     </ScrollView>
-    <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 22, paddingBottom: insets.bottom + 14, backgroundColor: C.ink, flexDirection: 'row', gap: 10 }}>
+    <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 22, paddingBottom: insets.bottom + 14, backgroundColor: C.bg, flexDirection: 'row', gap: 10 }}>
       {step > 0 && <Button kind="dark" title="Back" onPress={() => setStep(step - 1)} />}
       <Button style={{ flex: 1 }} loading={busy} disabled={step === 0 && !okStep0} title={step === 2 ? 'Start listening' : step === 1 && top4.length < 4 ? 'Skip for now' : 'Next'} onPress={() => (step === 2 ? finish() : setStep(step + 1))} />
     </View>

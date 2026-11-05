@@ -186,6 +186,14 @@ export function createApi(sb: SupabaseClient) {
     /* ---------- diary ---------- */
     async log(itemId: string, rating: number | null, liked = false) { await need(); ok(await sb.from('logs').insert({ item_id: itemId, rating, liked })); },
     async diary(userId: string, limit = 200): Promise<LogEntry[]> { return ok(await sb.from('logs').select('*').eq('user_id', userId).order('listened_at', { ascending: false }).limit(limit)); },
+    /** The latest log from each of these people in the last week, newest first (the "listening now" row). */
+    async recentLogs(userIds: string[], limit = 20): Promise<LogEntry[]> {
+      if (!userIds.length) return [];
+      const since = new Date(Date.now() - 7 * 864e5).toISOString();
+      const rows: LogEntry[] = ok(await sb.from('logs').select('*').in('user_id', userIds).eq('source', 'melo').gte('listened_at', since).order('listened_at', { ascending: false }).limit(200));
+      const seen = new Set<string>();
+      return rows.filter(r => !seen.has(r.user_id) && seen.add(r.user_id)).slice(0, limit);
+    },
     async deleteLog(id: string) { ok(await sb.from('logs').delete().eq('id', id)); },
 
     /* ---------- follows and blocks ---------- */

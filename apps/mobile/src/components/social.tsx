@@ -7,7 +7,7 @@ import { fail, go, useLoad } from '../lib/hooks';
 import { moderate } from './post';
 import { Loading } from './skeleton';
 import { Avatar, Button, Empty, Icon, Input, T } from './ui';
-import { C, F } from './theme';
+import { C, F, shadow } from './theme';
 
 export function FollowButton({ kind, target, small = true, onDark }: { kind: FollowKind; target: string; small?: boolean; onDark?: boolean }) {
   const { user, follows, setFollows, toast } = useSession();
@@ -94,6 +94,6 @@ const s = StyleSheet.create({
   meta: { fontFamily: F.medium, fontSize: 13, color: C.dim },
   link: { fontFamily: F.semibold, fontSize: 13.5, color: C.blue },
   act: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  wiki: { backgroundColor: C.mist, borderRadius: 22, padding: 16, gap: 8 },
+  wiki: { backgroundColor: C.mist, borderRadius: 22, padding: 16, gap: 8, ...shadow(1) },
   wikiText: { fontFamily: F.regular, fontSize: 15, lineHeight: 22.5, color: C.text },
 });

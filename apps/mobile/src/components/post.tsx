@@ -4,15 +4,34 @@ import * as Haptics from 'expo-haptics';
 import { ago, flag, type FeedPost, type Target } from '@melo/core';
 import { api } from '../lib/supabase';
 import { useSession } from '../lib/session';
-import { fail, go, loadArtists, loadItems, shareMenu, targetHref, targetLabel } from '../lib/hooks';
-import { Avatar, Empty, Icon, ItemCover, ArtistCover, GenreCover, Stars, T } from './ui';
-import { C, F } from './theme';
+import { cachedItem, fail, go, loadArtists, loadItems, shareMenu, targetHref, targetLabel } from '../lib/hooks';
+import { Avatar, Empty, Icon, ItemCover, ArtistCover, GenreCover, Stars, T, type IconName } from './ui';
+import { C, F, shadow } from './theme';
 import { Loading } from './skeleton';
 
+const KIND_LABEL: Record<string, string> = { album: 'Album', episode: 'Episode', show: 'Podcast' };
+/** Small inline reference (comments, chats). */
 export function TargetChip({ t }: { t: Target }) {
   return <Pressable onPress={() => go(targetHref(t))} style={s.chip} accessibilityRole="link">
     {t.type === 'item' ? <ItemCover item={{ id: t.id, title: targetLabel(t), type: 'album' }} size={22} radius={5} /> : t.type === 'artist' ? <ArtistCover id={t.id} size={22} /> : <GenreCover id={t.id} size={22} radius={5} />}
     <Text style={s.chipText} numberOfLines={1}>{targetLabel(t)}</Text>
+  </Pressable>;
+}
+
+/** What a post is about, shown as a card with the real cover: kind, title, who made it. Tapping opens it. */
+export function RefCard({ t, rating }: { t: Target; rating?: number | null }) {
+  const it = t.type === 'item' ? cachedItem(t.id) : undefined;
+  const kind = t.type === 'artist' ? 'Artist' : t.type === 'genre' ? 'Genre' : KIND_LABEL[it?.type ?? 'album'] ?? 'Album';
+  const sub = t.type === 'item' ? [it?.artist_name, it?.year].filter(Boolean).join(' · ') : t.type === 'artist' ? 'Discussion and wiki' : 'Community';
+  const icon: IconName = t.type === 'artist' ? 'mic' : t.type === 'genre' ? 'waveform' : it?.type === 'album' || !it ? 'disc' : 'headphones';
+  return <Pressable onPress={() => go(targetHref(t))} accessibilityRole="link" accessibilityLabel={`${kind}: ${targetLabel(t)}${sub ? ', ' + sub : ''}`} style={({ pressed }) => [s.ref, pressed && { backgroundColor: C.card2 }]}>
+    {t.type === 'item' ? <ItemCover item={{ id: t.id, title: targetLabel(t), type: it?.type ?? 'album', artwork_url: it?.artwork_url }} size={54} radius={10} /> : t.type === 'artist' ? <ArtistCover id={t.id} size={54} /> : <GenreCover id={t.id} size={54} radius={10} />}
+    <View style={{ flex: 1, gap: 2 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}><Icon name={icon} size={12} color={C.blue} weight={2.4} /><Text style={s.refKind}>{kind}</Text></View>
+      <Text style={s.refTitle} numberOfLines={1}>{targetLabel(t)}</Text>
+      {!!sub && <Text style={s.refSub} numberOfLines={1}>{sub}</Text>}
+    </View>
+    {rating != null ? <View style={{ alignItems: 'flex-end', gap: 3 }}><Text style={s.refScore}>{(rating / 2).toFixed(1)}</Text><Stars r10={rating} size={11} /></View> : <Icon name="chevron.right" size={18} color={C.faint} />}
   </Pressable>;
 }
 
@@ -57,39 +76,50 @@ export function PostCard({ post, liked, laughed, vote, onChange, full, hideTarge
   };
   const total = post.agree + post.disagree;
 
-  return <Pressable disabled={full} onPress={() => go(`/post/${post.id}`)} style={[s.card, full && { backgroundColor: 'transparent', padding: 0 }]}>
+  const verb = post.kind === 'review' ? 'reviewed' : post.kind === 'take' ? 'hot take' : 'started a thread';
+  return <Pressable disabled={full} onPress={() => go(`/post/${post.id}`)} style={({ pressed }) => [s.card, full && s.full, pressed && !full && { opacity: 0.94 }]}>
     <View style={s.head}>
-      <Pressable onPress={() => go(`/user/${post.author_handle}`)} style={s.author}>
-        <Avatar name={post.author_name} color={post.author_color} size={34} />
-        <View style={{ flex: 1 }}>
-          <Text style={s.name} numberOfLines={1}>{post.author_name} <Text style={s.handle}>@{post.author_handle} {flag(post.author_cc)}</Text></Text>
-          <Text style={s.handle}>{post.kind === 'review' ? 'Review' : post.kind === 'take' ? 'Take' : 'Thread'} · {ago(post.created_at)}</Text>
+      <Pressable onPress={() => go(`/user/${post.author_handle}`)} accessibilityLabel={`${post.author_name}, @${post.author_handle}`}><Avatar name={post.author_name} color={post.author_color} size={40} /></Pressable>
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={s.name} numberOfLines={1} onPress={() => go(`/user/${post.author_handle}`)}>{post.author_name} <Text style={s.handle}>@{post.author_handle}{post.author_cc ? ' ' + flag(post.author_cc) : ''}</Text></Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={[s.kind, post.kind === 'take' && { backgroundColor: '#FFF1E6' }, post.kind === 'thread' && { backgroundColor: C.card2 }]}>
+            <Icon name={post.kind === 'review' ? 'star' : post.kind === 'take' ? 'flame' : 'bubble.left'} size={11} color={post.kind === 'take' ? '#E06A12' : post.kind === 'review' ? C.blue : C.dim} weight={2.4} />
+            <Text style={[s.kindText, post.kind === 'take' && { color: '#E06A12' }, post.kind === 'thread' && { color: C.dim }]}>{verb}</Text>
+          </View>
+          <Text style={s.handle}>{ago(post.created_at)}</Text>
         </View>
-      </Pressable>
+      </View>
       <Pressable hitSlop={12} accessibilityLabel="More options" onPress={() => moderate({ kind: 'post', id: post.id, authorId: post.author, authorHandle: post.author_handle, mine, onDeleted: () => api.deletePost(post.id).then(() => { onChange?.({ _gone: true }); toast('Deleted'); }).catch(fail), onBlocked: () => { onChange?.({ _gone: true }); toast('Blocked'); } })}>
-        <Icon name="ellipsis" size={18} color={C.dim} />
+        <Icon name="ellipsis" size={18} color={C.faint} />
       </Pressable>
     </View>
-    {target && !hideTarget && <TargetChip t={target} />}
-    {post.kind === 'review' && post.rating != null && <Stars r10={post.rating} size={16} color={C.blue} />}
+    {target && !hideTarget && <RefCard t={target} rating={post.kind === 'review' ? post.rating : null} />}
+    {hideTarget && post.kind === 'review' && post.rating != null && <Stars r10={post.rating} size={15} />}
     {post.title ? <Text style={s.title}>{post.title}</Text> : null}
     {reveal
-      ? <Text style={[s.body, post.kind === 'take' && s.take]} numberOfLines={full ? undefined : 8}>{post.body}</Text>
+      ? <Text style={[s.body, post.kind === 'take' && s.take, full && { fontSize: 17, lineHeight: 26 }]} numberOfLines={full ? undefined : 7}>{post.body}</Text>
       : <Pressable onPress={() => setReveal(true)} style={s.spoiler}><Icon name="eye.slash" size={16} color={C.dim} /><Text style={s.handle}>Contains spoilers. Tap to read.</Text></Pressable>}
     {post.kind === 'take' && <View style={{ gap: 6 }}>
       <View style={s.voteRow}>
-        <Pressable onPress={() => doVote('agree')} style={[s.vote, vote === 'agree' && { backgroundColor: C.blue }]}><Text style={[s.voteText, vote === 'agree' && { color: '#fff' }]}>Agree {total ? Math.round((post.agree / total) * 100) + '%' : ''}</Text></Pressable>
-        <Pressable onPress={() => doVote('disagree')} style={[s.vote, vote === 'disagree' && { backgroundColor: C.ink }]}><Text style={[s.voteText, vote === 'disagree' && { color: '#fff' }]}>Disagree {total ? Math.round((post.disagree / total) * 100) + '%' : ''}</Text></Pressable>
+        {(['agree', 'disagree'] as const).map(v => {
+          const n = v === 'agree' ? post.agree : post.disagree; const pct = total ? Math.round((n / total) * 100) : 0; const on = vote === v;
+          return <Pressable key={v} onPress={() => doVote(v)} accessibilityRole="button" accessibilityState={{ selected: on }} style={[s.vote, on && { borderColor: v === 'agree' ? C.blue : C.text }]}>
+            {total > 0 && <View style={[s.voteFill, { width: `${pct}%`, backgroundColor: v === 'agree' ? C.blueSoft : C.card2 }]} />}
+            <Text style={[s.voteText, on && { color: v === 'agree' ? C.blue : C.text }]}>{v === 'agree' ? 'Agree' : 'Disagree'}</Text>
+            {total > 0 && <Text style={[s.votePct, on && { color: v === 'agree' ? C.blue : C.text }]}>{pct}%</Text>}
+          </Pressable>;
+        })}
       </View>
       {total > 0 && <Text style={s.handle}>{total} {total === 1 ? 'vote' : 'votes'}</Text>}
     </View>}
     <View style={s.actions}>
-      <Pressable hitSlop={8} onPress={() => react('like')} style={s.act} accessibilityRole="button" accessibilityLabel={`Like, ${post.likes} ${post.likes === 1 ? 'like' : 'likes'}`} accessibilityState={{ selected: !!liked }}><Icon name={liked ? 'heart.fill' : 'heart'} size={18} color={liked ? '#e0245e' : C.dim} /><Text style={s.count}>{post.likes || ''}</Text></Pressable>
-      <Pressable hitSlop={8} onPress={() => react('laugh')} style={s.act} accessibilityRole="button" accessibilityLabel={`Funny, ${post.laughs} ${post.laughs === 1 ? 'laugh' : 'laughs'}`} accessibilityState={{ selected: !!laughed }}><Text style={{ fontSize: 16, opacity: laughed ? 1 : 0.55 }}>😂</Text><Text style={s.count}>{post.laughs || ''}</Text></Pressable>
-      <Pressable hitSlop={8} onPress={() => go(`/post/${post.id}`)} style={s.act} accessibilityRole="button" accessibilityLabel={`${post.comment_count} comments`}><Icon name="bubble.left" size={17} color={C.dim} /><Text style={s.count}>{post.comment_count || ''}</Text></Pressable>
+      <Pressable hitSlop={8} onPress={() => react('like')} style={s.act} accessibilityRole="button" accessibilityLabel={`Like, ${post.likes} ${post.likes === 1 ? 'like' : 'likes'}`} accessibilityState={{ selected: !!liked }}><Icon name={liked ? 'heart.fill' : 'heart'} size={19} color={liked ? C.heart : C.dim} /><Text style={[s.count, liked && { color: C.heart }]}>{post.likes || ''}</Text></Pressable>
+      <Pressable hitSlop={8} onPress={() => react('laugh')} style={s.act} accessibilityRole="button" accessibilityLabel={`Funny, ${post.laughs} ${post.laughs === 1 ? 'laugh' : 'laughs'}`} accessibilityState={{ selected: !!laughed }}><Icon name="laugh" size={19} color={laughed ? '#E0A100' : C.dim} weight={laughed ? 2.4 : 1.9} /><Text style={[s.count, laughed && { color: '#E0A100' }]}>{post.laughs || ''}</Text></Pressable>
+      <Pressable hitSlop={8} onPress={() => go(`/post/${post.id}`)} style={s.act} accessibilityRole="button" accessibilityLabel={`${post.comment_count} comments`}><Icon name="bubble.left" size={18} color={C.dim} /><Text style={s.count}>{post.comment_count || ''}</Text></Pressable>
       <View style={{ flex: 1 }} />
-      <Pressable hitSlop={8} onPress={() => go(`/chats/new?share=post:${post.id}`)} accessibilityLabel="Send in a chat"><Icon name="paperplane" size={17} color={C.dim} /></Pressable>
-      <Pressable hitSlop={8} onPress={() => shareMenu({ path: `/p/${post.id}`, storyPath: `/p/${post.id}/story`, message: `${post.author_name} on Melo` })} accessibilityLabel="Share"><Icon name="square.and.arrow.up" size={17} color={C.dim} /></Pressable>
+      <Pressable hitSlop={8} onPress={() => go(`/chats/new?share=post:${post.id}`)} accessibilityLabel="Send in a chat"><Icon name="paperplane" size={18} color={C.dim} /></Pressable>
+      <Pressable hitSlop={8} onPress={() => shareMenu({ path: `/p/${post.id}`, storyPath: `/p/${post.id}/story`, message: `${post.author_name} on Melo` })} accessibilityLabel="Share"><Icon name="square.and.arrow.up" size={18} color={C.dim} /></Pressable>
     </View>
   </Pressable>;
 }
@@ -138,21 +168,30 @@ export const SectionTitle = ({ title, action, onAction }: { title: string; actio
 </View>;
 
 const s = StyleSheet.create({
-  card: { backgroundColor: C.mist, borderRadius: 22, padding: 16, gap: 10 },
-  head: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  author: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  name: { fontFamily: F.bold, fontSize: 15, color: C.text },
-  handle: { fontFamily: F.medium, fontSize: 13, color: C.dim },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', backgroundColor: C.paper, borderRadius: 10, paddingRight: 10, paddingLeft: 4, paddingVertical: 4, maxWidth: '100%' },
+  card: { backgroundColor: C.card, borderRadius: 24, padding: 16, gap: 12, ...shadow(1) },
+  full: { backgroundColor: 'transparent', padding: 0, borderRadius: 0, shadowOpacity: 0, elevation: 0 },
+  head: { flexDirection: 'row', alignItems: 'center', gap: 11 },
+  name: { fontFamily: F.bold, fontSize: 15.5, color: C.text },
+  handle: { fontFamily: F.medium, fontSize: 13.5, color: C.dim },
+  kind: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.blueSoft, borderRadius: 999, paddingHorizontal: 7, paddingVertical: 2 },
+  kindText: { fontFamily: F.bold, fontSize: 11.5, color: C.blue },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', backgroundColor: C.card2, borderRadius: 10, paddingRight: 10, paddingLeft: 4, paddingVertical: 4, maxWidth: '100%' },
   chipText: { fontFamily: F.semibold, fontSize: 13.5, color: C.text, flexShrink: 1 },
-  title: { fontFamily: F.bold, fontSize: 19, color: C.text, lineHeight: 24 },
-  body: { fontFamily: F.regular, fontSize: 15.5, lineHeight: 23, color: C.text },
-  take: { fontFamily: F.semibold, fontSize: 18, lineHeight: 25 },
-  spoiler: { flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: C.paper, borderRadius: 12, padding: 14 },
+  ref: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.card2, borderRadius: 16, padding: 8, paddingRight: 14 },
+  refKind: { fontFamily: F.bold, fontSize: 11, letterSpacing: 0.6, color: C.blue, textTransform: 'uppercase' },
+  refTitle: { fontFamily: F.bold, fontSize: 16, color: C.text },
+  refSub: { fontFamily: F.medium, fontSize: 13, color: C.dim },
+  refScore: { fontFamily: F.heavy, fontSize: 18, color: C.text, letterSpacing: -0.3 },
+  title: { fontFamily: F.heavy, fontSize: 20, color: C.text, lineHeight: 25, letterSpacing: -0.3 },
+  body: { fontFamily: F.medium, fontSize: 16, lineHeight: 24, color: C.text },
+  take: { fontFamily: F.bold, fontSize: 20, lineHeight: 27, letterSpacing: -0.3 },
+  spoiler: { flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: C.card2, borderRadius: 14, padding: 14 },
   voteRow: { flexDirection: 'row', gap: 8 },
-  vote: { flex: 1, height: 40, borderRadius: 12, backgroundColor: C.paper, alignItems: 'center', justifyContent: 'center' },
-  voteText: { fontFamily: F.semibold, fontSize: 14.5, color: C.text },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: 18, paddingTop: 2 },
-  act: { flexDirection: 'row', alignItems: 'center', gap: 5, minWidth: 34 },
+  vote: { flex: 1, height: 42, borderRadius: 14, borderWidth: 1.5, borderColor: C.line, backgroundColor: C.card, alignItems: 'center', justifyContent: 'space-between', flexDirection: 'row', paddingHorizontal: 14, overflow: 'hidden' },
+  voteFill: { position: 'absolute', left: 0, top: 0, bottom: 0 },
+  voteText: { fontFamily: F.bold, fontSize: 14.5, color: C.text },
+  votePct: { fontFamily: F.semibold, fontSize: 13.5, color: C.dim },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 20, paddingTop: 2 },
+  act: { flexDirection: 'row', alignItems: 'center', gap: 5, minWidth: 36 },
   count: { fontFamily: F.semibold, fontSize: 13.5, color: C.dim },
 });

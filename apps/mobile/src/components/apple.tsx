@@ -51,7 +51,7 @@ export function AppleRow({ r, onPick, existing }: { r: AppleResult; onPick?: (id
   };
   return <Pressable onPress={open} disabled={busy} accessibilityLabel={`${r.title}, ${sub(r)}`} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
     {r.artwork ? <Image source={{ uri: r.artwork }} style={{ width: 56, height: 56, borderRadius: r.kind === 'show' ? 14 : 10, backgroundColor: C.mist }} contentFit="cover" transition={150} />
-      : <View style={{ width: 56, height: 56, borderRadius: 10, backgroundColor: C.mist }} />}
+      : <View style={{ width: 56, height: 56, borderRadius: 10, backgroundColor: C.card2 }} />}
     <View style={{ flex: 1 }}>
       <Text style={{ fontFamily: F.bold, fontSize: 16, color: C.text }} numberOfLines={1}>{r.title}</Text>
       <T.Dim numberOfLines={1}>{sub(r)}</T.Dim>

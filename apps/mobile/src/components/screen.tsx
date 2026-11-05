@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, RefreshControl, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, RefreshControl, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { C } from './theme';
 import { Chip } from './ui';
@@ -8,11 +8,9 @@ import { Chip } from './ui';
 export function Screen({ children, onRefresh, top = true, keyboard }: { children: React.ReactNode; onRefresh?: () => Promise<unknown>; top?: boolean; keyboard?: boolean }) {
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
-  const body = <ScrollView style={{ flex: 1, backgroundColor: C.ink }} contentContainerStyle={{ flexGrow: 1, paddingTop: top ? insets.top : 0 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive"
-    refreshControl={onRefresh ? <RefreshControl tintColor="#fff" refreshing={refreshing} onRefresh={async () => { setRefreshing(true); try { await onRefresh(); } finally { setRefreshing(false); } }} /> : undefined}>
+  const body = <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ flexGrow: 1, paddingTop: top ? insets.top : 0 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive"
+    refreshControl={onRefresh ? <RefreshControl tintColor={C.dim} refreshing={refreshing} onRefresh={async () => { setRefreshing(true); try { await onRefresh(); } finally { setRefreshing(false); } }} /> : undefined}>
     {children}
-    {/* Keeps the bottom white when content is short or overscrolled. */}
-    <View style={{ backgroundColor: C.paper, height: 600, marginBottom: -600 }} />
   </ScrollView>;
   return keyboard ? <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={top ? 0 : 100}>{body}</KeyboardAvoidingView> : body;
 }

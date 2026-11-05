@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text } from 'react-native';
+import { Animated, Platform, StyleSheet, Text } from 'react-native';
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@melo/core';
 import { api, configured } from './supabase';
@@ -42,7 +42,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!userId) { setUnread(0); return; }
     refreshUnread();
-    registerPush(false);
+    if (Platform.OS !== 'web') registerPush(false);
     return api.onNotifications(userId, n => { if (n.kind !== 'message') setUnread(u => u + 1); });
   }, [userId, refreshUnread]);
 

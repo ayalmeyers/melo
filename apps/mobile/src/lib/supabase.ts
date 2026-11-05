@@ -2,12 +2,14 @@ import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
-import { createApi } from '@melo/core';
+import { createApi, createDemoApi } from '@melo/core';
 
 export const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 export const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
 export const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL ?? 'https://melo.vercel.app';
-export const configured = Boolean(SUPABASE_URL && SUPABASE_KEY);
+/** Demo mode runs the whole app on sample data (design reviews, App Store screenshots). */
+export const DEMO = process.env.EXPO_PUBLIC_DEMO === '1';
+export const configured = DEMO || Boolean(SUPABASE_URL && SUPABASE_KEY);
 
 export const supabase = createClient(SUPABASE_URL || 'http://localhost:54321', SUPABASE_KEY || 'missing-key', {
   auth: {
@@ -26,4 +28,4 @@ if (Platform.OS !== 'web') {
   });
 }
 
-export const api = createApi(supabase);
+export const api = DEMO ? createDemoApi() : createApi(supabase);

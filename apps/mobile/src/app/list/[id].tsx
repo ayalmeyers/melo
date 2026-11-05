@@ -32,16 +32,16 @@ export default function ListScreen() {
   const del = () => Alert.alert('Delete this list?', 'The list goes away; the albums stay on Melo.', [{ text: 'Cancel', style: 'cancel' }, { text: 'Delete', style: 'destructive', onPress: () => api.deleteList(id).then(() => { toast('List deleted'); router.back(); }).catch(fail) }]);
 
   return <Screen top={false} keyboard onRefresh={data.reload}>
-    <Stack.Screen options={{ title: '', headerRight: () => <Pressable hitSlop={10} accessibilityLabel="Share list" onPress={() => shareLink(`/lists/${id}`, `${list.title}, a list by ${list.owner_name} on Melo`)}><Icon name="square.and.arrow.up" size={20} color="#fff" /></Pressable> }} />
+    <Stack.Screen options={{ title: '', headerRight: () => <Pressable hitSlop={10} accessibilityLabel="Share list" onPress={() => shareLink(`/lists/${id}`, `${list.title}, a list by ${list.owner_name} on Melo`)}><Icon name="square.and.arrow.up" size={20} color={C.text} /></Pressable> }} />
     <Band>
       {editing ? <View style={{ gap: 10 }}>
         <Input dark value={title} onChangeText={setTitle} maxLength={100} placeholder="Title" />
         <Input dark value={desc} onChangeText={setDesc} maxLength={1000} placeholder="What ties these together?" multiline />
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}><Switch value={ranked} onValueChange={setRanked} trackColor={{ true: C.blue }} /><Text style={{ color: '#fff', fontFamily: F.medium }}>Ranked list</Text></View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}><Switch value={ranked} onValueChange={setRanked} trackColor={{ true: C.blue }} /><Text style={{ color: C.text, fontFamily: F.medium }}>Ranked list</Text></View>
         <View style={{ flexDirection: 'row', gap: 10 }}><Button small title="Save" onPress={save} /><Button small kind="dark" title="Cancel" onPress={() => setEditing(false)} /><Button small kind="danger" title="Delete list" onPress={del} /></View>
       </View> : <>
         <Text style={{ fontFamily: F.semibold, fontSize: 12.5, letterSpacing: 1, color: C.blue }}>{list.ranked ? 'RANKED LIST' : 'LIST'}</Text>
-        <Text style={{ fontFamily: F.bold, fontSize: 28, lineHeight: 32, color: '#fff' }}>{list.title}</Text>
+        <Text style={{ fontFamily: F.bold, fontSize: 28, lineHeight: 32, color: C.text }}>{list.title}</Text>
         {!!list.description && <Text style={{ fontFamily: F.medium, fontSize: 15.5, lineHeight: 22, color: C.onInk }}>{list.description}</Text>}
         <Pressable onPress={() => go(`/user/${list.owner_handle}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}><Avatar name={list.owner_name} color={list.owner_color} size={26} /><Text style={{ color: C.onInkDim, fontFamily: F.semibold }}>{list.owner_name} · {list.item_count} records</Text></Pressable>
         <View style={{ flexDirection: 'row', gap: 10 }}>

@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import type { Forecast, ForecastConsensus } from '@melo/core';
-import { api, configured } from '../../lib/supabase';
-import { useSession } from '../../lib/session';
-import { go, useLoad } from '../../lib/hooks';
-import { Screen, Seg } from '../../components/screen';
-import { ForecastCard } from '../../components/rows';
-import { Avatar, Band, Button, Empty, Sheet, T } from '../../components/ui';
-import { C, F } from '../../components/theme';
-import { ErrorView, Loading } from '../../components/skeleton';
+import { api, configured } from '../lib/supabase';
+import { useSession } from '../lib/session';
+import { go, useLoad } from '../lib/hooks';
+import { Screen, Seg } from '../components/screen';
+import { ForecastCard } from '../components/rows';
+import { Avatar, Band, Button, Empty, Sheet, T } from '../components/ui';
+import { C, F } from '../components/theme';
+import { ErrorView, Loading } from '../components/skeleton';
 
 export default function Forecasts() {
   const { user } = useSession();
@@ -22,7 +22,7 @@ export default function Forecasts() {
     return board.map(b => ({ ...b, p: byId[b.user_id] })).filter(b => b.p);
   }, [tab]);
 
-  return <Screen onRefresh={() => (tab === 'ears' ? ears.reload() : list.reload())}>
+  return <Screen top={false} onRefresh={() => (tab === 'ears' ? ears.reload() : list.reload())}>
     <Band>
       <T.Display>Forecasts</T.Display>
       <Text style={{ fontFamily: F.medium, fontSize: 15.5, lineHeight: 22, color: C.onInkDim }}>Call what happens next in music. The crowd's number weights people by how often they've been right. That's your Ear score.</Text>

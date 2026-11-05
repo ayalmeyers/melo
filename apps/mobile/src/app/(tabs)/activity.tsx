@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { ago, type MeloNotification, type Profile } from '@melo/core';
-import { api } from '../lib/supabase';
-import { useSession } from '../lib/session';
-import { go, useLoad } from '../lib/hooks';
-import { pushStatus, registerPush } from '../lib/push';
-import { Screen } from '../components/screen';
-import { Avatar, Button, Empty, Icon, Sheet } from '../components/ui';
-import { C, F } from '../components/theme';
-import { ErrorView, Loading } from '../components/skeleton';
+import { api } from '../../lib/supabase';
+import { useSession } from '../../lib/session';
+import { go, useLoad } from '../../lib/hooks';
+import { pushStatus, registerPush } from '../../lib/push';
+import { Screen } from '../../components/screen';
+import { Avatar, Band, Button, Empty, Icon, Sheet, T } from '../../components/ui';
+import { C, F } from '../../components/theme';
+import { ErrorView, Loading } from '../../components/skeleton';
 
 const VERB: Record<string, string> = { comment: 'commented on your post', reply: 'replied to you', follow: 'followed you', like: 'liked your post', laugh: 'laughed at your post', resolved: 'A forecast you made resolved' };
 const hrefOf = (n: MeloNotification, actor?: Profile) => n.forecast_id ? `/forecast/${n.forecast_id}` : n.post_id ? `/post/${n.post_id}` : actor ? `/user/${actor.handle}` : '/';
@@ -26,8 +26,9 @@ export default function Activity() {
   // Opening the list marks everything read; the dots stay until the next visit so you can see what was new.
   useEffect(() => { if (list.data?.ns.some(n => !n.read_at)) api.markNotificationsRead().then(refreshUnread).catch(() => {}); }, [list.data, refreshUnread]);
 
-  return <Screen top={false} onRefresh={list.reload}>
-    <Sheet style={{ marginTop: 0 }}>
+  return <Screen onRefresh={list.reload}>
+    <Band><T.Display>Activity</T.Display></Band>
+    <Sheet>
       {!user ? <Button title="Sign in" onPress={() => go('/login')} /> : <>
         {push === 'off' && <View style={{ backgroundColor: C.blueSoft, borderRadius: 18, padding: 16, gap: 10 }}>
           <Text style={{ fontFamily: F.bold, fontSize: 16, color: C.text }}>Know when people reply</Text>

@@ -3,14 +3,14 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { ARTISTS, GENRES, SHOWS, artistName, flag, type Artist, type CatalogItem, type Profile } from '@melo/core';
 import { api, configured } from '../../lib/supabase';
 import { useSession } from '../../lib/session';
-import { go, loadArtists, loadGenreArt, rememberArtist, rememberItem, useLoad } from '../../lib/hooks';
+import { cachedItem, go, loadArtists, loadGenreArt, rememberArtist, rememberItem, useLoad } from '../../lib/hooks';
 import { AppleSection, useAppleSearch } from '../../components/apple';
 import { Screen } from '../../components/screen';
 import { SectionTitle } from '../../components/post';
 import { ItemRow } from '../../components/rows';
-import { ChartRowView, loadChart } from '../../components/chart';
-import { ArtistCover, Avatar, Band, Empty, GenreCover, Icon, Input, ItemCover, Sheet, Stars, T } from '../../components/ui';
-import { C, F } from '../../components/theme';
+import { loadChart } from '../../components/chart';
+import { ArtistCover, Avatar, Band, Chip, Empty, GenreCover, Icon, Input, ItemCover, Sheet, Stars, T } from '../../components/ui';
+import { C, F, shadow } from '../../components/theme';
 import { Loading } from '../../components/skeleton';
 
 export default function Discover() {
@@ -52,9 +52,17 @@ export default function Discover() {
     <Band>
       <T.Display>Discover</T.Display>
       <View>
-        <Input dark value={q} onChangeText={setQ} placeholder="Albums, podcasts, artists, people" returnKeyType="search" clearButtonMode="while-editing" autoCorrect={false} style={{ paddingLeft: 40 }} />
-        <View style={{ position: 'absolute', left: 13, top: 14 }}><Icon name="magnifyingglass" size={18} color={C.onInkDim} /></View>
+        <Input dark value={q} onChangeText={setQ} placeholder="Albums, podcasts, artists, people" returnKeyType="search" clearButtonMode="while-editing" autoCorrect={false} style={{ paddingLeft: 42, borderRadius: 999 }} />
+        <View style={{ position: 'absolute', left: 15, top: 15 }}><Icon name="magnifyingglass" size={18} color={C.faint} /></View>
       </View>
+      {!res && <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }} style={{ marginHorizontal: -20 }}>
+        <View style={{ width: 12 }} />
+        <Chip label="Charts" icon="trophy" onPress={() => go('/charts')} />
+        <Chip label="Forecasts" icon="chart.line.uptrend.xyaxis" onPress={() => go('/forecasts')} />
+        <Chip label="Breakout radar" icon="flame" onPress={() => go('/forecasts')} />
+        {user && <Chip label="Your lists" icon="list" onPress={() => go('/me')} />}
+        <View style={{ width: 12 }} />
+      </ScrollView>}
     </Band>
     <Sheet>
       {res ? <View style={{ gap: 14 }}>
@@ -71,13 +79,26 @@ export default function Discover() {
         </Pressable>
       </View> : <>
         <SectionTitle title="This week on Melo" action="Charts" onAction={() => go('/charts')} />
-        {!chart.data && !chart.error ? <Loading n={3} /> : chart.data?.length ? <View style={{ gap: 14 }}>{chart.data.map(r => <ChartRowView key={r.subject_id} r={r} />)}</View> : <T.Dim>The weekly chart fills up as people log what they listen to.</T.Dim>}
+        {!chart.data && !chart.error ? <Loading n={3} /> : chart.data?.length ? <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 14 }} style={{ marginHorizontal: -16 }}>
+          <View style={{ width: 2 }} />
+          {chart.data.map(r => <Pressable key={r.subject_id} onPress={() => go(`/item/${r.subject_id}`)} style={({ pressed }) => [{ width: 186, gap: 8, opacity: pressed ? 0.9 : 1 }]}>
+            <View style={[{ borderRadius: 22 }, shadow(1)]}>
+              <ItemCover item={{ id: r.subject_id, title: '', type: 'album' }} size={186} radius={22} />
+              <View style={{ position: 'absolute', top: 10, left: 10, backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: 999, paddingHorizontal: 10, height: 28, justifyContent: 'center' }}><Text style={{ fontFamily: F.heavy, fontSize: 14, color: C.text }}>#{r.rank}</Text></View>
+            </View>
+            <View style={{ paddingHorizontal: 4 }}>
+              <Text style={{ fontFamily: F.bold, fontSize: 16, color: C.text }} numberOfLines={1}>{cachedItem(r.subject_id)?.title ?? ''}</Text>
+              <Text style={{ fontFamily: F.medium, fontSize: 13.5, color: C.dim }} numberOfLines={1}>{cachedItem(r.subject_id)?.artist_name} · {r.listeners} listeners</Text>
+            </View>
+          </Pressable>)}
+          <View style={{ width: 2 }} />
+        </ScrollView> : <T.Dim>The weekly chart fills up as people log what they listen to.</T.Dim>}
 
         {!!similar.data?.length && <View style={{ gap: 12 }}>
           <SectionTitle title="People who hear like you" />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }} style={{ marginHorizontal: -20 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }} style={{ marginHorizontal: -16 }}>
             <View style={{ width: 8 }} />
-            {similar.data.map(x => <Pressable key={x.user_id} onPress={() => go(`/user/${x.p.handle}`)} style={{ width: 112, alignItems: 'center', gap: 6, backgroundColor: C.mist, borderRadius: 18, padding: 12 }}>
+            {similar.data.map(x => <Pressable key={x.user_id} onPress={() => go(`/user/${x.p.handle}`)} style={{ width: 112, alignItems: 'center', gap: 6, backgroundColor: C.card, borderRadius: 20, padding: 12, ...shadow(1) }}>
               <Avatar name={x.p.name} color={x.p.color} size={56} />
               <Text style={{ fontFamily: F.bold, fontSize: 14, color: C.text }} numberOfLines={1}>{x.p.name}</Text>
               <Text style={{ fontFamily: F.heavy, fontSize: 16, color: C.blue }}>{x.score}%</Text>
@@ -87,7 +108,7 @@ export default function Discover() {
         </View>}
 
         <SectionTitle title="Genres" />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }} style={{ marginHorizontal: -20 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }} style={{ marginHorizontal: -16 }}>
           <View style={{ width: 8 }} />
           {Object.entries(GENRES).map(([id, g]) => <Pressable key={id} onPress={() => go(`/genre/${id}`)} style={{ width: 120, gap: 6 }}><GenreCover key={genreArt.loading ? 'g' : 'G'} id={id} size={120} radius={18} /><T.Bold>{g.name}</T.Bold></Pressable>)}
           <View style={{ width: 8 }} />
@@ -107,7 +128,7 @@ export default function Discover() {
         </View>}
 
         <SectionTitle title="Artists" />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 14 }} style={{ marginHorizontal: -20 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 14 }} style={{ marginHorizontal: -16 }}>
           <View style={{ width: 6 }} />
           {Object.entries(ARTISTS).map(([id, a]) => <Pressable key={id} onPress={() => go(`/artist/${id}`)} style={{ width: 84, alignItems: 'center', gap: 6 }}><ArtistCover key={genreArt.loading ? 'a' : 'A'} id={id} size={76} /><Text style={{ fontFamily: F.semibold, fontSize: 13, color: C.text, textAlign: 'center' }} numberOfLines={2}>{a.name}</Text></Pressable>)}
           <View style={{ width: 6 }} />

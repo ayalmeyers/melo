@@ -25,7 +25,7 @@ export default function Chats() {
   }, [user?.id]);
 
   return <Screen top={false} onRefresh={chats.reload}>
-    <Stack.Screen options={{ title: 'Chats', headerRight: () => <Pressable hitSlop={10} onPress={() => go('/chats/new')} accessibilityLabel="New chat"><Icon name="square.and.pencil" size={20} color="#fff" /></Pressable> }} />
+    <Stack.Screen options={{ title: 'Chats', headerRight: () => <Pressable hitSlop={10} onPress={() => go('/chats/new')} accessibilityLabel="New chat"><Icon name="square.and.pencil" size={20} color={C.text} /></Pressable> }} />
     <Sheet style={{ marginTop: 0 }}>
       {!user ? <Button title="Sign in to chat" onPress={() => go('/login')} />
         : chats.error ? <ErrorView message={chats.error} onRetry={chats.reload} />

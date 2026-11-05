@@ -54,7 +54,7 @@ export default function ForecastScreen() {
   return <Screen top={false} keyboard onRefresh={f.reload}>
     <Stack.Screen options={{ title: 'Forecast' }} />
     <Band>
-      <Text style={{ fontFamily: F.bold, fontSize: 26, lineHeight: 31, color: '#fff' }}>{d.question}</Text>
+      <Text style={{ fontFamily: F.bold, fontSize: 26, lineHeight: 31, color: C.text }}>{d.question}</Text>
       {d.target_type && d.target_id && <TargetChip t={{ type: d.target_type, id: d.target_id }} />}
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 18 }}>
         <View>
@@ -62,7 +62,7 @@ export default function ForecastScreen() {
           <Text style={{ fontFamily: F.medium, fontSize: 13, color: C.onInkDim }}>{d.c?.outcome ? `Resolved ${d.c.outcome.toUpperCase()}` : 'Crowd, weighted by Ear score'}</Text>
         </View>
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'flex-end', gap: 3, height: 54 }}>
-          {Array.from({ length: 10 }, (_, i) => <View key={i} style={{ flex: 1, height: Math.max(3, ((dist[i] ?? 0) / max) * 54), backgroundColor: '#fff', opacity: 0.2 + ((dist[i] ?? 0) / max) * 0.6, borderRadius: 2 }} />)}
+          {Array.from({ length: 10 }, (_, i) => <View key={i} style={{ flex: 1, height: Math.max(3, ((dist[i] ?? 0) / max) * 54), backgroundColor: C.blue, opacity: 0.2 + ((dist[i] ?? 0) / max) * 0.6, borderRadius: 2 }} />)}
         </View>
       </View>
       <Text style={{ fontFamily: F.medium, fontSize: 13.5, color: C.onInkDim }}>{d.c?.forecasters ?? 0} forecasters · closes {new Date(d.closes_on).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</Text>
