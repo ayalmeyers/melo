@@ -11,7 +11,7 @@ on:
     branches: [main]
     paths: [scripts/library.mts, scripts/genres.mts, .github/workflows/library.yml]
 permissions: { contents: read }
-concurrency: { group: library, cancel-in-progress: false }
+concurrency: { group: library, cancel-in-progress: true }   # runs are resumable, so the newest code wins
 jobs:
   fill:
     runs-on: ubuntu-24.04

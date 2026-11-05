@@ -33,14 +33,14 @@ const summary = (line: string) => { if (process.env.GITHUB_STEP_SUMMARY) appendF
 
 /* ---------- polite HTTP with per-host pacing ---------- */
 const lastHit = new Map<string, number>();
-const GAP: Record<string, number> = { 'itunes.apple.com': 3200, 'query.wikidata.org': 2000, 'en.wikipedia.org': 600, 'commons.wikimedia.org': 600 };
-async function getJson(url: string, init: RequestInit = {}, tries = 5): Promise<unknown> {
+const GAP: Record<string, number> = { 'itunes.apple.com': 3200, 'query.wikidata.org': 2000, 'qlever.cs.uni-freiburg.de': 1000, 'en.wikipedia.org': 600, 'commons.wikimedia.org': 600 };
+async function getJson(url: string, init: RequestInit = {}, tries = 5, timeoutMs = 60_000): Promise<unknown> {
   const host = new URL(url).host;
   for (let i = 0; i < tries; i++) {
     const gap = (GAP[host] ?? 300) - (Date.now() - (lastHit.get(host) ?? 0)); if (gap > 0) await wait(gap);
     lastHit.set(host, Date.now());
     try {
-      const r = await fetch(url, { ...init, headers: { 'User-Agent': UA, 'Api-User-Agent': UA, Accept: 'application/json', ...(init.headers ?? {}) } });
+      const r = await fetch(url, { ...init, signal: AbortSignal.timeout(timeoutMs), headers: { 'User-Agent': UA, 'Api-User-Agent': UA, Accept: 'application/json', ...(init.headers ?? {}) } });
       if (r.status === 429 || r.status === 503 || r.status === 502 || r.status === 403) { await wait((Number(r.headers.get('retry-after')) || 20 * (i + 1)) * 1000); continue; }
       if (!r.ok) throw new Error(`${r.status} ${(await r.text()).slice(0, 200)}`);
       return await r.json();
@@ -68,40 +68,50 @@ function dryRpc(fn: string, body: unknown): unknown {
 interface Target { apple: number; qid?: string; label?: string; sl: number; image?: string; cc?: string; enwiki?: string; charts: number }
 const targets = new Map<number, Target>();
 
-async function sparql(min: number, max: number): Promise<number> {
-  const q = `SELECT ?item ?apple ?sl (SAMPLE(?lbl) AS ?label) (SAMPLE(?img) AS ?image) (SAMPLE(?code) AS ?cc) (SAMPLE(?t) AS ?enwiki) WHERE {
-    ?item wdt:P2850 ?apple ; wikibase:sitelinks ?sl .
-    FILTER(?sl >= ${min} && ?sl < ${max})
-    OPTIONAL { ?item rdfs:label ?lbl FILTER(LANG(?lbl) = "en") }
-    OPTIONAL { ?item wdt:P18 ?img }
-    OPTIONAL { ?item (wdt:P495|wdt:P27) ?c . ?c wdt:P297 ?code }
-    OPTIONAL { ?a schema:about ?item ; schema:isPartOf <https://en.wikipedia.org/> ; schema:name ?t }
-  } GROUP BY ?item ?apple ?sl`;
-  const j = await getJson(`https://query.wikidata.org/sparql?format=json&query=${encodeURIComponent(q)}`, {}, 2) as { results: { bindings: Record<string, { value: string }>[] } };
+const PREFIXES = `PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX wikibase: <http://wikiba.se/ontology#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX schema: <http://schema.org/>
+`;
+const query = (min: number, max: number) => `${PREFIXES}SELECT ?item ?apple ?sl (SAMPLE(?lbl) AS ?label) (SAMPLE(?img) AS ?image) (SAMPLE(?code) AS ?cc) (SAMPLE(?t) AS ?enwiki) WHERE {
+  ?item wdt:P2850 ?apple ; wikibase:sitelinks ?sl .
+  FILTER(?sl >= ${min} && ?sl < ${max})
+  OPTIONAL { ?item rdfs:label ?lbl FILTER(LANG(?lbl) = "en") }
+  OPTIONAL { ?item wdt:P18 ?img }
+  OPTIONAL { ?item wdt:P495 ?c1 . ?c1 wdt:P297 ?code }
+  OPTIONAL { ?item wdt:P27 ?c2 . ?c2 wdt:P297 ?code }
+  OPTIONAL { ?a schema:about ?item ; schema:isPartOf <https://en.wikipedia.org/> ; schema:name ?t }
+} GROUP BY ?item ?apple ?sl`;
+type Binding = Record<string, { value: string }>;
+function absorb(bindings: Binding[]): number {
   let n = 0;
-  for (const b of j.results.bindings) {
-    const apple = Number(b.apple?.value); if (!apple || !/^\d+$/.test(b.apple.value)) continue;
-    const prev = targets.get(apple); const sl = Number(b.sl.value);
+  for (const b of bindings) {
+    const raw = b.apple?.value ?? ''; const apple = Number(raw); if (!apple || !/^\d+$/.test(raw)) continue;
+    const prev = targets.get(apple); const sl = Number(b.sl?.value ?? 0);
     if (prev && prev.sl >= sl) continue;
+    const file = b.image?.value ? decodeURIComponent(b.image.value.split('/Special:FilePath/')[1] ?? b.image.value.split('/').pop() ?? '').replace(/_/g, ' ') : '';
     targets.set(apple, { apple, qid: b.item.value.split('/').pop(), label: b.label?.value, sl, charts: prev?.charts ?? 0,
-      image: b.image ? decodeURIComponent(b.image.value.split('/Special:FilePath/')[1] ?? '').replace(/_/g, ' ') || undefined : undefined,
-      cc: b.cc?.value?.toUpperCase(), enwiki: b.enwiki?.value });
+      image: file || undefined, cc: b.cc?.value?.toUpperCase(), enwiki: b.enwiki?.value });
     n++;
   }
   return n;
 }
-// Sitelink bands, split further whenever Wikidata times out.
-async function band(min: number, max: number) {
-  try { const n = await sparql(min, max); log(`wikidata sitelinks ${min}–${max === 9999 ? '∞' : max - 1}: ${n}`); }
-  catch (e) {
-    if (max - min <= 1) { log(`wikidata band ${min} failed:`, String(e).slice(0, 120)); return; }
-    const mid = max === 9999 ? min * 2 : Math.floor((min + max) / 2);
-    await band(min, mid); await band(mid, max);
+// QLever (a fast public Wikidata mirror) answers the whole question at once. If it is down, ask Wikidata's own
+// endpoint in sitelink bands, each small enough to finish inside its 60-second limit.
+const t0 = Date.now();
+try {
+  const j = await getJson(`https://qlever.cs.uni-freiburg.de/api/wikidata?query=${encodeURIComponent(query(MIN_SL, 100000))}`, { headers: { Accept: 'application/sparql-results+json' } }, 2, 180_000) as { results?: { bindings: Binding[] } };
+  log(`qlever: ${absorb(j.results?.bindings ?? [])} artists in ${Math.round((Date.now() - t0) / 1000)}s`);
+} catch (e) { log('qlever unavailable:', String(e).slice(0, 160)); }
+if (targets.size < 1000) {
+  const bands: [number, number][] = [[150, 100000], [90, 150], [60, 90], [45, 60], [35, 45], [28, 35], [24, 28], [21, 24], [18, 21], [15, 18], [12, 15], [10, 12]];
+  for (const [a, b] of bands) {
+    if (b <= MIN_SL || Date.now() - t0 > 25 * 60_000) break;
+    try {
+      const j = await getJson(`https://query.wikidata.org/sparql?format=json&query=${encodeURIComponent(query(Math.max(a, MIN_SL), b))}`, {}, 2, 75_000) as { results: { bindings: Binding[] } };
+      log(`wikidata sitelinks ${a}–${b - 1}: ${absorb(j.results.bindings)}`);
+    } catch (e) { log(`wikidata band ${a}–${b - 1} failed:`, String(e).slice(0, 120)); }
   }
-}
-for (const [a, b] of [[150, 9999], [90, 150], [60, 90], [45, 60], [35, 45], [28, 35], [23, 28], [20, 23], [18, 20], [15, 18], [12, 15], [10, 12]] as [number, number][]) {
-  if (b <= MIN_SL) break;
-  await band(Math.max(a, MIN_SL), b);
 }
 log('artists from Wikidata:', targets.size);
 
