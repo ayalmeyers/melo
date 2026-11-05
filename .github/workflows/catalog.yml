@@ -5,7 +5,7 @@ on:
   schedule: [{ cron: '17 9 * * 1' }]   # Mondays: refresh the charts
   push:
     branches: [main]
-    paths: [scripts/build-catalog.mts, .github/workflows/catalog.yml, packages/core/src/catalog-data.js]
+    paths: [scripts/build-catalog.mts, scripts/gen-seed.mjs, .github/workflows/catalog.yml, packages/core/src/catalog-data.js, packages/core/src/images.ts, packages/core/src/apple.ts]
 permissions: { contents: write }
 concurrency: { group: catalog, cancel-in-progress: false }
 jobs:
@@ -19,6 +19,12 @@ jobs:
       - run: npm ci
       - name: Match artwork, pull charts, find artist photos
         run: npx --yes tsx@4.19.2 scripts/build-catalog.mts
+      # The build takes a while; main may have moved. Start from the newest main, keep only the freshly built catalog, then regenerate.
+      - name: Rebase onto the newest main
+        run: |
+          cp packages/core/src/catalog-art.js catalog-report.md /tmp/
+          git fetch origin main && git reset --hard origin/main
+          cp /tmp/catalog-art.js packages/core/src/catalog-art.js && cp /tmp/catalog-report.md catalog-report.md
       - name: Regenerate seed and database update
         run: npm run seed
       - name: Commit
@@ -28,4 +34,4 @@ jobs:
           git add packages/core/src/catalog-art.js catalog-report.md supabase/seed.sql supabase/setup.sql supabase/updates
           git diff --cached --quiet && echo "No changes" && exit 0
           git commit -m "Catalog: real artwork and current charts"
-          git pull --rebase origin main && git push origin HEAD:main
+          git push origin HEAD:main
