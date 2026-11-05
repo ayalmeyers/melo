@@ -125,20 +125,27 @@ try {
 } catch (e) { log('qlever unavailable:', String(e).slice(0, 160)); }
 // Writers, poets, philosophers, politicians, journalists, playwrights and actors stay only when Wikidata lists them
 // directly as singer, musician, composer, rapper, singer-songwriter, guitarist or pianist, or they are a group.
+// Asked only about our own artists (in chunks of 1,500, posted), so the answers are complete rather than a capped sample.
 async function qids(where: string): Promise<Set<string>> {
-  const q = `${PREFIXES}SELECT DISTINCT ?item WHERE { ?item wdt:P2850 ?apple . ${where} }`;
-  try {
-    const j = await getJson(`https://qlever.cs.uni-freiburg.de/api/wikidata?query=${encodeURIComponent(q)}`, { headers: { Accept: 'application/sparql-results+json' } }, 2, 120_000) as { results?: { bindings: Binding[] } };
-    return new Set((j.results?.bindings ?? []).map(b => b.item.value.split('/').pop()!));
-  } catch (e) { log('qlever side query failed:', String(e).slice(0, 120)); return new Set(); }
+  const all = [...new Set([...targets.values()].map(t => t.qid).filter((x): x is string => !!x))];
+  const out = new Set<string>();
+  for (let i = 0; i < all.length; i += 1500) {
+    const q = `${PREFIXES}SELECT DISTINCT ?item WHERE { VALUES ?item { ${all.slice(i, i + 1500).map(x => 'wd:' + x).join(' ')} } ${where} }`;
+    try {
+      const j = await getJson('https://qlever.cs.uni-freiburg.de/api/wikidata', { method: 'POST', body: new URLSearchParams({ query: q }), headers: { Accept: 'application/sparql-results+json' } }, 2, 120_000) as { results?: { bindings: Binding[] } };
+      for (const b of j.results?.bindings ?? []) out.add(b.item.value.split('/').pop()!);
+    } catch (e) { log('qlever side query failed:', String(e).slice(0, 120)); }
+  }
+  return out;
 }
 {
   const writers = await qids('VALUES ?w { wd:Q36180 wd:Q49757 wd:Q6625963 wd:Q4964182 wd:Q82955 wd:Q1930187 wd:Q214917 wd:Q33999 } ?item wdt:P106 ?w .');
-  const musicians = await qids('VALUES ?m { wd:Q177220 wd:Q639669 wd:Q36834 wd:Q2252262 wd:Q488205 wd:Q855091 wd:Q486748 } ?item wdt:P106 ?m .');
+  const musicians = await qids('VALUES ?m { wd:Q177220 wd:Q639669 wd:Q36834 wd:Q2252262 wd:Q488205 wd:Q855091 wd:Q486748 wd:Q1415090 wd:Q130857 wd:Q183945 wd:Q158852 wd:Q1259917 wd:Q806349 } ?item wdt:P106 ?m .');
   const groups = await qids('?item wdt:P31/wdt:P279* wd:Q215380 .');
+  log(`occupations: ${writers.size} writers/politicians/actors, ${musicians.size} named musicians, ${groups.size} groups`);
   let dropped = 0; const examples: string[] = [];
   for (const t of [...targets.values()]) {
-    if (t.qid && writers.has(t.qid) && !musicians.has(t.qid) && !groups.has(t.qid)) { targets.delete(t.apple); dropped++; if (examples.length < 12) examples.push(t.label ?? t.qid); }
+    if (t.qid && writers.has(t.qid) && !musicians.has(t.qid) && !groups.has(t.qid)) { targets.delete(t.apple); dropped++; if (examples.length < 25) examples.push(t.label ?? t.qid); }
   }
   log(`not musicians (writers, politicians, actors…): ${dropped} removed, e.g. ${examples.join(', ')}`);
 }
