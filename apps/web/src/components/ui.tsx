@@ -1,4 +1,4 @@
-import { appleArt, coverSvg, hash, initials, itemCover, artistCover, genreCover, type CatalogItem, type Cover as CoverT } from '@melo/core';
+import { appleArt, seedArtistArt, seedGenreArt, seedItemArt, coverSvg, hash, initials, itemCover, artistCover, genreCover, type CatalogItem, type Cover as CoverT } from '@melo/core';
 
 const PATHS: Record<string, string> = {
   home: '<path d="M3.5 10.2 12 3.5l8.5 6.7V19.5a1.5 1.5 0 0 1-1.5 1.5h-4.2v-6h-5.6v6H5a1.5 1.5 0 0 1-1.5-1.5z"/>',
@@ -37,15 +37,22 @@ function Photo({ src, label, size, round, className = '' }: { src: string; label
   // eslint-disable-next-line @next/next/no-img-element
   return <div className={`art ${round ? 'round' : ''} ${className}`} style={size ? { width: size } : undefined}><img src={appleArt(src, size && size <= 64 ? 200 : 600)} alt={label} loading="lazy" decoding="async" /></div>;
 }
-export const ItemArt = ({ item, size, className }: { item: Pick<CatalogItem, 'id' | 'title' | 'type'> & { artwork_url?: string | null }; size?: number; className?: string }) =>
-  item.artwork_url ? <Photo src={item.artwork_url} label={item.title} size={size} className={className} /> : <Art cover={itemCover(item)} label={item.title} size={size} className={className} />;
-export const ArtistArt = ({ id, name, size, art }: { id: string; name?: string; size?: number; art?: string | null }) =>
-  art ? <Photo src={art} label={name ?? id} size={size} round /> : <Art cover={artistCover(id, name)} label={name ?? id} size={size} round />;
+export const ItemArt = ({ item, size, className }: { item: Pick<CatalogItem, 'id' | 'title' | 'type'> & { artwork_url?: string | null }; size?: number; className?: string }) => {
+  const src = item.artwork_url ?? seedItemArt(item.id);
+  return src ? <Photo src={src} label={item.title} size={size} className={className} /> : <Art cover={itemCover(item)} label={item.title} size={size} className={className} />;
+};
+export const ArtistArt = ({ id, name, size, art }: { id: string; name?: string; size?: number; art?: string | null }) => {
+  const src = art ?? seedArtistArt(id);
+  return src ? <Photo src={src} label={name ?? id} size={size} round /> : <Art cover={artistCover(id, name)} label={name ?? id} size={size} round />;
+};
 /** A genre is a 2×2 mosaic of its album covers once it has four, else a generated cover. */
-export const GenreArt = ({ id, size, covers }: { id: string; size?: number; covers?: string[] }) => covers && covers.length >= 4
+export const GenreArt = ({ id, size, covers: given }: { id: string; size?: number; covers?: string[] }) => {
+  const covers = given && given.length >= 4 ? given : seedGenreArt(id);
+  return covers.length >= 4
   // eslint-disable-next-line @next/next/no-img-element
   ? <div className="art mosaic" style={size ? { width: size } : undefined}>{covers.slice(0, 4).map(u => <img key={u} src={appleArt(u, 200)} alt="" loading="lazy" />)}</div>
   : <Art cover={genreCover(id)} label={id} size={size} />;
+};
 
 export function Avatar({ name, color, size = '' }: { name: string; color?: string; size?: '' | 'xs' | 'lg' | 'xl' }) {
   return <span className={`av ${size}`} style={{ background: color ?? '#047eef' }} aria-hidden="true">{initials(name)}</span>;

@@ -3,6 +3,8 @@
  * Used for design reviews and App Store screenshots. Turned on only by EXPO_PUBLIC_DEMO=1 / NEXT_PUBLIC_DEMO=1.
  */
 import { ALBUMS, ARTISTS, GENRES, SHOWS } from './catalog-data.js';
+import { CATALOG_ART } from './catalog-art.js';
+import { seedArtistArt, seedItemArt } from './catalog';
 import type {
   Artist, CatalogItem, ChartRow, Comment, FeedPost, Forecast, ForecastConsensus, ItemRating, ListCard, ListEntry, LogEntry,
   MeloNotification, Profile, ProfileStats, SimilarListener, TasteMatch,
@@ -26,11 +28,16 @@ const people: Profile[] = [
 const byId = Object.fromEntries(people.map(p => [p.id, p]));
 
 const items: CatalogItem[] = [
-  ...ALBUMS.map(([id, title, artistId, year, genre]) => ({ id, type: 'album' as const, title, artist_id: artistId, artist_name: ARTISTS[artistId]?.name ?? '', show_id: null, year, cc: ARTISTS[artistId]?.cc ?? 'US', genre, dur_min: null, source: 'seed' as const, added_by: null, created_at: ago(3000), artwork_url: null })),
-  ...SHOWS.map(([id, title, host]) => ({ id, type: 'show' as const, title, artist_id: null, artist_name: host, show_id: null, year: null, cc: 'US', genre: 'podcasts', dur_min: null, source: 'seed' as const, added_by: null, created_at: ago(3000), artwork_url: null })),
+  ...ALBUMS.map(([id, title, artistId, year, genre]) => ({ id, type: 'album' as const, title, artist_id: artistId, artist_name: ARTISTS[artistId]?.name ?? '', show_id: null, year, cc: ARTISTS[artistId]?.cc ?? 'US', genre, dur_min: null, source: 'seed' as const, added_by: null, created_at: ago(3000), artwork_url: seedItemArt(id) ?? null })),
+  ...SHOWS.map(([id, title, host]) => ({ id, type: 'show' as const, title, artist_id: null, artist_name: host, show_id: null, year: null, cc: 'US', genre: 'podcasts', dur_min: null, source: 'seed' as const, added_by: null, created_at: ago(3000), artwork_url: seedItemArt(id) ?? null })),
+  // Apple's current charts, as bundled by scripts/build-catalog.ts.
+  ...CATALOG_ART.extraAlbums.map(e => ({ id: e.id, type: 'album' as const, title: e.title, artist_id: e.artist_id, artist_name: e.artist_name, show_id: null, year: e.year, cc: '', genre: e.genre, dur_min: null, source: 'apple' as const, added_by: null, created_at: ago(500), artwork_url: e.art.artwork_url })),
 ];
 const itemById = Object.fromEntries(items.map(i => [i.id, i]));
-const artists: Artist[] = Object.entries(ARTISTS).map(([id, a]) => ({ id, name: a.name, cc: a.cc, genres: a.genres }));
+const artists: Artist[] = [
+  ...Object.entries(ARTISTS).map(([id, a]) => ({ id, name: a.name, cc: a.cc, genres: a.genres, image_url: seedArtistArt(id) ?? null })),
+  ...CATALOG_ART.extraArtists.map(a => ({ id: a.id, name: a.name, cc: '', genres: a.genres, image_url: seedArtistArt(a.id) ?? null })),
+];
 
 let seq = 0;
 const post = (author: string, h: number, p: Partial<FeedPost> & { body: string; kind: FeedPost['kind'] }): FeedPost => {
@@ -66,9 +73,9 @@ const forecasts = [
 const chartRows = (ids: string[], type: 'item' | 'artist'): ChartRow[] => ids.map((id, i) => ({ subject_id: id, subject_type: type, rank: i + 1, prev_rank: [2, 1, null, 3, 7, 5, null, 6, 12, 9][i] ?? null, listeners: 340 - i * 27, logs: 520 - i * 31, avg_rating: Math.round((4.6 - i * 0.12) * 10) / 10 }));
 const lists: ListCard[] = [
   { id: 'l1', owner: DEMO_ME, title: 'Albums that explain me', description: 'Ranked. Argue in the comments.', ranked: true, created_at: ago(90), updated_at: ago(3), owner_handle: 'ayal', owner_name: 'Ayal Meyers', owner_color: '#047eef', item_count: 12,
-    preview: ['blonde', 'tpab', 'motomami', 'discovery'].map(id => ({ id, title: itemById[id].title, type: 'album' as const, artwork_url: null })) },
+    preview: ['blonde', 'tpab', 'motomami', 'discovery'].map(id => ({ id, title: itemById[id].title, type: 'album' as const, artwork_url: seedItemArt(id) ?? null })) },
   { id: 'l2', owner: 'u-nia', title: 'Afrobeats, start here', description: 'Ten records, fifty years.', ranked: true, created_at: ago(120), updated_at: ago(30), owner_handle: 'niaplays', owner_name: 'Nia Okafor', owner_color: '#e0457b', item_count: 10,
-    preview: ['zombie', 'giant', 'timeless', 'bitw'].map(id => ({ id, title: itemById[id].title, type: 'album' as const, artwork_url: null })) },
+    preview: ['zombie', 'giant', 'timeless', 'bitw'].map(id => ({ id, title: itemById[id].title, type: 'album' as const, artwork_url: seedItemArt(id) ?? null })) },
 ];
 const notes: MeloNotification[] = [
   { id: 'n1', user_id: DEMO_ME, actor: 'u-nia', kind: 'reply', post_id: 'p6', comment_id: null, forecast_id: null, chat_id: null, body: 'Nights is the hinge of the whole record.', read_at: null, created_at: ago(0.3) },
@@ -102,7 +109,7 @@ const impl: Partial<Record<keyof MeloApi, unknown>> = {
   searchArtists: (q: string) => list(artists.filter(a => a.name.toLowerCase().includes(q.toLowerCase())).slice(0, 5)),
   artistsByGenre: (g: string) => list(artists.filter(a => a.genres.includes(g))),
   searchItems: (q: string) => list(items.filter(i => (i.title + ' ' + i.artist_name).toLowerCase().includes(q.toLowerCase())).slice(0, 10)),
-  genreArt: () => one({}),
+  genreArt: () => one(Object.fromEntries(Object.keys(GENRES).map(g => [g, items.filter(i => i.genre === g && i.artwork_url).slice(0, 4).map(i => i.artwork_url as string)]))),
   ratings: (ids: string[]) => one(Object.fromEntries(ids.filter(id => ratings[id]).map(id => [id, ratings[id]]))),
   mostRated: () => list(Object.values(ratings).sort((a, b) => b.n - a.n).slice(0, 12)),
   wiki: (k: string) => one(k.startsWith('r:') && ARTISTS[k.slice(2)] ? { key: k, body: ARTISTS[k.slice(2)].wiki, rev: 4, updated_by: null, updated_at: ago(40) } : k.startsWith('g:') && GENRES[k.slice(2)] ? { key: k, body: GENRES[k.slice(2)].wiki, rev: 2, updated_by: null, updated_at: ago(80) } : null),

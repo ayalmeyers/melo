@@ -4,7 +4,7 @@ import Svg, { Circle, Defs, LinearGradient, Path, Polygon, Rect, Stop, Text as S
 import * as L from 'lucide-react-native';
 import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
-import { appleArt, artistCover, genreCover, hash, initials, itemCover, type CatalogItem, type Cover as CoverT } from '@melo/core';
+import { appleArt, artistCover, seedArtistArt, seedGenreArt, seedItemArt, genreCover, hash, initials, itemCover, type CatalogItem, type Cover as CoverT } from '@melo/core';
 import { cachedArtist, cachedItem, genreArtCache } from '../lib/hooks';
 import { useArtVersion, wantArt } from '../lib/artwork';
 import { C, F, R, shadow } from './theme';
@@ -70,25 +70,26 @@ export function Cover({ cover, size, radius = 12, round }: { cover: CoverT; size
 }
 /** Real artwork from Apple when Melo has it, otherwise the generated cover. */
 function Art({ uri, size, radius, round }: { uri: string; size: number; radius: number; round?: boolean }) {
-  return <Image source={{ uri: appleArt(uri, size <= 64 ? 200 : 600) }} style={{ width: size, height: size, borderRadius: round ? size / 2 : radius, backgroundColor: C.mist }} contentFit="cover" transition={150} recyclingKey={uri} accessibilityIgnoresInvertColors accessible={false} />;
+  return <Image source={{ uri: appleArt(uri, size <= 64 ? 200 : 600) }} style={{ width: size, height: size, borderRadius: round ? size / 2 : radius, backgroundColor: C.card2 }} contentFit="cover" transition={150} recyclingKey={uri} accessibilityIgnoresInvertColors accessible={false} />;
 }
 export const ItemCover = ({ item, size, radius = 12 }: { item: Pick<CatalogItem, 'id' | 'title' | 'type'> & { artwork_url?: string | null }; size: number; radius?: number }) => {
   useArtVersion();
-  const art = item.artwork_url ?? cachedItem(item.id)?.artwork_url;
+  const art = item.artwork_url ?? cachedItem(item.id)?.artwork_url ?? seedItemArt(item.id);
   useEffect(() => { if (!art && item.type !== 'episode') wantArt('item', item.id); }, [art, item.id, item.type]);
   return art ? <Art uri={art} size={size} radius={radius} /> : <Cover cover={itemCover(item)} size={size} radius={radius} />;
 };
 /** Artist photo when Melo has one, else their latest album art, else a generated cover. */
 export const ArtistCover = ({ id, size, art }: { id: string; size: number; art?: string | null }) => {
   useArtVersion();
-  const a = cachedArtist(id); const uri = art ?? a?.image_url ?? a?.artwork_url;
-  useEffect(() => { if (!a?.image_url) wantArt('artist', id); }, [a?.image_url, id]);
+  const a = cachedArtist(id); const uri = art ?? a?.image_url ?? seedArtistArt(id) ?? a?.artwork_url;
+  useEffect(() => { if (!a?.image_url && !seedArtistArt(id)) wantArt('artist', id); }, [a?.image_url, id]);
   return uri ? <Art uri={uri} size={size} radius={0} round /> : <Cover cover={artistCover(id, a?.name)} size={size} round />;
 };
 /** A genre is shown as a 2×2 mosaic of its album covers once it has four, else a generated cover. */
 export const GenreCover = ({ id, size, radius = 12, covers }: { id: string; size: number; radius?: number; covers?: string[] }) => {
-  const list = covers ?? genreArtCache.get(id);
-  if (!list || list.length < 4) return <Cover cover={genreCover(id)} size={size} radius={radius} />;
+  const fromDb = covers ?? genreArtCache.get(id);
+  const list = fromDb && fromDb.length >= 4 ? fromDb : seedGenreArt(id);
+  if (list.length < 4) return <Cover cover={genreCover(id)} size={size} radius={radius} />;
   const h = size / 2;
   return <View style={{ width: size, height: size, borderRadius: radius, overflow: 'hidden', flexDirection: 'row', flexWrap: 'wrap', backgroundColor: C.mist }}>
     {list.slice(0, 4).map(u => <Image key={u} source={{ uri: appleArt(u, 200) }} style={{ width: h, height: h }} contentFit="cover" />)}

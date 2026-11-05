@@ -1,0 +1,36 @@
+name: Screenshots
+# Renders the iPhone app (demo data, real artwork) at iPhone 15 size and publishes the images to the ci-shots branch.
+on:
+  workflow_dispatch:
+  workflow_run: { workflows: [Catalog], types: [completed] }
+  push:
+    branches: [main]
+    paths: [apps/mobile/**, packages/core/**, scripts/shots.mjs, .github/workflows/shots.yml]
+permissions: { contents: write }
+concurrency: { group: shots, cancel-in-progress: true }
+jobs:
+  shots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: main }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Export the app for the web with demo data
+        working-directory: apps/mobile
+        env: { EXPO_PUBLIC_DEMO: '1' }
+        run: npx expo export --platform web --output-dir /tmp/web-demo
+      - name: Install Playwright
+        run: |
+          mkdir -p /tmp/pw && cd /tmp/pw && npm init -y >/dev/null && npm i playwright@1.55.0 >/dev/null
+          npx playwright install --with-deps chromium
+      - name: Screenshot
+        run: NODE_PATH=/tmp/pw/node_modules node scripts/shots.mjs /tmp/web-demo /tmp/shots
+      - name: Publish to the ci-shots branch
+        run: |
+          cd /tmp/shots
+          git init -q -b ci-shots && git config user.name "melo-shots-bot" && git config user.email "melo-shots-bot@users.noreply.github.com"
+          git add . && git commit -qm "Screenshots of ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" ci-shots
