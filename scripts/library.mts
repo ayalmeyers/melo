@@ -42,9 +42,11 @@ async function getJson(url: string, init: RequestInit = {}, tries = 5, timeoutMs
     try {
       const r = await fetch(url, { ...init, signal: AbortSignal.timeout(timeoutMs), headers: { 'User-Agent': UA, 'Api-User-Agent': UA, Accept: 'application/json', ...(init.headers ?? {}) } });
       if (r.status === 429 || r.status === 503 || r.status === 502 || r.status === 403) { await wait((Number(r.headers.get('retry-after')) || 20 * (i + 1)) * 1000); continue; }
+      // Other 4xx answers will not change on retry.
+      if (r.status >= 400 && r.status < 500) throw Object.assign(new Error(`${r.status} ${(await r.text()).slice(0, 200)}`), { final: true });
       if (!r.ok) throw new Error(`${r.status} ${(await r.text()).slice(0, 200)}`);
       return await r.json();
-    } catch (e) { if (i === tries - 1) throw e; await wait(4000 * (i + 1)); }
+    } catch (e) { if ((e as { final?: boolean }).final || i === tries - 1) throw e; await wait(4000 * (i + 1)); }
   }
   throw new Error('gave up ' + url);
 }
@@ -117,18 +119,19 @@ log('artists from Wikidata:', targets.size);
 
 type Rss = { artistId?: string; artistName: string };
 const STOREFRONTS = ['us', 'gb', 'ca', 'au', 'ie', 'nz', 'ng', 'gh', 'ke', 'za', 'eg', 'ma', 'br', 'mx', 'ar', 'co', 'cl', 'pe', 'es', 'pt', 'fr', 'de', 'it', 'nl', 'se', 'no', 'dk', 'fi', 'pl', 'tr', 'jp', 'kr', 'tw', 'hk', 'ph', 'id', 'th', 'vn', 'in', 'pk', 'ae', 'sa', 'il'];
-let chartArtists = 0;
+let chartArtists = 0; const tCharts = Date.now(); let feeds = 0;
 for (const cc of STOREFRONTS) for (const kind of ['albums', 'songs']) {
   let rows: Rss[] = [];
   for (const host of ['rss.marketingtools.apple.com', 'rss.applemarketingtools.com']) {
-    try { rows = ((await getJson(`https://${host}/api/v2/${cc}/music/most-played/100/${kind}.json`, {}, 2)) as { feed?: { results?: Rss[] } }).feed?.results ?? []; if (rows.length) break; } catch { /* next host */ }
+    try { rows = ((await getJson(`https://${host}/api/v2/${cc}/music/most-played/100/${kind}.json`, {}, 2, 20_000)) as { feed?: { results?: Rss[] } }).feed?.results ?? []; if (rows.length) break; } catch { /* next host */ }
   }
+  if (rows.length) feeds++;
   for (const r of rows) {
     const id = Number(r.artistId); if (!id) continue;
     const t = targets.get(id); if (t) t.charts++; else { targets.set(id, { apple: id, label: r.artistName, sl: 0, charts: 1 }); chartArtists++; }
   }
 }
-log('artists added from Apple charts:', chartArtists, '· total:', targets.size);
+log(`artists added from Apple charts: ${chartArtists} (${feeds} feeds in ${Math.round((Date.now() - tCharts) / 1000)}s) · total: ${targets.size}`);
 
 /* ---------- 2. Skip what is already fresh, most notable first ---------- */
 const popularity = (t: Target) => t.sl * 10 + t.charts * 40;
