@@ -185,7 +185,8 @@ for (let i = 0; i < queue.length; i += 1000) {
   const ids = queue.slice(i, i + 1000).map(t => t.apple);
   for (const id of await rpc('library_synced', { p_ids: ids, p_days: 45 }) as number[]) fresh.add(Number(id));
 }
-queue = queue.filter(t => !fresh.has(t.apple)).filter((_, i) => i % SHARDS === SHARD);
+// Split by Apple id, not list position: every runner agrees which artists are its own even when their chart feeds differ.
+queue = queue.filter(t => !fresh.has(t.apple)).filter(t => t.apple % SHARDS === SHARD);
 if (LIMIT) queue = queue.slice(0, LIMIT);
 log(`already fresh: ${fresh.size} · shard ${SHARD + 1}/${SHARDS} syncs ${queue.length}`);
 summary(`### Library run\n- Artists found: ${targets.size} (Wikidata ≥ ${MIN_SL} sitelinks + Apple charts in ${STOREFRONTS.length} countries)\n- Already fresh: ${fresh.size}\n- To sync: ${queue.length}`);
