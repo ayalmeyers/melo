@@ -81,7 +81,9 @@ export function createApi(sb: SupabaseClient) {
     async item(id: string): Promise<CatalogItem | null> { return ok(await sb.from('catalog_items').select('*').eq('id', id).maybeSingle()); },
     async items(ids: string[]): Promise<CatalogItem[]> { if (!ids.length) return []; return ok(await sb.from('catalog_items').select('*').in('id', ids)); },
     async itemsBy(filter: { artist?: string; genre?: string; show?: string; type?: string }, limit = 60): Promise<CatalogItem[]> {
-      let q = sb.from('catalog_items').select('*').order('year', { ascending: false, nullsFirst: false }).limit(limit);
+      // Genre and type lists lead with what people know best; an artist's own page is newest first.
+      let q = sb.from('catalog_items').select('*');
+      q = (filter.artist || filter.show ? q : q.order('popularity', { ascending: false })).order('year', { ascending: false, nullsFirst: false }).limit(limit);
       if (filter.artist) q = q.eq('artist_id', filter.artist);
       if (filter.genre) q = q.eq('genre', filter.genre);
       if (filter.show) q = q.eq('show_id', filter.show);
@@ -90,8 +92,8 @@ export function createApi(sb: SupabaseClient) {
     },
     async artist(id: string): Promise<Artist | null> { return ok(await sb.from('artists').select('*').eq('id', id).maybeSingle()); },
     async artists(ids: string[]): Promise<Artist[]> { if (!ids.length) return []; return ok(await sb.from('artists').select('*').in('id', [...new Set(ids)])); },
-    async searchArtists(q: string, limit = 8): Promise<Artist[]> { const s = q.replace(/[%,()]/g, ' ').trim(); if (s.length < 2) return []; return ok(await sb.from('artists').select('*').ilike('name', `%${s}%`).limit(limit)); },
-    async artistsByGenre(genre: string, limit = 60): Promise<Artist[]> { return ok(await sb.from('artists').select('*').contains('genres', [genre]).order('name').limit(limit)); },
+    async searchArtists(q: string, limit = 8): Promise<Artist[]> { const s = q.replace(/[%,()]/g, ' ').trim(); if (s.length < 2) return []; return ok(await sb.from('artists').select('*').ilike('name', `%${s}%`).order('popularity', { ascending: false }).limit(limit)); },
+    async artistsByGenre(genre: string, limit = 60): Promise<Artist[]> { return ok(await sb.from('artists').select('*').contains('genres', [genre]).order('popularity', { ascending: false }).order('name').limit(limit)); },
     /** Adds an album, podcast or episode from Apple's catalog (or finds the existing page) and returns its Melo id. */
     async importApple(r: AppleResult): Promise<string> { await need(); return ok(await sb.rpc('import_apple', { p: r })) as string; },
     async setArtistImage(id: string, photo: { url: string; credit: string; source: string } | null) {
@@ -105,7 +107,7 @@ export function createApi(sb: SupabaseClient) {
       const rows = ok(await sb.from('genre_art').select('*')) as { genre: string; covers: string[] }[];
       return Object.fromEntries(rows.map(r => [r.genre, r.covers]));
     },
-    async searchItems(q: string, limit = 20): Promise<CatalogItem[]> { const s = q.replace(/[%,()]/g, ' ').trim(); if (!s) return []; return ok(await sb.from('catalog_items').select('*').or(`title.ilike.%${s}%,artist_name.ilike.%${s}%`).limit(limit)); },
+    async searchItems(q: string, limit = 20): Promise<CatalogItem[]> { const s = q.replace(/[%,()]/g, ' ').trim(); if (!s) return []; return ok(await sb.from('catalog_items').select('*').or(`title.ilike.%${s}%,artist_name.ilike.%${s}%`).order('popularity', { ascending: false }).limit(limit)); },
     async addItem(it: { type: 'album' | 'episode'; title: string; artist_name: string; artist_id?: string | null; show_id?: string | null; year?: number | null; cc: string; genre: string; dur_min?: number | null }): Promise<string> {
       const by = await need();
       const id = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);

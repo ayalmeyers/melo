@@ -1,3 +1,4 @@
+create schema if not exists extensions;
 -- Minimal stand-in for Supabase's auth schema and roles, for local tests only.
 do $$ begin if not exists (select 1 from pg_roles where rolname = 'anon') then create role anon nologin; create role authenticated nologin; create role service_role nologin bypassrls; end if; end $$;
 create schema auth;

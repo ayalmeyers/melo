@@ -141,6 +141,7 @@ New features sometimes add a file to `supabase/migrations/`. Apply each new file
 | `20261105000002_history_charts.sql` | Spotify / Apple Music history import, weekly charts |
 | `20261105000003_taste_lists.sql` | Taste match, people who hear like you, lists |
 | `20261106000001_genres.sql` | K-pop, J-pop, Indian & Bollywood, Country, Soundtracks & Musicals |
+| `20261107000001_library.sql` | The music library: bulk import, fast search, popularity ordering |
 
 Each batch is also bundled into one paste-in file in `supabase/updates/` (`2026-11-04.sql`, `2026-11-05.sql`).
 
@@ -150,6 +151,18 @@ Each batch is also bundled into one paste-in file in `supabase/updates/` (`2026-
 It holds every starting album's real cover, a credited photo for each artist, the new genres, and the 50 most-played albums in 14 countries plus the top podcasts.
 Run the newest one after the dated updates. It is safe to run again: it never replaces art Melo already has and never creates duplicates.
 `catalog-report.md` at the top of the repo says what matched, what didn't, and how many artists got photos.
+
+### The library (tens of thousands of artists, full discographies)
+
+The **Library** GitHub workflow fills the database directly. It needs two repository secrets
+(GitHub → the melo repo → Settings → Secrets and variables → Actions → New repository secret):
+
+- `SUPABASE_URL`: the Project URL from Supabase → Project Settings → API (or Data API).
+- `SUPABASE_SERVICE_ROLE_KEY`: the **secret** key from Supabase → Project Settings → API Keys (starts with `sb_secret_`, or the legacy `service_role` key).
+  This key bypasses row security; it lives only in GitHub secrets and is never shipped in the apps.
+
+Run `supabase/updates/2026-11-07.sql` first. Then GitHub → Actions → Library → Run workflow. It runs every six hours on its own,
+continues where it stopped, and refreshes each artist every 45 days. Each run's summary shows how big the library is.
 
 Screenshots of the iPhone app with real artwork are rebuilt on every push and published to the `ci-shots` branch.
 
