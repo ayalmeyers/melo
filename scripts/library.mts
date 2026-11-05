@@ -91,12 +91,7 @@ const query = (min: number, max: number) => `${PREFIXES}SELECT ?item ?apple ?sl 
   # DJ, record producer or songwriter. Writers, poets, philosophers, politicians, journalists, playwrights and actors count
   # only when Wikidata lists them directly as singer, musician, composer, rapper, singer-songwriter, guitarist or pianist
   # (Apple lists authors as audiobook "artists").
-  FILTER(
-    EXISTS { ?item wdt:P31/wdt:P279* wd:Q215380 }
-    || ( EXISTS { { ?item wdt:P106/wdt:P279* wd:Q639669 } UNION { ?item wdt:P106/wdt:P279* wd:Q36834 } UNION { ?item wdt:P106 ?dj . VALUES ?dj { wd:Q130857 wd:Q183945 wd:Q753110 } } }
-         && ( NOT EXISTS { ?item wdt:P106 ?w . VALUES ?w { wd:Q36180 wd:Q49757 wd:Q6625963 wd:Q4964182 wd:Q82955 wd:Q1930187 wd:Q214917 wd:Q33999 } }
-              || EXISTS { ?item wdt:P106 ?m . VALUES ?m { wd:Q177220 wd:Q639669 wd:Q36834 wd:Q2252262 wd:Q488205 wd:Q855091 wd:Q486748 } } ) )
-  )
+  FILTER EXISTS { { ?item wdt:P31/wdt:P279* wd:Q215380 } UNION { ?item wdt:P106/wdt:P279* wd:Q639669 } UNION { ?item wdt:P106/wdt:P279* wd:Q36834 } UNION { ?item wdt:P106 wd:Q130857 } UNION { ?item wdt:P106 wd:Q183945 } }
   OPTIONAL { ?item rdfs:label ?lbl FILTER(LANG(?lbl) = "en") }
   OPTIONAL { ?item wdt:P18 ?img }
   OPTIONAL { ?item wdt:P495 ?c1 . ?c1 wdt:P297 ?code }
@@ -128,6 +123,25 @@ try {
   const j = await getJson(`https://qlever.cs.uni-freiburg.de/api/wikidata?query=${encodeURIComponent(query(MIN_SL, 100000))}`, { headers: { Accept: 'application/sparql-results+json' } }, 2, 180_000) as { results?: { bindings: Binding[] } };
   log(`qlever: ${absorb(j.results?.bindings ?? [])} artists in ${Math.round((Date.now() - t0) / 1000)}s`);
 } catch (e) { log('qlever unavailable:', String(e).slice(0, 160)); }
+// Writers, poets, philosophers, politicians, journalists, playwrights and actors stay only when Wikidata lists them
+// directly as singer, musician, composer, rapper, singer-songwriter, guitarist or pianist, or they are a group.
+async function qids(where: string): Promise<Set<string>> {
+  const q = `${PREFIXES}SELECT DISTINCT ?item WHERE { ?item wdt:P2850 ?apple . ${where} }`;
+  try {
+    const j = await getJson(`https://qlever.cs.uni-freiburg.de/api/wikidata?query=${encodeURIComponent(q)}`, { headers: { Accept: 'application/sparql-results+json' } }, 2, 120_000) as { results?: { bindings: Binding[] } };
+    return new Set((j.results?.bindings ?? []).map(b => b.item.value.split('/').pop()!));
+  } catch (e) { log('qlever side query failed:', String(e).slice(0, 120)); return new Set(); }
+}
+{
+  const writers = await qids('VALUES ?w { wd:Q36180 wd:Q49757 wd:Q6625963 wd:Q4964182 wd:Q82955 wd:Q1930187 wd:Q214917 wd:Q33999 } ?item wdt:P106 ?w .');
+  const musicians = await qids('VALUES ?m { wd:Q177220 wd:Q639669 wd:Q36834 wd:Q2252262 wd:Q488205 wd:Q855091 wd:Q486748 } ?item wdt:P106 ?m .');
+  const groups = await qids('?item wdt:P31/wdt:P279* wd:Q215380 .');
+  let dropped = 0; const examples: string[] = [];
+  for (const t of [...targets.values()]) {
+    if (t.qid && writers.has(t.qid) && !musicians.has(t.qid) && !groups.has(t.qid)) { targets.delete(t.apple); dropped++; if (examples.length < 12) examples.push(t.label ?? t.qid); }
+  }
+  log(`not musicians (writers, politicians, actors…): ${dropped} removed, e.g. ${examples.join(', ')}`);
+}
 if (targets.size < 1000) {
   const bands: [number, number][] = [[150, 100000], [90, 150], [60, 90], [45, 60], [35, 45], [28, 35], [24, 28], [21, 24], [18, 21], [15, 18], [12, 15], [10, 12]];
   for (const [a, b] of bands) {
