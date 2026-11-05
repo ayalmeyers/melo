@@ -1,6 +1,6 @@
 # Catalog build report
 
-Built 2026-11-05T14:32:07.030Z
+Built 2026-11-05T16:03:20.733Z
 
 Hand-picked albums and podcasts with art: 40 of 40
 Chart albums added: 464 · chart podcasts added: 97 · new artists: 340
@@ -28,7 +28,6 @@ Artists with a Commons photo: 181 of 364
 - Variété française / Musique: 1
 - Musique pour enfants / Musique / Variété française: 1
 - Musique / Bande originale: 1
-- Christian: 1
 - Devotional & Spiritual: 1
 - Alternativa / Música: 1
 - Música / Músicas del mundo: 1
