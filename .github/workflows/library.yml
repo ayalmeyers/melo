@@ -4,7 +4,7 @@ name: Library
 on:
   workflow_dispatch:
     inputs:
-      min_sitelinks: { description: 'Include artists with at least this many Wikipedia language editions', default: '18' }
+      min_sitelinks: { description: 'Include artists with at least this many Wikipedia language editions', default: '12' }
       limit: { description: 'Stop after this many artists (0 = no limit)', default: '0' }
   schedule: [{ cron: '41 */6 * * *' }]
   push:
@@ -25,7 +25,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          LIB_MIN_SITELINKS: ${{ inputs.min_sitelinks || '18' }}
+          LIB_MIN_SITELINKS: ${{ inputs.min_sitelinks || '12' }}
           LIB_LIMIT: ${{ inputs.limit || '0' }}
           LIB_MAX_MINUTES: '320'
         run: npx --yes tsx@4.19.2 scripts/library.mts

@@ -23,7 +23,7 @@ const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 // Without keys this is a dry run: it gathers everything for the first 60 artists and reports, but writes nothing.
 const DRY = !URL_ || !KEY;
 if (DRY) console.log('SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set: dry run (nothing is written). Add them as repository secrets to fill the library.');
-const MIN_SL = Number(process.env.LIB_MIN_SITELINKS ?? 18);
+const MIN_SL = Number(process.env.LIB_MIN_SITELINKS ?? 12);
 const DEADLINE = Date.now() + Number(process.env.LIB_MAX_MINUTES ?? 320) * 60_000;
 const LIMIT = Number(process.env.LIB_LIMIT ?? 0) || (DRY ? 60 : 0);
 const UA = 'MeloLibrary/1.0 (https://github.com/ayalmeyers/melo)';
@@ -33,7 +33,7 @@ const summary = (line: string) => { if (process.env.GITHUB_STEP_SUMMARY) appendF
 
 /* ---------- polite HTTP with per-host pacing ---------- */
 const lastHit = new Map<string, number>();
-const GAP: Record<string, number> = { 'itunes.apple.com': 3200, 'query.wikidata.org': 2000, 'qlever.cs.uni-freiburg.de': 1000, 'en.wikipedia.org': 600, 'commons.wikimedia.org': 600 };
+const GAP: Record<string, number> = { 'rss.marketingtools.apple.com': 0, 'rss.applemarketingtools.com': 0, 'itunes.apple.com': 3200, 'query.wikidata.org': 2000, 'qlever.cs.uni-freiburg.de': 1000, 'en.wikipedia.org': 600, 'commons.wikimedia.org': 600 };
 async function getJson(url: string, init: RequestInit = {}, tries = 5, timeoutMs = 60_000): Promise<unknown> {
   const host = new URL(url).host;
   for (let i = 0; i < tries; i++) {
@@ -70,7 +70,8 @@ function dryRpc(fn: string, body: unknown): unknown {
 interface Target { apple: number; qid?: string; label?: string; sl: number; image?: string; cc?: string; enwiki?: string; charts: number }
 const targets = new Map<number, Target>();
 
-const PREFIXES = `PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+const PREFIXES = `PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
 PREFIX wikibase: <http://wikiba.se/ontology#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX schema: <http://schema.org/>
@@ -78,6 +79,10 @@ PREFIX schema: <http://schema.org/>
 const query = (min: number, max: number) => `${PREFIXES}SELECT ?item ?apple ?sl (SAMPLE(?lbl) AS ?label) (SAMPLE(?img) AS ?image) (SAMPLE(?code) AS ?cc) (SAMPLE(?t) AS ?enwiki) WHERE {
   ?item wdt:P2850 ?apple ; wikibase:sitelinks ?sl .
   FILTER(?sl >= ${min} && ?sl < ${max})
+  # Music only: bands and groups, or people whose occupation is musician, composer, record producer or DJ (or a kind of those).
+  # Apple also lists authors and politicians as audiobook "artists"; this keeps them out.
+  FILTER EXISTS { { ?item wdt:P31/wdt:P279* wd:Q215380 } UNION { ?item wdt:P106/wdt:P279* wd:Q639669 } UNION { ?item wdt:P106/wdt:P279* wd:Q36834 }
+                  UNION { ?item wdt:P106 wd:Q183945 } UNION { ?item wdt:P106 wd:Q130857 } }
   OPTIONAL { ?item rdfs:label ?lbl FILTER(LANG(?lbl) = "en") }
   OPTIONAL { ?item wdt:P18 ?img }
   OPTIONAL { ?item wdt:P495 ?c1 . ?c1 wdt:P297 ?code }
@@ -122,22 +127,28 @@ const STOREFRONTS = ['us', 'gb', 'ca', 'au', 'ie', 'nz', 'ng', 'gh', 'ke', 'za',
 let chartArtists = 0; const tCharts = Date.now(); let feeds = 0;
 // Use whichever chart host answers, remember it, and give the whole step at most six minutes.
 let rssHosts = ['rss.marketingtools.apple.com', 'rss.applemarketingtools.com'];
-charts: for (const cc of STOREFRONTS) for (const kind of ['albums', 'songs']) {
-  if (Date.now() - tCharts > 6 * 60_000) { log('chart step hit its time limit'); break charts; }
-  let rows: Rss[] = []; const t = Date.now();
+async function chartFeed(cc: string, kind: string): Promise<Rss[]> {
   for (const host of rssHosts) {
     try {
-      rows = ((await getJson(`https://${host}/api/v2/${cc}/music/most-played/100/${kind}.json`, {}, 1, 15_000)) as { feed?: { results?: Rss[] } }).feed?.results ?? [];
-      if (rows.length) { rssHosts = [host, ...rssHosts.filter(h => h !== host)]; break; }
-    } catch (e) { if (feeds < 3) log(`chart ${cc} ${kind} via ${host}:`, String(e).slice(0, 100)); }
+      const rows = ((await getJson(`https://${host}/api/v2/${cc}/music/most-played/100/${kind}.json`, {}, 1, 15_000)) as { feed?: { results?: Rss[] } }).feed?.results ?? [];
+      if (rows.length) return rows;
+    } catch { /* try the other host */ }
   }
-  if (feeds < 3 || !rows.length) log(`chart ${cc} ${kind}: ${rows.length} rows in ${Date.now() - t}ms`);
-  if (rows.length) feeds++;
-  for (const r of rows) {
-    const id = Number(r.artistId); if (!id) continue;
-    const t = targets.get(id); if (t) t.charts++; else { targets.set(id, { apple: id, label: r.artistName, sl: 0, charts: 1 }); chartArtists++; }
-  }
+  return [];
 }
+// Eight feeds at a time; Apple's chart hosts are slow from cloud machines, so the step is capped at six minutes.
+const jobs = STOREFRONTS.flatMap(cc => ['albums', 'songs'].map(kind => [cc, kind] as const));
+await Promise.all(Array.from({ length: 8 }, async () => {
+  while (jobs.length && Date.now() - tCharts < 6 * 60_000) {
+    const [cc, kind] = jobs.shift()!;
+    const rows = await chartFeed(cc, kind);
+    if (rows.length) feeds++;
+    for (const r of rows) {
+      const id = Number(r.artistId); if (!id) continue;
+      const t = targets.get(id); if (t) t.charts++; else { targets.set(id, { apple: id, label: r.artistName, sl: 0, charts: 1 }); chartArtists++; }
+    }
+  }
+}));
 log(`artists added from Apple charts: ${chartArtists} (${feeds} feeds in ${Math.round((Date.now() - tCharts) / 1000)}s) · total: ${targets.size}`);
 
 /* ---------- 2. Skip what is already fresh, most notable first ---------- */
@@ -171,7 +182,9 @@ async function discographies(ids: number[]): Promise<Map<number, { name?: string
   return out;
 }
 /** One release per record: drop clean versions when the explicit one exists, and editions when the original exists. */
-function tidy(albums: AppleRaw[]): AppleRaw[] {
+const NOT_MUSIC = /spoken word|audiobook|hörbuch|livres audio|audiolibro|fitness/i;
+function tidy(raw: AppleRaw[]): AppleRaw[] {
+  const albums = raw.filter(a => !NOT_MUSIC.test(a.primaryGenreName ?? ''));
   const byKey = new Map<string, AppleRaw[]>();
   for (const a of albums) { const k = norm((a.collectionName ?? '').replace(EDITION, '')); byKey.set(k, [...(byKey.get(k) ?? []), a]); }
   const keep: AppleRaw[] = [];
@@ -181,7 +194,13 @@ function tidy(albums: AppleRaw[]): AppleRaw[] {
     const original = pool.filter(a => !EDITION.test(a.collectionName ?? ''));
     keep.push((original.length ? original : pool).sort((x, y) => (x.releaseDate ?? '').localeCompare(y.releaseDate ?? ''))[0]);
   }
-  return keep;
+  // "Record: The Encore", "Record + Acoustic Collection", "Record (Live)" are versions of Record. Re-recordings ("Taylor's Version") stand alone.
+  const titles = keep.map(a => a.collectionName ?? '');
+  return keep.filter(a => {
+    const t = a.collectionName ?? '';
+    if (/taylor.s version/i.test(t)) return true;
+    return !titles.some(base => base.length >= 3 && base !== t && t.toLowerCase().startsWith(base.toLowerCase()) && /^\s*(?:[:+(\[-–—]|&)/.test(t.slice(base.length)));
+  });
 }
 async function bios(titles: string[]): Promise<Map<string, string>> {
   const out = new Map<string, string>();
