@@ -1,10 +1,47 @@
 # Catalog build report
 
-Built 2026-11-05T05:36:09.339Z
+Built 2026-11-05T05:49:47.384Z
 
 Hand-picked albums and podcasts with art: 40 of 40
 Chart albums added: 461 · chart podcasts added: 96 · new artists: 335
-Artists with a Commons photo: 29 of 359
+Artists with a Commons photo: 74 of 359
+
+## Apple genres with no Melo genre
+- Bollywood: 11
+- (none): 8
+- ロック / ミュージック: 8
+- Tamil / Regional Indian: 7
+- Musik für Kinder / Musik: 6
+- Música: 4
+- 음악 / 힙합/랩: 4
+- Regional Indian: 4
+- Musique: 3
+- Children's Music: 2
+- オルタナティブ / ミュージック: 2
+- サウンドトラック / ミュージック: 2
+- 힙합/랩 / 음악: 2
+- 얼터너티브 / 음악: 2
+- Telugu / Regional Indian: 2
+- Musik: 2
+- Alternativo / Música: 1
+- ミュージック: 1
+- チルドレン・ミュージック / ミュージック: 1
+- ポップ / ミュージック: 1
+- チルドレン・ミュージック / ミュージック / サウンドトラック: 1
+- 음악 / 록: 1
+- OST / 음악: 1
+- 팝 / 음악: 1
+- 록 / 음악: 1
+- 음악 / 힙합/랩 / 월드 뮤직: 1
+- Bandas sonoras / Música: 1
+- Variété française / Musique: 1
+- Musique pour enfants / Musique / Variété française: 1
+- Christian: 1
+- Devotional & Spiritual: 1
+- Alternativa / Música: 1
+- Música para niños / Música: 1
+- Música / Músicas del mundo: 1
+- Musik / Musik für Kinder: 1
 
 ## Misses
 - none
@@ -15,14 +52,14 @@ Artists with a Commons photo: 29 of 359
 - album brat: BRAT — Charli xcx (1739079974)
 - album blonde: Blonde — Frank Ocean (1146195596)
 - album orange: channel ORANGE — Frank Ocean (1440765580)
-- album madvillainy: Madvillainy Instrumentals — Madvillain (41655332)
+- album madvillainy: Madvillainy — Madvillain (887699504)
 - album zombie: Zombie — Fela Kuti (559710299)
 - album uvst: Un Verano Sin Ti — Bad Bunny (1622045624)
 - album dtmf: DeBÍ TiRAR MáS FOToS — Bad Bunny (1787022393)
 - album okc: OK Computer — Radiohead (1097861387)
 - album kida: Kid A — Radiohead (1097862870)
 - album inrainbows: In Rainbows — Radiohead (1109714933)
-- album variety: VARIETY - 30th Anniversary Edition — Mariya Takeuchi (1591437245)
+- album variety: VARIETY - 30th Anniversary Edition — 竹内まりや (1591437245)
 - album ctrl: Ctrl — SZA (1239977075)
 - album sos: SOS — SZA (1658650093)
 - album bitw: Born in the Wild — Tems (1750361972)
@@ -84,24 +121,16 @@ Artists with a Commons photo: 29 of 359
 - no free photo: Bad Bunny (using newest cover)
 - no free photo: Radiohead (using newest cover)
 - no free photo: SZA (using newest cover)
-- no free photo: Tems (using newest cover)
 - no free photo: Rosalía (using newest cover)
 - no free photo: Burna Boy (using newest cover)
 - no free photo: Youssou N'Dour (using newest cover)
-- no free photo: Beyoncé (using newest cover)
-- no free photo: Fleetwood Mac (using newest cover)
 - no free photo: Daft Punk (using newest cover)
-- no free photo: Jorge Ben Jor (using newest cover)
 - no free photo: Lauryn Hill (using newest cover)
 - no free photo: Arooj Aftab (using newest cover)
 - no free photo: Amy Winehouse (using newest cover)
 - no free photo: Davido (using newest cover)
 - no free photo: Karol G (using newest cover)
-- no free photo: BigXthaPlug (using newest cover)
-- no free photo: Drake (using newest cover)
 - no free photo: Olivia Rodrigo (using newest cover)
-- no free photo: Zach Bryan (using newest cover)
-- no free photo: Rod Wave (using newest cover)
 - no free photo: Taylor Swift (using newest cover)
 - no free photo: Morgan Wallen (using newest cover)
 - no free photo: Jhené Aiko (using newest cover)
@@ -111,10 +140,7 @@ Artists with a Commons photo: 29 of 359
 - no free photo: Don Toliver (using newest cover)
 - no free photo: Lin-Manuel Miranda, Leslie Odom, Jr., Phillipa Soo, Daveed Diggs & Christopher Jackson (using newest cover)
 - no free photo: Ms. Rachel (using newest cover)
-- no free photo: Ariana Grande (using newest cover)
 - no free photo: NoCap (using newest cover)
-- no free photo: Olivia Dean (using newest cover)
-- no free photo: Ella Langley (using newest cover)
 - no free photo: Dominic Fike (using newest cover)
 - no free photo: Steve Lacy (using newest cover)
 - no free photo: Yeat & Lyfestyle Corporation (using newest cover)
@@ -129,10 +155,8 @@ Artists with a Commons photo: 29 of 359
 - no free photo: PARTYNEXTDOOR & Drake (using newest cover)
 - no free photo: Harry Styles (using newest cover)
 - no free photo: Kanye West (using newest cover)
-- no free photo: Remi Wolf (using newest cover)
 - no free photo: Gracie Abrams (using newest cover)
 - no free photo: Fatt Smaxk (using newest cover)
-- no free photo: Daddy Yankee (using newest cover)
 - no free photo: Tate McRae (using newest cover)
 - no free photo: Fontaines D.C. (using newest cover)
 - no free photo: Queens of the Stone Age (using newest cover)
@@ -141,12 +165,9 @@ Artists with a Commons photo: 29 of 359
 - no free photo: Nickelback (using newest cover)
 - no free photo: Benj Pasek & Justin Paul, Hugh Jackman (using newest cover)
 - no free photo: Bugzy Malone (using newest cover)
-- no free photo: RAYE (using newest cover)
 - no free photo: Chase & Status (using newest cover)
 - no free photo: FOLA (using newest cover)
 - no free photo: Sam Fender (using newest cover)
-- no free photo: Sabrina Carpenter (using newest cover)
-- no free photo: Ashe (using newest cover)
 - no free photo: Arctic Monkeys (using newest cover)
 - no free photo: Oasis (using newest cover)
 - no free photo: Ed Sheeran (using newest cover)
@@ -159,16 +180,13 @@ Artists with a Commons photo: 29 of 359
 - no free photo: Tml Vibez (using newest cover)
 - no free photo: Victony (using newest cover)
 - no free photo: BNXN (using newest cover)
-- no free photo: Wizkid (using newest cover)
 - no free photo: Mavo (using newest cover)
 - no free photo: Greatman Takit (using newest cover)
 - no free photo: Young Jonn (using newest cover)
-- no free photo: Ayra Starr (using newest cover)
 - no free photo: Anendlessocean (using newest cover)
 - no free photo: Zaylevelten (using newest cover)
 - no free photo: Dj Boat (using newest cover)
 - no free photo: Dave (using newest cover)
-- no free photo: Anitta (using newest cover)
 - no free photo: BTS (using newest cover)
 - no free photo: Som De Chuva e Trovoadas (using newest cover)
 - no free photo: Madonna (using newest cover)
@@ -176,13 +194,10 @@ Artists with a Commons photo: 29 of 359
 - no free photo: Vários intérpretes (using newest cover)
 - no free photo: João Gomes, Mestrinho & Jota.pê (using newest cover)
 - no free photo: Marina Sena (using newest cover)
-- no free photo: Troye Sivan (using newest cover)
 - no free photo: Pitty (using newest cover)
 - no free photo: Chuva Para Dormir (using newest cover)
 - no free photo: Ivy Skye (using newest cover)
 - no free photo: Slayyyter (using newest cover)
-- no free photo: Lady Gaga (using newest cover)
-- no free photo: Billie Eilish (using newest cover)
 - no free photo: LISA (using newest cover)
 - no free photo: Henrique & Juliano (using newest cover)
 - no free photo: Elton John (using newest cover)
@@ -201,16 +216,13 @@ Artists with a Commons photo: 29 of 359
 - no free photo: RELAX WORLD (using newest cover)
 - no free photo: 藤井 風 (using newest cover)
 - no free photo: M!LK (using newest cover)
-- no free photo: Mr.Children (using newest cover)
 - no free photo: α Healing (using newest cover)
 - no free photo: GLAY (using newest cover)
 - no free photo: 超かぐや姫! (using newest cover)
 - no free photo: Hey! Say! JUMP (using newest cover)
-- no free photo: Vaundy (using newest cover)
 - no free photo: 米津玄師 (using newest cover)
 - no free photo: YOASOBI (using newest cover)
 - no free photo: Akira Senju/Tatsuhiko Saiki/Shu Kanematsu (using newest cover)
-- no free photo: 宇多田ヒカル (using newest cover)
 - no free photo: Official髭男dism (using newest cover)
 - no free photo: 三代目 J SOUL BROTHERS from EXILE TRIBE (using newest cover)
 - no free photo: My Hair is Bad (using newest cover)
@@ -224,7 +236,6 @@ Artists with a Commons photo: 29 of 359
 - no free photo: Unofficialboyy (using newest cover)
 - no free photo: 악뮤 (using newest cover)
 - no free photo: 창모 (using newest cover)
-- no free photo: 로제 (using newest cover)
 - no free photo: 닥스후드 & 양홍원 (using newest cover)
 - no free photo: Justin Bieber (using newest cover)
 - no free photo: 뉴진스 (using newest cover)
@@ -235,7 +246,6 @@ Artists with a Commons photo: 29 of 359
 - no free photo: 잔나비 (using newest cover)
 - no free photo: viceversa & 피캐시디 (using newest cover)
 - no free photo: 재지팩트 (using newest cover)
-- no free photo: 제니 (using newest cover)
 - no free photo: Xdinary Heroes (using newest cover)
 - no free photo: BIGBANG (using newest cover)
 - no free photo: 한로로 (using newest cover)
@@ -247,20 +257,14 @@ Artists with a Commons photo: 29 of 359
 - no free photo: Junior H (using newest cover)
 - no free photo: Peso Pluma & Tito Double P (using newest cover)
 - no free photo: Omar Camacho (using newest cover)
-- no free photo: Natanael Cano (using newest cover)
 - no free photo: Tombochio (using newest cover)
 - no free photo: Varios Artistas (using newest cover)
-- no free photo: Tito Double P (using newest cover)
 - no free photo: Chuyin (using newest cover)
-- no free photo: Neton Vega (using newest cover)
 - no free photo: Calle 24 (using newest cover)
 - no free photo: Fred again.. & LATIN MAFIA (using newest cover)
-- no free photo: Rauw Alejandro (using newest cover)
 - no free photo: Tainy (using newest cover)
-- no free photo: Aitana (using newest cover)
 - no free photo: José Madero (using newest cover)
 - no free photo: Jimmy Guzman (using newest cover)
-- no free photo: Luis Miguel (using newest cover)
 - no free photo: Hamza (using newest cover)
 - no free photo: Tiakola (using newest cover)
 - no free photo: Ronisia (using newest cover)
@@ -280,7 +284,6 @@ Artists with a Commons photo: 29 of 359
 - no free photo: Ninho (using newest cover)
 - no free photo: Aya Nakamura (using newest cover)
 - no free photo: TRIANGLE DES BERMUDES (using newest cover)
-- no free photo: SDM (using newest cover)
 - no free photo: BEN plg (using newest cover)
 - no free photo: PLK (using newest cover)
 - no free photo: La superstar des comptines rondes et berceuses (using newest cover)
@@ -306,7 +309,6 @@ Artists with a Commons photo: 29 of 359
 - no free photo: Noted. (using newest cover)
 - no free photo: Sminofu (using newest cover)
 - no free photo: Jabulile Majola (using newest cover)
-- no free photo: Tyla (using newest cover)
 - no free photo: Kabza De Small (using newest cover)
 - no free photo: Kelvin Momo (using newest cover)
 - no free photo: GoldMax (using newest cover)
@@ -333,21 +335,17 @@ Artists with a Commons photo: 29 of 359
 - no free photo: Rambabu Gosala, Srinivasa Mouli, Super Subu, Krishna Kanth, Asura, Heisenberg, Anirudh Ravichander & Bhaskara Bhatla (using newest cover)
 - no free photo: Cheema Y & Gur Sidhu (using newest cover)
 - no free photo: Navaan Sandhu (using newest cover)
-- no free photo: A.R. Rahman (using newest cover)
 - no free photo: Real Boss (using newest cover)
 - no free photo: Sachet-Parampara, Vishal Mishra, Mithoon, Akhil Sachdeva & Amaal Mallik (using newest cover)
 - no free photo: Mithoon, Ankit Tiwari & Jeet Gannguli (using newest cover)
 - no free photo: Anand Bhaskar, Parry G, Junaid Kumar, Ray, Dhanda Nyoliwala, Ginny Diwan, Kumaar, Nusrat Fateh Ali Khan & Tejpal (using newest cover)
 - no free photo: Jxggi (using newest cover)
 - no free photo: Jordan Sandhu (using newest cover)
-- no free photo: Parmish Verma (using newest cover)
 - no free photo: Vishnu Vijay, Vinayak Sasikumar & Suhail Koya (using newest cover)
 - no free photo: The Weeknd (using newest cover)
 - no free photo: Pritam (using newest cover)
-- no free photo: Ilaiyaraaja (using newest cover)
 - no free photo: Arjan Dhillon (using newest cover)
 - no free photo: Manan Bhardwaj, Vishal Mishra, Pritam, Shreyas Puranik, Harshavardhan Rameshwar, Jaani, Ashim Kemson, A.R. Rahman, Bhupinder Babbal, Siddharth-Garima, Manoj Muntashir, Raj Shekhar & Traditional (using newest cover)
-- no free photo: Hariharan (using newest cover)
 - no free photo: Lucho RK (using newest cover)
 - no free photo: Arde Bogotá (using newest cover)
 - no free photo: Metrika (using newest cover)
@@ -355,9 +353,7 @@ Artists with a Commons photo: 29 of 359
 - no free photo: El Barrio (using newest cover)
 - no free photo: Alcalá Norte (using newest cover)
 - no free photo: Clarent (using newest cover)
-- no free photo: Guitarricadelafuente (using newest cover)
 - no free photo: Música Infantil TV (using newest cover)
-- no free photo: Dei V (using newest cover)
 - no free photo: YOLAMASCARA (using newest cover)
 - no free photo: C. Tangana (using newest cover)
 - no free photo: Linda Beldad (using newest cover)
@@ -368,7 +364,6 @@ Artists with a Commons photo: 29 of 359
 - no free photo: Música Ambiente (using newest cover)
 - no free photo: David Bisbal (using newest cover)
 - no free photo: Feid (using newest cover)
-- no free photo: Camilo (using newest cover)
 - no free photo: BOM, Miranda! & Lali (using newest cover)
 - no free photo: Kris R. (using newest cover)
 - no free photo: Topboy TGR (using newest cover)
@@ -378,7 +373,6 @@ Artists with a Commons photo: 29 of 359
 - no free photo: FANTA ROSARIO (using newest cover)
 - no free photo: Peter Manjarrés & Luis Jose Villa (using newest cover)
 - no free photo: Kapo (using newest cover)
-- no free photo: Myke Towers (using newest cover)
 - no free photo: J Balvin & Bad Bunny (using newest cover)
 - no free photo: JHAYCO (using newest cover)
 - no free photo: Lichterkinder (using newest cover)
@@ -398,12 +392,10 @@ Artists with a Commons photo: 29 of 359
 - no free photo: BLOK3 (using newest cover)
 - no free photo: Ufo361 (using newest cover)
 - no free photo: Torsten Sträter (using newest cover)
-- no free photo: Massiv (using newest cover)
 - no free photo: THIZZY52 (using newest cover)
 - no free photo: Peter Maffay & Johannes Oerding (using newest cover)
 - no free photo: Philipp Poisel (using newest cover)
 - no free photo: Ski Aggu (using newest cover)
-- no free photo: Lana Del Rey (using newest cover)
 - no free photo: Katy Perry (using newest cover)
 - no free photo: Riley Green (using newest cover)
 - no free photo: Luke Combs (using newest cover)
