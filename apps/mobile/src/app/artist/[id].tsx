@@ -7,6 +7,7 @@ import { apple } from '../../lib/apple';
 import { rememberArtist, useLoad } from '../../lib/hooks';
 import { artwork } from '../../lib/artwork';
 import { Board } from '../../components/board';
+import { C } from '../../components/theme';
 import { AppleSection } from '../../components/apple';
 import { Screen } from '../../components/screen';
 import { ArtistCover, Band, T } from '../../components/ui';
@@ -40,8 +41,8 @@ export default function ArtistScreen() {
   const where = art.cc ? `${flag(art.cc)} ${countryName(art.cc)}` : '';
   const genres = art.genres.map(genreName).filter(Boolean).join(', ');
   return <Board kind="artist" id={id} name={art.name} sub={[where, genres].filter(Boolean).join(' · ') || 'Artist'}
-    art={<ArtistCover id={id} art={art.image_url ?? art.artwork_url} size={96} />}
-    credit={art.image_credit ? <Text onPress={() => art.image_source && Linking.openURL(art.image_source)} style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.5)' }} numberOfLines={1}>{art.image_credit}</Text> : undefined} wikiKey={`r:${id}`} wikiFallback={ARTISTS[id]?.wiki ?? ''} sharePath={`/artist/${id}`}
+    art={<ArtistCover id={id} art={art.image_url ?? undefined} size={148} />}
+    credit={art.image_credit ? <Text onPress={() => art.image_source && Linking.openURL(art.image_source)} style={{ fontSize: 11.5, color: C.faint, textAlign: 'center' }} numberOfLines={1}>{art.image_credit}</Text> : undefined} wikiKey={`r:${id}`} wikiFallback={ARTISTS[id]?.wiki ?? ''} sharePath={`/artist/${id}`}
     items={() => api.itemsBy({ artist: id }, 100)}
     recordsExtra={have => <AppleSection title="More on Apple Music" results={more.data?.filter(r => !have.has('am' + r.apple_id)) ?? null} />} />;
 }

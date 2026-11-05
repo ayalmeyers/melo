@@ -13,6 +13,6 @@ export default function GenreScreen() {
   const art = useLoad(() => loadGenreArt(), []);
   if (!g) return <Screen top={false}><Band><T.Display>Not found.</T.Display></Band></Screen>;
   const n = artists.data?.length ?? Object.values(ARTISTS).filter(a => a.genres.includes(id)).length;
-  return <Board kind="genre" id={id} name={g.name} sub={`${n} artists`} art={<GenreCover key={art.loading ? 'g' : 'G'} id={id} size={96} radius={20} />}
+  return <Board kind="genre" id={id} name={g.name} sub={`${n} artists`} art={<GenreCover key={art.loading ? 'g' : 'G'} id={id} size={148} radius={28} />}
     wikiKey={`g:${id}`} wikiFallback={g.wiki} sharePath={`/genre/${id}`} items={() => api.itemsBy({ genre: id }, 100)} />;
 }

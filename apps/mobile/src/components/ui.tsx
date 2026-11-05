@@ -124,7 +124,7 @@ export function Button({ title, kind = 'primary', small, icon, loading, style, d
   const outlined = kind === 'ghost' || kind === 'dark';
   return <Pressable accessibilityRole="button" disabled={disabled || loading} onPress={e => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {}); onPress?.(e); }} {...rest}
     style={({ pressed }) => [{ height: small ? 38 : 50, borderRadius: R.pill, backgroundColor: bg, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7, paddingHorizontal: title ? (small ? 16 : 22) : 0, minWidth: small ? 38 : 50, opacity: disabled ? 0.45 : 1, transform: [{ scale: pressed ? 0.97 : 1 }] }, outlined && { borderWidth: 1, borderColor: C.line }, kind === 'primary' && !disabled && shadowBlue, style]}>
-    {loading ? <ActivityIndicator color={fg} /> : <>{icon && <Icon name={icon} size={small ? 16 : 18} color={fg} />}{!!title && <Text style={{ color: fg, fontFamily: F.bold, fontSize: small ? 14.5 : 16 }}>{title}</Text>}</>}
+    {loading ? <ActivityIndicator color={fg} /> : <>{icon && <View style={{ flexShrink: 0 }}><Icon name={icon} size={small ? 16 : 18} color={fg} /></View>}{!!title && <Text style={{ color: fg, fontFamily: F.bold, fontSize: small ? 14.5 : 16 }}>{title}</Text>}</>}
   </Pressable>;
 }
 const shadowBlue: ViewStyle = { shadowColor: C.blue, shadowOpacity: 0.25, shadowRadius: 12, shadowOffset: { width: 0, height: 6 } };
